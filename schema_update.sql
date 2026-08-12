@@ -94,3 +94,14 @@ DROP POLICY IF EXISTS "Allow read access on service_history" ON public.service_h
 CREATE POLICY "Allow read access on service_history" ON public.service_history FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Allow write access on service_history" ON public.service_history;
 CREATE POLICY "Allow write access on service_history" ON public.service_history FOR ALL USING (true);
+
+-- 7. Fix CHECK constraints on bookings and vehicles tables for refund & maintenance statuses
+ALTER TABLE public.bookings DROP CONSTRAINT IF EXISTS bookings_status_check;
+ALTER TABLE public.bookings ADD CONSTRAINT bookings_status_check CHECK (
+  status IN ('pending', 'approved', 'rejected', 'active', 'completed', 'cancelled', 'refund_requested', 'refunded')
+);
+
+ALTER TABLE public.vehicles DROP CONSTRAINT IF EXISTS vehicles_status_check;
+ALTER TABLE public.vehicles ADD CONSTRAINT vehicles_status_check CHECK (
+  status IN ('available', 'rented', 'maintenance', 'in_service', 'scheduled_maint', 'off_the_road')
+);

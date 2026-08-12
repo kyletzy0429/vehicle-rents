@@ -2192,16 +2192,25 @@ async function openRefundRequestModal(bookingId) {
     const reason = $('#refReason').value.trim();
     const notes = `Refund Request: ${method} (${accNo} - ${accName}). Reason: ${reason}`;
 
-    const { error } = await supabase.from('bookings').update({
+    let { error } = await supabase.from('bookings').update({
       status: 'refund_requested',
       review_notes: notes,
     }).eq('id', bookingId);
 
     if (error) {
-      toast(error.message, 'error');
-      btn.disabled = false;
-      btn.textContent = 'Submit Refund Request';
-      return;
+      // Fallback if Supabase database constraint bookings_status_check hasn't been updated yet
+      const fallbackNotes = `[REFUND REQUESTED] ${notes}`;
+      const { error: fallbackErr } = await supabase.from('bookings').update({
+        status: 'cancelled',
+        review_notes: fallbackNotes,
+      }).eq('id', bookingId);
+
+      if (fallbackErr) {
+        toast(error.message || fallbackErr.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Submit Refund Request';
+        return;
+      }
     }
 
     toast('Refund request submitted! Staff will review and process your transfer.', 'success');
@@ -2220,39 +2229,41 @@ async function openRefundVoucherModal(bookingId) {
 
   openModal(`
     <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
-      <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Refund Voucher</div>
+      <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Refund &amp; Disbursement Voucher</div>
       <div class="modal-close" onclick="window.closeModal()">✕</div>
     </div>
-
     <div style="text-align:center;margin-bottom:18px;">
       <div style="width:58px;height:58px;border-radius:50%;background:#ecfdf5;border:2px solid #a7f3d0;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
-        <i class="fa-solid fa-hand-holding-dollar" style="font-size:26px;color:#059669;"></i>
+        <i class="fa-solid fa-hand-holding-dollar" style="font-size:28px;color:#059669;"></i>
       </div>
-      <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Refund Disbursed</h2>
-      <span class="badge badge-completed" style="font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Transfer Completed</span>
-      <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Voucher No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
+      <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Refund Disbursed Successfully</h2>
+      <span class="badge badge-refunded" style="font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Transfer Completed</span>
+      <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Voucher / Claim No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-file-invoice-dollar" style="color:#2563eb;"></i> Refund Summary</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-user" style="color:#2563eb;"></i> Beneficiary Details</h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:#64748b;">Customer</span><span style="font-weight:700;color:#0f172a;">${cName}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name ?? 'Rental Vehicle'}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Customer Name</span><span style="font-weight:700;color:#0f172a;">${cName}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Phone Number</span><span style="color:#0f172a;">${b.profiles?.phone || '—'}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name ?? 'Vehicle'}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Rental Dates</span><span style="color:#0f172a;">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Transfer Details</span><span style="color:#0f172a;font-size:0.8rem;">${b.review_notes ?? 'Refunded to customer'}</span></div>
-      <div class="divider"></div>
-      <div class="receipt-row receipt-total"><span>Total Amount Refunded</span><span style="color:#059669;">${fmtMoney(b.total_amount)}</span></div>
+      ${b.review_notes ? `<div class="receipt-row" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:4px;"><span style="color:#64748b;">Refund Transfer Notes</span><span style="color:#b45309;font-weight:600;">${b.review_notes}</span></div>` : ''}
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;" class="no-print">
-      <button class="btn btn-ghost btn-block" onclick="window.print()" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-print"></i> Print Voucher</button>
-      <button class="btn btn-primary btn-block" onclick="window.closeModal()">Done</button>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-receipt" style="color:#059669;"></i> Financial Summary</h4>
+    <div class="receipt" style="margin-bottom:16px;">
+      <div class="receipt-row"><span>Total Booking Amount</span><span>${fmtMoney(b.total_amount)}</span></div>
+      <div class="receipt-row"><span>Refund Status</span><span class="badge badge-refunded">COMPLETED</span></div>
+      <div class="divider"></div>
+      <div class="receipt-row receipt-total"><span>Total Refund Disbursed</span><span style="color:#059669;">${fmtMoney(b.total_amount)}</span></div>
     </div>
+    <button class="btn btn-primary btn-block" onclick="window.print()" style="margin-top:8px;background:#059669;border-color:#059669;"><i class="fa-solid fa-print"></i> Print Refund Voucher</button>
   `);
 }
 
-// =====================================================================
+// ---------------------------------------------------------------------
 // STAFF PORTAL
-// =====================================================================
+// ---------------------------------------------------------------------
 async function renderStaff(tab, view) {
   if (tab === 'requests') return renderStaffRequests(view);
   if (tab === 'active') return renderStaffActive(view);
@@ -2262,13 +2273,17 @@ async function renderStaff(tab, view) {
 }
 
 async function renderStaffRefunds(view) {
-  const { data: bookings, error } = await supabase
+  const { data: allBookings, error } = await supabase
     .from('bookings')
     .select('*, vehicles(name, plate_number), profiles!bookings_customer_id_fkey(full_name, phone)')
-    .in('status', ['refund_requested', 'refunded'])
     .order('created_at', { ascending: false });
 
   if (error) throw error;
+
+  const bookings = (allBookings || []).filter(b => 
+    ['refund_requested', 'refunded'].includes(b.status) || 
+    (b.review_notes && b.review_notes.includes('REFUND REQUESTED'))
+  );
 
   view.innerHTML = `
     <div class="view">
