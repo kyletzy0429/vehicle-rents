@@ -247,21 +247,53 @@ $('#loginForm').addEventListener('submit', async (e) => {
 });
 
 // ---------------------------------------------------------------------
-// LOAD DATA FROM DATABASE
+// LOAD DATA FROM DATABASE WITH PUBLIC FALLBACKS
 // ---------------------------------------------------------------------
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'Sedans' },
+  { id: 2, name: 'MPVs & Crossovers' },
+  { id: 3, name: 'SUVs & Pickups' },
+  { id: 4, name: 'Motorcycles' },
+  { id: 5, name: 'Passenger Vans' }
+];
+
+const DEFAULT_VEHICLES = [
+  { id: 1, name: 'Toyota Vios 1.3 XLE', category_id: 1, plate_number: 'NGL-8821', status: 'available', seats: 5, transmission: 'Automatic', fuel_type: 'Gasoline', has_ac: true, daily_rate: 2500, image_url: 'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800&auto=format&fit=crop&q=80' },
+  { id: 2, name: 'Toyota Innova 2.8 E Diesel', category_id: 2, plate_number: 'CAK-4019', status: 'available', seats: 7, transmission: 'Automatic', fuel_type: 'Diesel', has_ac: true, daily_rate: 3200, image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80' },
+  { id: 3, name: 'Toyota Fortuner 2.8 Q 4x2', category_id: 3, plate_number: 'DAN-7712', status: 'available', seats: 7, transmission: 'Automatic', fuel_type: 'Diesel', has_ac: true, daily_rate: 4200, image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80' },
+  { id: 4, name: 'Ford Ranger Raptor 2.0L Bi-Turbo', category_id: 3, plate_number: 'NEO-1092', status: 'available', seats: 5, transmission: 'Automatic', fuel_type: 'Diesel', has_ac: true, daily_rate: 4500, image_url: 'https://images.unsplash.com/photo-1551830820-330a71b99659?w=800&auto=format&fit=crop&q=80' },
+  { id: 5, name: 'Yamaha NMAX 155 ABS', category_id: 4, plate_number: 'MC-4821', status: 'available', seats: 2, transmission: 'Automatic', fuel_type: 'Gasoline', has_ac: false, daily_rate: 2000, image_url: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80' },
+  { id: 6, name: 'Toyota HiAce Commuter Deluxe 3.0L', category_id: 5, plate_number: 'VAN-9081', status: 'available', seats: 14, transmission: 'Manual', fuel_type: 'Diesel', has_ac: true, daily_rate: 5000, image_url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80' }
+];
+
 async function loadCategories() {
-  const { data } = await supabase.from('categories').select('*').order('name');
-  state.categories = data || [];
+  try {
+    const { data } = await supabase.from('categories').select('*').order('name');
+    state.categories = (data && data.length) ? data : DEFAULT_CATEGORIES;
+  } catch (e) {
+    state.categories = DEFAULT_CATEGORIES;
+  }
 }
 
 async function loadVehicles() {
-  const { data } = await supabase.from('vehicles').select('*, categories(name, daily_rate)').order('name');
-  state.vehicles = data || [];
+  try {
+    const { data } = await supabase.from('vehicles').select('*').order('name');
+    state.vehicles = (data && data.length) ? data : DEFAULT_VEHICLES;
+  } catch (e) {
+    state.vehicles = DEFAULT_VEHICLES;
+  }
 }
 
 async function loadDrivers() {
-  const { data } = await supabase.from('drivers').select('*').order('name');
-  state.drivers = (data || []).map(d => ({ ...d, daily_fee: Number(d.daily_fee || 0) < 500 ? 500 : Number(d.daily_fee) }));
+  try {
+    const { data } = await supabase.from('drivers').select('*').order('name');
+    state.drivers = (data || []).map(d => ({ ...d, daily_fee: Number(d.daily_fee || 0) < 500 ? 500 : Number(d.daily_fee) }));
+  } catch (e) {
+    state.drivers = [
+      { id: 1, name: 'Ramon Santos', phone: '+63 917 555 1024', license_type: 'Professional', rating: 4.90, daily_fee: 500, status: 'available' },
+      { id: 2, name: 'Eduardo Reyes', phone: '+63 918 444 8812', license_type: 'Professional Heavy', rating: 4.85, daily_fee: 500, status: 'available' }
+    ];
+  }
 }
 
 function getVehicleRate(v) {
