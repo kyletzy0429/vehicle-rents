@@ -1944,7 +1944,7 @@ async function openVehicleDetail(id) {
 
     // === Show Booking Confirmation Receipt ===
     const days = daysBetween(start.value, end.value);
-    const rate = v.categories?.daily_rate ?? 0;
+    const rate = getVehicleDailyRate(v);
     const isPerKm = selectedChargeType === 'per_km';
     const kmRate = rate * 0.05;
     const estKm = Number(submitBtn.dataset.estKm || 0);
