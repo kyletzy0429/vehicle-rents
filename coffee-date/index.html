@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Special Question for You... ☕💖</title>
+  <meta name="description" content="A cute interactive website to invite my crush out for coffee." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Floating Hearts Background -->
+  <div class="hearts-container" id="heartsBg"></div>
+
+  <!-- Background Music Toggle -->
+  <div class="music-toggle" id="musicToggleBtn" title="Toggle background music">
+    <i class="fa-solid fa-music"></i>
+  </div>
+
+  <audio id="bgMusic" loop src="https://assets.mixkit.co/music/preview/mixkit-loving-you-1188.mp3"></audio>
+
+  <!-- Main Interactive App Container -->
+  <div class="app-wrap">
+    <!-- Card Container -->
+    <div class="invite-card glass" id="inviteCard">
+      
+      <!-- STEP 1: Who are you? -->
+      <div class="step-view active" id="step1">
+        <div class="header-icon">☕</div>
+        <h2 class="card-title">Who are you?</h2>
+        <p class="card-sub">Please type your name or nickname to unlock this message:</p>
+        
+        <div class="input-wrap">
+          <input type="text" id="crushNameInput" placeholder="Type your name here..." autocomplete="off" autofocus />
+          <button type="button" class="btn btn-primary" id="btnStep1Next">
+            Enter <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+        <div class="error-msg" id="step1Error"></div>
+      </div>
+
+      <!-- STEP 2: The Big Question (Yay, it's you!) -->
+      <div class="step-view" id="step2">
+        <div class="gif-box">
+          <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3ZkMnU3a3c2eW44cTYyeGJub2ZzNW56aTBucmV4anE1dmFzYXlyMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/M90mJvfWfd5mbUuULX/giphy.gif" alt="Cute character dancing" class="cute-gif" />
+        </div>
+        <h2 class="card-title">YAY! IT'S YOU! <span id="crushNameDisplay" class="highlight-name"></span> 💖</h2>
+        <p class="card-sub">I've been wanting to ask you this for a while...</p>
+        <h3 class="question-text">Would you like to go out for a coffee date with me? ☕✨</h3>
+
+        <div class="btn-group" id="btnGroupStep2">
+          <button type="button" class="btn btn-yes" id="btnYes">
+            Yes, I'd love to! 💖
+          </button>
+          <button type="button" class="btn btn-no" id="btnNo">
+            No, sorry 💔
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: What type of date? -->
+      <div class="step-view" id="step3">
+        <div class="header-icon">🎉</div>
+        <h2 class="card-title">Awesome! 💕</h2>
+        <p class="card-sub">What kind of date vibe do you prefer?</p>
+
+        <div class="choice-grid">
+          <div class="choice-card active" data-type="Cozy Coffee & Pastries ☕🥐">
+            <div class="choice-icon">☕</div>
+            <div class="choice-title">Cozy Coffee &amp; Pastries</div>
+            <div class="choice-sub">Warm coffee, sweet talks &amp; chill cafe vibe</div>
+          </div>
+          <div class="choice-card" data-type="Romantic Dinner 🍽️✨">
+            <div class="choice-icon">🍽️</div>
+            <div class="choice-title">Romantic Dinner</div>
+            <div class="choice-sub">Good food &amp; deep conversations</div>
+          </div>
+          <div class="choice-card" data-type="Chill Hangout & Matcha 🍵🍰">
+            <div class="choice-icon">🍵</div>
+            <div class="choice-title">Matcha &amp; Sweet Treats</div>
+            <div class="choice-sub">Cute cafe hopping &amp; dessert time</div>
+          </div>
+          <div class="choice-card" data-type="Surprise Me! 🎁✨">
+            <div class="choice-icon">🎁</div>
+            <div class="choice-title">Surprise Me!</div>
+            <div class="choice-sub">Let me plan everything for you</div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" id="btnStep3Next" style="margin-top:20px;">
+          Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- STEP 4: Where would you like to go? -->
+      <div class="step-view" id="step4">
+        <div class="header-icon">📍</div>
+        <h2 class="card-title">Nice choice! ✨</h2>
+        <p class="card-sub">Where would you like us to have our coffee hangout?</p>
+
+        <div class="field-wrap">
+          <label class="field-label">Any specific cafe or coffee shop in mind?</label>
+          <input type="text" id="cafeLocationInput" placeholder="e.g. Starbucks, Coffee Bean, local aesthetic cafe..." />
+        </div>
+
+        <div class="quick-tags">
+          <span class="tag-pill" data-cafe="Starbucks ☕">Starbucks</span>
+          <span class="tag-pill" data-cafe="CBTL 🍵">Coffee Bean</span>
+          <span class="tag-pill" data-cafe="Aesthetic Local Cafe 🌿">Aesthetic Cafe</span>
+          <span class="tag-pill" data-cafe="You pick the place! ✨">You pick!</span>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" id="btnStep4Next" style="margin-top:24px;">
+          Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- STEP 5: Timing is everything! -->
+      <div class="step-view" id="step5">
+        <div class="header-icon">⏰</div>
+        <h2 class="card-title">Timing is everything! ⏰</h2>
+        <p class="card-sub">What time &amp; day works best for you?</p>
+
+        <div class="field-wrap">
+          <label class="field-label">Select Preferred Time of Day:</label>
+          <select id="timeSlotSelect">
+            <option value="🌅 Morning Coffee (8:00 AM - 11:00 AM)">🌅 Morning Coffee (8:00 AM - 11:00 AM)</option>
+            <option value="☀️ Afternoon Chill (1:00 PM - 4:00 PM)" selected>☀️ Afternoon Chill (1:00 PM - 4:00 PM)</option>
+            <option value="🌙 Sunset / Evening Coffee (5:00 PM - 8:00 PM)">🌙 Sunset / Evening Coffee (5:00 PM - 8:00 PM)</option>
+            <option value="🕒 Anytime you are free!">🕒 Anytime you are free!</option>
+          </select>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Preferred Date / Day:</label>
+          <input type="date" id="dateInput" />
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" id="btnStep5Next" style="margin-top:20px;">
+          Lock It In! 💌
+        </button>
+      </div>
+
+      <!-- STEP 6: It's a Date! (Final Confirmation / Receipt) -->
+      <div class="step-view" id="step6">
+        <div class="gif-box">
+          <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3ZkMnU3a3c2eW44cTYyeGJub2ZzNW56aTBucmV4anE1dmFzYXlyMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/artj92V8o75VPL7AeQ/giphy.gif" alt="Celebration" class="cute-gif" />
+        </div>
+        <h2 class="card-title" style="color:#e11d48;">IT'S A DATE! 🎉☕💖</h2>
+        <p class="card-sub">Here is our official Coffee Date Pass:</p>
+
+        <div class="date-pass">
+          <div class="pass-row">
+            <span class="pass-label">Date Partner:</span>
+            <span class="pass-val" id="resName">—</span>
+          </div>
+          <div class="pass-row">
+            <span class="pass-label">Date Vibe:</span>
+            <span class="pass-val" id="resType">—</span>
+          </div>
+          <div class="pass-row">
+            <span class="pass-label">Place / Cafe:</span>
+            <span class="pass-val" id="resLocation">—</span>
+          </div>
+          <div class="pass-row">
+            <span class="pass-label">Time &amp; Date:</span>
+            <span class="pass-val" id="resTime">—</span>
+          </div>
+          <div class="pass-row">
+            <span class="pass-label">Coffee on Me:</span>
+            <span class="pass-val" style="color:#059669;font-weight:800;">100% Guaranteed ☕✨</span>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+          <button type="button" class="btn btn-primary btn-block" id="btnShareSummary">
+            <i class="fa-solid fa-paper-plane"></i> Send / Copy Date Summary
+          </button>
+          <button type="button" class="btn btn-outline btn-block" onclick="window.restartInvite()">
+            <i class="fa-solid fa-rotate-left"></i> Change Answers
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

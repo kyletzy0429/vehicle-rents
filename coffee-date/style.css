@@ -1,0 +1,478 @@
+/* =====================================================================
+   NERD IN LOVE — COFFEE DATE INVITATION STYLESHEET
+   Cute, Playful, Glassmorphic & Interactive
+   ===================================================================== */
+
+:root {
+  --font-main: 'Plus Jakarta Sans', sans-serif;
+  --font-title: 'Fredoka', cursive, sans-serif;
+
+  --bg-gradient: linear-gradient(135deg, #74b9ff 0%, #a29bfe 50%, #fab1a0 100%);
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-border: rgba(255, 255, 255, 0.8);
+  --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.08);
+
+  --primary-pink: #ff7675;
+  --primary-pink-hover: #d63031;
+  --primary-blue: #0984e3;
+  --primary-blue-hover: #74b9ff;
+  --accent-coffee: #6c5ce7;
+
+  --text-dark: #2d3436;
+  --text-muted: #636e72;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dark);
+  overflow-x: hidden;
+  position: relative;
+  padding: 20px;
+}
+
+/* Floating Hearts Background */
+.hearts-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.heart-particle {
+  position: absolute;
+  font-size: 1.5rem;
+  opacity: 0.6;
+  animation: floatUp 8s linear infinite;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-10vh) scale(1.2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Music Toggle Button */
+.music-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  color: var(--primary-pink);
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.music-toggle:hover {
+  transform: scale(1.1);
+  color: var(--primary-pink-hover);
+}
+
+.music-toggle.playing {
+  animation: pulseMusic 1.5s infinite;
+}
+
+@keyframes pulseMusic {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* App Wrapper */
+.app-wrap {
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Invitation Glass Card */
+.invite-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid var(--card-border);
+  border-radius: 28px;
+  padding: 36px 30px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: min-height 0.3s ease;
+}
+
+/* Step Views */
+.step-view {
+  display: none;
+  animation: fadeInStep 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.step-view.active {
+  display: block;
+}
+
+@keyframes fadeInStep {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.header-icon {
+  font-size: 3.2rem;
+  margin-bottom: 12px;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.card-title {
+  font-family: var(--font-title);
+  font-size: 1.8rem;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.card-sub {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.highlight-name {
+  color: var(--primary-pink);
+}
+
+.question-text {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  color: #0984e3;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+/* GIF display */
+.gif-box {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 16px auto;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  background: #ffeaa7;
+}
+
+.cute-gif {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Inputs & Form */
+.input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.input-wrap input {
+  flex: 1;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid #dfe6e9;
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 600;
+  outline: none;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.input-wrap input:focus {
+  border-color: #0984e3;
+  box-shadow: 0 0 0 4px rgba(9, 132, 227, 0.15);
+}
+
+.error-msg {
+  color: #d63031;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 8px;
+  min-height: 18px;
+}
+
+.field-wrap {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.field-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.field-wrap input,
+.field-wrap select {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid #dfe6e9;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+  background: #ffffff;
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+}
+
+.field-wrap input:focus,
+.field-wrap select:focus {
+  border-color: #0984e3;
+  box-shadow: 0 0 0 4px rgba(9, 132, 227, 0.15);
+}
+
+/* Quick tags */
+.quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.tag-pill {
+  background: #f1f2f6;
+  border: 1px solid #dfe6e9;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-pill:hover {
+  background: #74b9ff;
+  color: #fff;
+  border-color: #74b9ff;
+  transform: translateY(-2px);
+}
+
+/* Choice Cards Grid */
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.choice-card {
+  background: #ffffff;
+  border: 2px solid #dfe6e9;
+  border-radius: 18px;
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+.choice-card:hover {
+  transform: translateY(-4px);
+  border-color: #74b9ff;
+  box-shadow: 0 8px 18px rgba(116, 185, 255, 0.2);
+}
+
+.choice-card.active {
+  border-color: var(--primary-pink);
+  background: #fff5f5;
+  box-shadow: 0 8px 20px rgba(255, 118, 117, 0.25);
+  transform: scale(1.03);
+}
+
+.choice-icon {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+}
+
+.choice-title {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.choice-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0984e3, #74b9ff);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(9, 132, 227, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(9, 132, 227, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid #dfe6e9;
+  color: var(--text-muted);
+}
+
+.btn-outline:hover {
+  background: #f1f2f6;
+  color: var(--text-dark);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  position: relative;
+  min-height: 56px;
+}
+
+.btn-yes {
+  background: linear-gradient(135deg, #ff7675, #d63031);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(255, 118, 117, 0.35);
+  font-size: 1.15rem;
+  padding: 14px 28px;
+  animation: pulseYes 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseYes {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.btn-no {
+  background: #dfe6e9;
+  color: #636e72;
+  font-size: 1rem;
+  padding: 14px 22px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+/* Date Pass Summary Card */
+.date-pass {
+  background: #ffffff;
+  border: 2px dashed #ff7675;
+  border-radius: 20px;
+  padding: 18px 20px;
+  text-align: left;
+  margin-top: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+.pass-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.88rem;
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.pass-row:last-child {
+  border-bottom: none;
+  padding-top: 8px;
+}
+
+.pass-label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.pass-val {
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .invite-card {
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+  .card-title {
+    font-size: 1.55rem;
+  }
+}
