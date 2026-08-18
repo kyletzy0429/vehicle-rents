@@ -525,6 +525,155 @@ async function logout() {
 }
 
 // ---------------------------------------------------------------------
+// CUSTOMER ONBOARDING POPUP (Driver's License & Contact Info)
+// ---------------------------------------------------------------------
+function promptCustomerOnboardingModal(force = false) {
+  if (!state.user || state.portal !== 'customer') return;
+  const p = state.profile || {};
+  
+  // Check if already completed (phone and license number provided)
+  const isComplete = Boolean(p.phone && p.license_number);
+  if (isComplete && !force) return;
+
+  const dismissedKey = `rentflow_onboarding_seen_${state.user.id}`;
+  if (!force && sessionStorage.getItem(dismissedKey)) return;
+
+  openModal(`
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+          <i class="fa-solid fa-id-card"></i>
+        </div>
+        <div>
+          <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin:0;">Complete Your Driver Registration</h3>
+          <span style="font-size:0.75rem;color:var(--text-mid);">Required for fast booking approval and vehicle pickup</span>
+        </div>
+      </div>
+      <div class="modal-close" id="mClose">✕</div>
+    </div>
+
+    <div style="background:var(--accent-glow);border:1px solid var(--accent-blue);border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;">
+      <i class="fa-solid fa-circle-info" style="color:var(--accent);font-size:1.1rem;margin-top:2px;"></i>
+      <p style="margin:0;font-size:0.82rem;color:var(--text-hi);line-height:1.4;">
+        Welcome to <strong>Vehicle Rental Management System</strong>! Please complete your driver and contact info below so our staff can verify your booking and vehicle pickup smoothly.
+      </p>
+    </div>
+
+    <form id="onboardingForm">
+      <div class="detail-grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="obName" value="${p.full_name ?? ''}" placeholder="e.g. Juan Dela Cruz" required />
+        </div>
+        <div class="field">
+          <label>Contact Phone Number</label>
+          <input type="text" id="obPhone" value="${p.phone ?? ''}" placeholder="e.g. 0917 123 4567" required />
+        </div>
+      </div>
+
+      <div class="detail-grid" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Driver's License Number</label>
+          <input type="text" id="obLicense" value="${p.license_number ?? ''}" placeholder="e.g. N02-18-984012" required />
+        </div>
+        <div class="field">
+          <label>License Expiry Date</label>
+          <input type="date" id="obLicenseExpiry" value="${p.license_expiry ?? ''}" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:14px;">
+        <label>Home / Delivery Address</label>
+        <input type="text" id="obAddress" value="${p.address ?? ''}" placeholder="e.g. 123 Rizal St, Makati City" />
+      </div>
+
+      <div class="field" style="margin-bottom:18px;">
+        <label>Driver's License ID Photo (Recommended)</label>
+        <div style="background:var(--bg-dark);border:2px dashed var(--glass-border);border-radius:10px;padding:14px;text-align:center;">
+          <div id="obLicensePreviewBox" style="margin-bottom:8px;">
+            ${p.license_id_url ? `
+              <img src="${p.license_id_url}" style="max-height:120px;border-radius:8px;border:1px solid var(--accent);" />
+            ` : `
+              <div style="font-size:0.78rem;color:var(--text-mid);"><i class="fa-solid fa-camera" style="margin-right:4px;"></i> Upload a photo of your Driver's License Card (JPG, PNG)</div>
+            `}
+          </div>
+          <input type="file" id="obLicenseFileInput" accept="image/*" style="display:none;" />
+          <input type="hidden" id="obLicenseIdUrl" value="${p.license_id_url ?? ''}" />
+          <button type="button" class="btn btn-ghost btn-sm" id="obUploadBtn" style="border:1px solid var(--glass-border);">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i> ${p.license_id_url ? 'Change License Photo' : 'Select License Photo'}
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="button" class="btn btn-ghost" id="obSkipBtn" style="flex:1;border:1px solid var(--glass-border);">I'll Do This Later</button>
+        <button type="submit" class="btn btn-primary" id="obSubmitBtn" style="flex:2;">
+          <i class="fa-solid fa-circle-check"></i> Save &amp; Complete Profile
+        </button>
+      </div>
+    </form>
+  `, true);
+
+  $('#mClose').addEventListener('click', closeModal);
+  $('#obSkipBtn').addEventListener('click', () => {
+    sessionStorage.setItem(dismissedKey, 'true');
+    closeModal();
+  });
+
+  const uploadBtn = $('#obUploadBtn');
+  const fileInput = $('#obLicenseFileInput');
+  if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const dataUrl = evt.target.result;
+        $('#obLicenseIdUrl').value = dataUrl;
+        $('#obLicensePreviewBox').innerHTML = `
+          <img src="${dataUrl}" style="max-height:130px;border-radius:8px;border:2px solid var(--accent);box-shadow:0 4px 10px rgba(0,0,0,0.15);" />
+        `;
+        toast('License photo attached!', 'info');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  $('#onboardingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = $('#obSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving Profile…';
+
+    const updated = {
+      full_name: $('#obName').value.trim(),
+      phone: $('#obPhone').value.trim(),
+      license_number: $('#obLicense').value.trim(),
+      license_expiry: $('#obLicenseExpiry').value || null,
+      license_id_url: $('#obLicenseIdUrl').value,
+      address: $('#obAddress').value.trim(),
+    };
+
+    let { error } = await supabase.from('profiles').update(updated).eq('id', state.user.id);
+    if (error) {
+      const standardPayload = { full_name: updated.full_name, phone: updated.phone };
+      await supabase.from('profiles').update(standardPayload).eq('id', state.user.id).catch(() => {});
+    }
+
+    try {
+      localStorage.setItem(`rentflow_prof_${state.user.id}`, JSON.stringify(updated));
+    } catch (err) {}
+
+    Object.assign(state.profile, updated);
+    toast('🎉 Driver profile saved! You can now book any vehicle.', 'success');
+    sessionStorage.setItem(dismissedKey, 'true');
+    closeModal();
+    renderShell();
+  });
+}
+
+// ---------------------------------------------------------------------
 // BOOTSTRAP
 // ---------------------------------------------------------------------
 async function bootstrapSession() {
@@ -550,6 +699,13 @@ async function bootstrapSession() {
   state.portal = profile.role;
   await Promise.all([loadCategories(), loadVehicles()]);
   renderShell();
+
+  // Check if customer profile is incomplete and show popup
+  if (state.portal === 'customer') {
+    setTimeout(() => {
+      promptCustomerOnboardingModal();
+    }, 400);
+  }
 }
 
 const PH_POPULAR_VEHICLES = [
