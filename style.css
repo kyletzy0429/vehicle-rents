@@ -644,7 +644,7 @@ select option {
 }
 
 .sidebar {
-  width: 270px;
+  width: 290px;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
   display: flex;
@@ -655,7 +655,14 @@ select option {
   left: 0;
   z-index: 50;
   padding: 22px 18px;
-  box-shadow: 2px 0 16px rgba(15, 23, 42, 0.02);
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+  box-shadow: 8px 0 30px rgba(15, 23, 42, 0.12);
 }
 
 .sidebar-brand {
@@ -728,7 +735,7 @@ select option {
 
 .main-wrapper {
   flex: 1;
-  margin-left: 270px;
+  margin-left: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -1375,7 +1382,7 @@ tr:hover td { background: #f8fafc; }
 
 /* Hamburger Menu Button */
 .hamburger-btn {
-  display: none;
+  display: flex;
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -1406,9 +1413,9 @@ tr:hover td { background: #f8fafc; }
   color: #2563eb;
 }
 
-/* Sidebar Overlay (mobile) */
+/* Sidebar Overlay */
 .sidebar-overlay {
-  display: none;
+  display: block;
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
@@ -1416,16 +1423,18 @@ tr:hover td { background: #f8fafc; }
   -webkit-backdrop-filter: blur(4px);
   z-index: 45;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s ease;
 }
 
 .sidebar-overlay.active {
   opacity: 1;
+  pointer-events: auto;
 }
 
-/* Mobile close button inside sidebar */
+/* Close button inside sidebar */
 .sidebar-close-btn {
-  display: none;
+  display: flex;
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -1454,7 +1463,7 @@ tr:hover td { background: #f8fafc; }
   color: #dc2626;
 }
 
-/* Responsive Adjustments */
+/* Responsive Adjustments — Mobile */
 @media (max-width: 768px) {
   .topbar { padding: 12px 18px; }
   .portal-nav { padding: 12px 18px 0 18px; }
@@ -1462,47 +1471,8 @@ tr:hover td { background: #f8fafc; }
   .detail-grid { grid-template-columns: 1fr; }
   .auth-card { padding: 28px 20px; }
 
-  /* Show hamburger button */
-  .hamburger-btn {
-    display: flex;
-  }
-
-  /* Sidebar becomes off-canvas drawer */
   .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: none;
     width: 280px;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: 8px 0 30px rgba(15, 23, 42, 0.12);
-  }
-
-  /* Keep user-meta visible inside sidebar */
-  .sidebar .user-meta {
-    display: block !important;
-  }
-
-  /* Show overlay when sidebar is open */
-  .sidebar-overlay {
-    display: block;
-    pointer-events: none;
-  }
-
-  .sidebar-overlay.active {
-    pointer-events: auto;
-  }
-
-  /* Show close button inside sidebar */
-  .sidebar-close-btn {
-    display: flex;
-  }
-
-  /* Main wrapper takes full width */
-  .main-wrapper {
-    margin-left: 0;
   }
 
   /* Topbar adjustments */
