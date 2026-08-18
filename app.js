@@ -700,8 +700,17 @@ async function bootstrapSession() {
   await Promise.all([loadCategories(), loadVehicles()]);
   renderShell();
 
+  // Check if routed from Public Website with a specific vehicle to book
+  const urlParams = new URLSearchParams(window.location.search);
+  const bookVehicleId = urlParams.get('book');
+  if (bookVehicleId) {
+    setTimeout(() => {
+      openVehicleDetail(Number(bookVehicleId));
+    }, 500);
+  }
+
   // Check if customer profile is incomplete and show popup
-  if (state.portal === 'customer') {
+  if (state.portal === 'customer' && !bookVehicleId) {
     setTimeout(() => {
       promptCustomerOnboardingModal();
     }, 400);
@@ -1065,6 +1074,9 @@ function renderShell() {
                   ${t.label}
                 </button>
               `).join('')}
+              <a href="website/index.html" class="btn btn-ghost" style="font-size:0.85rem;padding:8px 16px;border-radius:99px;font-weight:700;text-decoration:none;color:#2563eb;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-globe"></i> Public Website
+              </a>
             </nav>
           </div>
 

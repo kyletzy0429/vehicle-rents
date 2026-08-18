@@ -275,8 +275,8 @@ function renderHeaderAuthSlot() {
     const initials = (state.profile.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     slot.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;">
-        <button class="btn btn-outline btn-sm" id="btnMyBookings" style="background:var(--bg-card);font-weight:700;">
-          <i class="fa-solid fa-calendar-check" style="color:#059669;"></i> My Bookings
+        <button class="btn btn-primary btn-sm" id="btnGoDashboard" style="font-weight:700;box-shadow:0 4px 12px var(--accent-glow);">
+          <i class="fa-solid fa-gauge-high"></i> Guest Dashboard
         </button>
         <div class="user-menu-pill" id="userMenuPill" title="Click for profile options">
           <div class="user-avatar-circle">${initials}</div>
@@ -286,7 +286,9 @@ function renderHeaderAuthSlot() {
       </div>
     `;
 
-    $('#btnMyBookings')?.addEventListener('click', openMyBookingsModal);
+    $('#btnGoDashboard')?.addEventListener('click', () => {
+      window.location.href = '../index.html';
+    });
     $('#userMenuPill')?.addEventListener('click', openUserProfileModal);
   } else {
     slot.innerHTML = `
@@ -308,8 +310,8 @@ function openAuthModal(mode = 'login', callbackAfterAuth = null) {
     openModal(`
       <div class="modal-head">
         <div>
-          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-dark);">${curMode === 'login' ? 'Welcome Back!' : 'Create Customer Account'}</h3>
-          <span style="font-size:0.8rem;color:var(--text-muted);">${curMode === 'login' ? 'Log in to complete your vehicle rental booking.' : 'Register to book cars, track rentals, and submit verified reviews.'}</span>
+          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-dark);">${curMode === 'login' ? 'Log In to Customer Portal' : 'Register Customer Account'}</h3>
+          <span style="font-size:0.8rem;color:var(--text-muted);">${curMode === 'login' ? 'Log in to continue to your Guest Dashboard and complete bookings.' : 'Create an account to book vehicles, track rentals, and submit reviews.'}</span>
         </div>
         <div class="modal-close" id="mClose">✕</div>
       </div>
@@ -341,7 +343,7 @@ function openAuthModal(mode = 'login', callbackAfterAuth = null) {
           <input type="password" id="afPassword" placeholder="••••••••" minlength="6" required />
         </div>
         <button type="submit" class="btn btn-primary btn-block" id="afSubmitBtn" style="margin-top:10px;height:44px;">
-          ${curMode === 'login' ? '<i class="fa-solid fa-right-to-bracket"></i> Log In & Continue' : '<i class="fa-solid fa-user-check"></i> Register Account'}
+          ${curMode === 'login' ? '<i class="fa-solid fa-right-to-bracket"></i> Log In & Continue to Dashboard' : '<i class="fa-solid fa-user-check"></i> Register & Continue to Dashboard'}
         </button>
       </form>
     `);
@@ -354,7 +356,7 @@ function openAuthModal(mode = 'login', callbackAfterAuth = null) {
       const sBtn = $('#afSubmitBtn');
       const errBox = $('#authErrBox');
       sBtn.disabled = true;
-      sBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing…';
+      sBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in…';
       errBox.innerHTML = '';
 
       const email = $('#afEmail').value.trim();
@@ -364,7 +366,6 @@ function openAuthModal(mode = 'login', callbackAfterAuth = null) {
         if (curMode === 'login') {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
-          toast('Successfully logged in!', 'success');
         } else {
           const fullName = $('#afName').value.trim();
           const { error } = await supabase.auth.signUp({
@@ -372,23 +373,23 @@ function openAuthModal(mode = 'login', callbackAfterAuth = null) {
             options: { data: { full_name: fullName, role: 'customer' } }
           });
           if (error) throw error;
-          toast('Account registered! Logging you in…', 'success');
         }
 
-        await checkAuthSession();
+        toast('Welcome! Redirecting to your Guest Dashboard…', 'success');
         closeModal();
 
-        if (callbackAfterAuth && typeof callbackAfterAuth === 'function') {
-          callbackAfterAuth();
-        } else if (state.pendingBookingVehicleId) {
-          const vId = state.pendingBookingVehicleId;
-          state.pendingBookingVehicleId = null;
-          openBookingModal(vId);
-        }
+        setTimeout(() => {
+          if (callbackAfterAuth && typeof callbackAfterAuth === 'function') {
+            callbackAfterAuth();
+          } else {
+            const targetUrl = '../index.html' + (state.pendingBookingVehicleId ? '?book=' + state.pendingBookingVehicleId : '');
+            window.location.href = targetUrl;
+          }
+        }, 500);
       } catch (err) {
         errBox.innerHTML = `<div style="background:#fee2e2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:0.82rem;font-weight:700;"><i class="fa-solid fa-triangle-exclamation"></i> ${err.message}</div>`;
         sBtn.disabled = false;
-        sBtn.innerHTML = curMode === 'login' ? '<i class="fa-solid fa-right-to-bracket"></i> Log In & Continue' : '<i class="fa-solid fa-user-check"></i> Register Account';
+        sBtn.innerHTML = curMode === 'login' ? '<i class="fa-solid fa-right-to-bracket"></i> Log In & Continue to Dashboard' : '<i class="fa-solid fa-user-check"></i> Register & Continue to Dashboard';
       }
     });
   }
@@ -729,11 +730,14 @@ function openVehicleDetailsModal(vehicleId) {
 function handleBookClick(vehicleId) {
   if (!state.user) {
     state.pendingBookingVehicleId = vehicleId;
-    toast('Please log in or create an account to proceed with booking.', 'info');
-    openAuthModal('login', () => openBookingModal(vehicleId));
+    toast('Please log in or register to continue to your Guest Dashboard.', 'info');
+    openAuthModal('login', () => {
+      window.location.href = `../index.html?book=${vehicleId}`;
+    });
     return;
   }
-  openBookingModal(vehicleId);
+  toast('Opening vehicle in your Guest Dashboard…', 'info');
+  window.location.href = `../index.html?book=${vehicleId}`;
 }
 
 // ---------------------------------------------------------------------
