@@ -57,60 +57,253 @@ function setLang(lang) {
   renderShell();
 }
 
-const DEFAULT_NOTIFS = [
-  { id: 1, title: '🟢 Booking Request Approved!', time: '10 mins ago', desc: 'Your Toyota Fortuner 2.8 V reservation (BK-88421094) has been approved by staff.', read: false },
-  { id: 2, title: '🚗 Vehicle Pickup Reminder', time: '1 hour ago', desc: 'Pickup location: VEHICLE RENTALS MAIN BRANCH. Please arrive 15 minutes early with your driver license.', read: false },
-  { id: 3, title: '💳 System Alert', time: 'Yesterday', desc: 'Free cancellation is available up to 24 hours prior to vehicle pickup date.', read: true }
+// =====================================================================
+// DYNAMIC NOTIFICATIONS & REAL-TIME ALERTS SYSTEM
+// =====================================================================
+const SYSTEM_ALERTS = [
+  { id: 'sys-pickup', title: '🚗 Vehicle Pickup Guidelines', time: 'Notice', desc: 'Pickup location: VEHICLE RENTALS MAIN BRANCH. Please arrive 15 minutes early with your valid driver license.' },
+  { id: 'sys-cancel', title: '💳 Free Cancellation Notice', time: 'Policy', desc: 'Free cancellation is available up to 24 hours prior to vehicle pickup date.' },
+  { id: 'sys-support', title: '📞 24/7 Roadside Assistance', time: 'Support', desc: 'Need help during your trip? Call our emergency hotline at +63 (2) 8888-RENT or email vehiclerental@gmail.com' }
 ];
 
-function getNotifications() {
+let cachedNotifs = [];
+
+function getReadNotifIds() {
   try {
-    const raw = localStorage.getItem(`rentflow_notifs_${state.user?.id || 'guest'}`);
-    return raw ? JSON.parse(raw) : DEFAULT_NOTIFS;
-  } catch (e) { return DEFAULT_NOTIFS; }
+    const raw = localStorage.getItem(`rentflow_read_notifs_${state.user?.id || 'guest'}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
 }
 
-function openNotificationsModal() {
-  const notifs = getNotifications();
+function markAllNotifsRead(ids) {
+  try {
+    const existing = getReadNotifIds();
+    const updated = Array.from(new Set([...existing, ...ids]));
+    localStorage.setItem(`rentflow_read_notifs_${state.user?.id || 'guest'}`, JSON.stringify(updated));
+  } catch (e) {}
+}
+
+function getNotifications() {
+  const readIds = getReadNotifIds();
+  if (cachedNotifs.length > 0) {
+    return cachedNotifs.map(n => ({ ...n, read: n.read || readIds.includes(String(n.id)) }));
+  }
+  return SYSTEM_ALERTS.map(a => ({ ...a, read: readIds.includes(String(a.id)) }));
+}
+
+function getRelativeTime(dateInput) {
+  if (!dateInput) return 'Recently';
+  const created = new Date(dateInput);
+  if (isNaN(created.getTime())) return 'Recently';
+  const now = new Date();
+  const diffMs = now - created;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffDays > 0) return diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
+  if (diffHrs > 0) return `${diffHrs} hour${diffHrs > 1 ? 's' : ''} ago`;
+  if (diffMins > 0) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+  return 'Just now';
+}
+
+function buildCustomerNotif(b) {
+  const vName = b.vehicles?.name || 'Vehicle';
+  const shortId = `BK-${String(b.id).slice(-8).toUpperCase()}`;
+  const statusMap = {
+    'approved': { icon: '🟢', title: 'Booking Approved!', desc: `Your reservation for ${vName} (${shortId}) has been approved by staff. Please prepare for pickup.` },
+    'pending': { icon: '🟡', title: 'Booking Request Submitted', desc: `Your reservation for ${vName} (${shortId}) is pending staff review.` },
+    'active': { icon: '🚗', title: 'Rental Active & In-Progress', desc: `Your ${vName} (${shortId}) rental is currently active. Have a safe journey!` },
+    'completed': { icon: '✅', title: 'Rental Completed & Returned', desc: `Your ${vName} rental (${shortId}) has been successfully completed. Thank you for renting with us!` },
+    'rejected': { icon: '🔴', title: 'Booking Rejected', desc: `Your reservation for ${vName} (${shortId}) was not approved. Please contact support.` },
+    'cancelled': { icon: '❌', title: 'Booking Cancelled', desc: `Your reservation for ${vName} (${shortId}) was cancelled.` },
+    'refund_requested': { icon: '💰', title: 'Refund Request Received', desc: `Your refund request for ${vName} (${shortId}) is being reviewed by our billing staff.` },
+    'refunded': { icon: '💳', title: 'Refund Issued', desc: `Your refund for ${vName} (${shortId}) has been processed successfully.` },
+  };
+
+  const info = statusMap[b.status] || { icon: '📋', title: `Booking Update`, desc: `Your ${vName} booking (${shortId}) status changed to: ${b.status}` };
+  return {
+    id: `booking-${b.id}`,
+    title: `${info.icon} ${info.title}`,
+    time: getRelativeTime(b.updated_at || b.created_at),
+    desc: info.desc,
+    read: ['completed', 'cancelled', 'refunded'].includes(b.status)
+  };
+}
+
+function buildStaffNotif(b) {
+  const vName = b.vehicles?.name || 'Vehicle';
+  const custName = b.profiles?.full_name || 'Customer';
+  const shortId = `BK-${String(b.id).slice(-8).toUpperCase()}`;
+  const statusMap = {
+    'pending': { icon: '📋', title: 'New Booking Request', desc: `${custName} submitted a new request for ${vName} (${shortId}). Action required.` },
+    'approved': { icon: '🟢', title: 'Booking Approved', desc: `${vName} (${shortId}) for ${custName} is approved and awaiting pickup/payment.` },
+    'active': { icon: '🚗', title: 'Rental Ongoing', desc: `${custName} picked up ${vName} (${shortId}). Vehicle is currently on the road.` },
+    'completed': { icon: '✅', title: 'Vehicle Returned', desc: `${custName} returned ${vName} (${shortId}). Inspection & return logged.` },
+    'refund_requested': { icon: '💰', title: 'Refund Claim Pending', desc: `${custName} submitted a refund request for ${vName} (${shortId}). Please verify.` },
+  };
+
+  const info = statusMap[b.status] || { icon: '📋', title: 'Booking Record Update', desc: `${vName} (${shortId}) — Current status: ${b.status}` };
+  return {
+    id: `booking-${b.id}`,
+    title: `${info.icon} ${info.title}`,
+    time: getRelativeTime(b.updated_at || b.created_at),
+    desc: info.desc,
+    read: ['completed', 'cancelled', 'refunded'].includes(b.status)
+  };
+}
+
+async function fetchLiveNotifications() {
+  if (!state.user) return SYSTEM_ALERTS.map(a => ({ ...a, read: false }));
+  try {
+    let bookingNotifs = [];
+    if (state.portal === 'customer') {
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('*, vehicles(name)')
+        .eq('customer_id', state.user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (bookings && bookings.length > 0) {
+        bookingNotifs = bookings.map(b => buildCustomerNotif(b));
+      }
+    } else {
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('*, vehicles(name), profiles!bookings_customer_id_fkey(full_name)')
+        .order('created_at', { ascending: false })
+        .limit(25);
+      if (bookings && bookings.length > 0) {
+        bookingNotifs = bookings.map(b => buildStaffNotif(b));
+      }
+    }
+
+    const readIds = getReadNotifIds();
+    const formattedAlerts = SYSTEM_ALERTS.map(a => ({
+      ...a,
+      read: readIds.includes(String(a.id))
+    }));
+
+    cachedNotifs = [
+      ...bookingNotifs.map(n => ({ ...n, read: n.read || readIds.includes(String(n.id)) })),
+      ...formattedAlerts
+    ];
+    return cachedNotifs;
+  } catch (err) {
+    console.error('Failed to load notifications from database:', err);
+    return getNotifications();
+  }
+}
+
+async function updateNotificationBadge() {
+  const notifs = await fetchLiveNotifications();
+  const unreadCount = notifs.filter(n => !n.read).length;
+  const notifBtn = $('#topNotifBtn');
+  if (notifBtn) {
+    const existingBadge = notifBtn.querySelector('.notif-badge');
+    if (unreadCount > 0) {
+      if (existingBadge) {
+        existingBadge.textContent = unreadCount;
+      } else {
+        const badge = document.createElement('div');
+        badge.className = 'notif-badge';
+        badge.textContent = unreadCount;
+        notifBtn.appendChild(badge);
+      }
+    } else if (existingBadge) {
+      existingBadge.remove();
+    }
+  }
+}
+
+async function openNotificationsModal() {
   openModal(`
     <div class="modal-head">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:38px;height:38px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;color:#2563eb;font-size:1.1rem;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:1.1rem;">
           <i class="fa-solid fa-bell"></i>
         </div>
         <div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">Notifications &amp; Alerts</h3>
-          <span style="font-size:0.75rem;color:#64748b;">Live system updates &amp; rental alerts</span>
+          <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">Notifications &amp; Alerts</h3>
+          <span style="font-size:0.75rem;color:var(--text-mid);">Live system updates &amp; rental alerts</span>
+        </div>
+      </div>
+      <div class="modal-close" id="mClose">✕</div>
+    </div>
+    <div style="padding:28px 0;text-align:center;"><div class="loading-spin"></div><p style="margin-top:12px;color:var(--text-mid);font-size:0.85rem;">Checking for live updates...</p></div>
+  `);
+  $('#mClose').addEventListener('click', closeModal);
+
+  const notifs = await fetchLiveNotifications();
+
+  const isDark = getTheme() === 'dark';
+  const unreadBg = isDark ? 'rgba(59,130,246,0.14)' : '#eff6ff';
+  const unreadBorder = isDark ? 'rgba(59,130,246,0.35)' : '#bfdbfe';
+  const readBg = isDark ? 'rgba(30,41,59,0.6)' : '#f8fafc';
+  const readBorder = isDark ? '#334155' : '#e2e8f0';
+
+  const notifsHtml = notifs.length > 0 ? notifs.map(n => `
+    <div style="background:${n.read ? readBg : unreadBg};border:1px solid ${n.read ? readBorder : unreadBorder};border-radius:10px;padding:12px 14px;transition:all 0.2s ease;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;">
+        <span style="font-weight:700;font-size:0.88rem;color:var(--text-hi);">${n.title}</span>
+        <span style="font-size:0.72rem;color:var(--text-mid);flex-shrink:0;">${n.time}</span>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-mid);margin:0;line-height:1.4;">${n.desc}</p>
+    </div>
+  `).join('') : `
+    <div style="text-align:center;padding:30px 10px;">
+      <div style="font-size:2.5rem;margin-bottom:10px;opacity:0.6;">🔔</div>
+      <p style="font-size:0.9rem;font-weight:600;color:var(--text-hi);margin:0;">No notifications yet</p>
+      <p style="font-size:0.8rem;color:var(--text-mid);margin-top:6px;">When you make a reservation or your booking is updated, alerts will show here.</p>
+    </div>
+  `;
+
+  const unreadCount = notifs.filter(n => !n.read).length;
+
+  openModal(`
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:1.1rem;">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">Notifications &amp; Alerts</h3>
+          <span style="font-size:0.75rem;color:var(--text-mid);">${unreadCount > 0 ? `${unreadCount} new update${unreadCount > 1 ? 's' : ''}` : 'All caught up!'} · ${notifs.length} total</span>
         </div>
       </div>
       <div class="modal-close" id="mClose">✕</div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:360px;overflow-y:auto;">
-      ${notifs.map(n => `
-        <div style="background:${n.read ? '#f8fafc' : '#eff6ff'};border:1px solid ${n.read ? '#e2e8f0' : '#bfdbfe'};border-radius:10px;padding:12px 14px;">
-          <div style="display:flex;align-items:center;justify-content:between;margin-bottom:4px;">
-            <span style="font-weight:700;font-size:0.88rem;color:#0f172a;">${n.title}</span>
-            <span style="font-size:0.72rem;color:#64748b;">${n.time}</span>
-          </div>
-          <p style="font-size:0.8rem;color:#475569;margin:0;line-height:1.4;">${n.desc}</p>
-        </div>
-      `).join('')}
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:420px;overflow-y:auto;">
+      ${notifsHtml}
     </div>
 
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-ghost btn-sm btn-block" id="clearNotifsBtn" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-check-double"></i> Mark All as Read</button>
+      <button class="btn btn-ghost btn-sm btn-block" id="markAllReadBtn" style="border:1px solid var(--glass-border);"><i class="fa-solid fa-check-double"></i> Mark All as Read</button>
+      <button class="btn btn-primary btn-sm btn-block" id="refreshNotifsBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
     </div>
   `);
 
   $('#mClose').addEventListener('click', closeModal);
-  $('#clearNotifsBtn').addEventListener('click', () => {
-    const updated = notifs.map(n => ({ ...n, read: true }));
-    try { localStorage.setItem(`rentflow_notifs_${state.user?.id || 'guest'}`, JSON.stringify(updated)); } catch (e) {}
-    toast('Notifications marked as read.', 'success');
-    closeModal();
-    renderShell();
-  });
+
+  const markAllBtn = $('#markAllReadBtn');
+  if (markAllBtn) {
+    markAllBtn.addEventListener('click', () => {
+      const allIds = notifs.map(n => String(n.id));
+      markAllNotifsRead(allIds);
+      cachedNotifs = cachedNotifs.map(n => ({ ...n, read: true }));
+      toast('All notifications marked as read', 'success');
+      closeModal();
+      updateNotificationBadge();
+    });
+  }
+
+  const refreshBtn = $('#refreshNotifsBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      closeModal();
+      openNotificationsModal();
+    });
+  }
 }
 
 function getVehicleDailyRate(v) {
@@ -738,6 +931,7 @@ function renderShell() {
     $('#topLangSelect').addEventListener('change', (e) => setLang(e.target.value));
     $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
 
+    updateNotificationBadge();
     renderTab();
     return;
   }
@@ -854,6 +1048,7 @@ function renderShell() {
   if (uChip) uChip.addEventListener('click', openUserMenuModal);
   $$('.sidebar-nav-btn').forEach(btn => btn.addEventListener('click', () => { closeSidebar(); state.tab = btn.dataset.tab; renderShell(); }));
 
+  updateNotificationBadge();
   renderTab();
 }
 
