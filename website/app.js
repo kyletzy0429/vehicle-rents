@@ -1452,10 +1452,47 @@ window.openRentalPolicyModal = function() {
 };
 
 // ---------------------------------------------------------------------
+// Dynamic Company Profile & Contact Details
+// ---------------------------------------------------------------------
+function getCompanySettings() {
+  try {
+    const raw = localStorage.getItem('rentflow_system_settings');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.company) return parsed.company;
+    }
+  } catch (e) {}
+  return {
+    name: 'Vehicle Rental Management System',
+    phone: '+63 67676767',
+    mobile: '+63 917 123 4567',
+    email: 'vehiclerental.ph',
+    currency: '₱ (PHP)',
+    address: '123 PPC MAIN BRANCH VENUE',
+    hours: '8:00 AM - 8:00 PM Daily'
+  };
+}
+
+function applyCompanySettingsToWebsite() {
+  const comp = getCompanySettings();
+  const hotlineEl = $('#footerHotline');
+  if (hotlineEl) hotlineEl.textContent = comp.phone || '+63 67676767';
+  const mobileEl = $('#footerMobile');
+  if (mobileEl) mobileEl.textContent = `Mobile: ${comp.mobile || '+63 917 123 4567'}`;
+  const addrEl = $('#footerAddress');
+  if (addrEl) addrEl.textContent = comp.address || '123 PPC MAIN BRANCH VENUE';
+  const emailEl = $('#footerEmail');
+  if (emailEl) emailEl.textContent = comp.email || 'vehiclerental.ph';
+  const hoursEl = $('#footerHours');
+  if (hoursEl) hoursEl.textContent = comp.hours || '8:00 AM - 8:00 PM Daily';
+}
+
+// ---------------------------------------------------------------------
 // Initialize Application
 // ---------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', async () => {
   applyTheme();
+  applyCompanySettingsToWebsite();
   $('#siteThemeBtn')?.addEventListener('click', toggleTheme);
 
   // Search & Filter Listeners
