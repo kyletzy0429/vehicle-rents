@@ -745,13 +745,17 @@ function renderShell() {
   // Sidebar Layout for Staff & Admin Portals
   $('#app').innerHTML = `
     <div class="app-shell">
-      <aside class="sidebar">
-        <div class="sidebar-brand">
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar" id="sidebarMenu">
+        <div class="sidebar-brand" style="display:flex;align-items:center;gap:12px;">
           <img src="logo.png" style="width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid #cbd5e1;" />
-          <div>
+          <div style="flex:1;">
             <div style="font-weight:800;font-size:0.92rem;line-height:1.2;color:#0f172a;">Vehicle Rental Management System</div>
             <div style="font-size:0.7rem;color:#64748b;font-weight:600;margin-top:2px;">${roleTitle} Portal</div>
           </div>
+          <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close Menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -773,8 +777,13 @@ function renderShell() {
 
       <div class="main-wrapper">
         <div class="main-topbar">
-          <div style="font-weight:800;font-size:1.05rem;color:#0f172a;display:flex;align-items:center;gap:10px;">
-            ${activeTabObj?.label ?? 'Dashboard'}
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" class="hamburger-btn" id="hamburgerBtn" title="Open Menu">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div style="font-weight:800;font-size:1.05rem;color:#0f172a;display:flex;align-items:center;gap:10px;">
+              ${activeTabObj?.label ?? 'Dashboard'}
+            </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <!-- Language Selector -->
@@ -810,6 +819,32 @@ function renderShell() {
     </div>
   `;
 
+  // Sidebar toggle helpers
+  function openSidebar() {
+    const sidebar = $('#sidebarMenu');
+    const overlay = $('#sidebarOverlay');
+    if (sidebar) sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('active');
+  }
+  function closeSidebar() {
+    const sidebar = $('#sidebarMenu');
+    const overlay = $('#sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  // Hamburger open
+  const hamburgerBtn = $('#hamburgerBtn');
+  if (hamburgerBtn) hamburgerBtn.addEventListener('click', openSidebar);
+
+  // Sidebar close button
+  const sidebarCloseBtn = $('#sidebarCloseBtn');
+  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+
+  // Overlay click to close
+  const sidebarOverlay = $('#sidebarOverlay');
+  if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
   $('#logoutBtn').addEventListener('click', logout);
   $('#topThemeBtn').addEventListener('click', toggleTheme);
   $('#topNotifBtn').addEventListener('click', openNotificationsModal);
@@ -817,7 +852,7 @@ function renderShell() {
   $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
   const uChip = $('#userProfileChip');
   if (uChip) uChip.addEventListener('click', openUserMenuModal);
-  $$('.sidebar-nav-btn').forEach(btn => btn.addEventListener('click', () => { state.tab = btn.dataset.tab; renderShell(); }));
+  $$('.sidebar-nav-btn').forEach(btn => btn.addEventListener('click', () => { closeSidebar(); state.tab = btn.dataset.tab; renderShell(); }));
 
   renderTab();
 }

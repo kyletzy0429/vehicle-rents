@@ -1373,15 +1373,224 @@ tr:hover td { background: #f8fafc; }
 .muted { color: var(--text-mid); font-size: 0.84rem; }
 .center { text-align: center; }
 
+/* Hamburger Menu Button */
+.hamburger-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  z-index: 60;
+  padding: 0;
+}
+
+.hamburger-btn:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.hamburger-btn i {
+  font-size: 1.1rem;
+  color: #475569;
+  transition: color 0.2s ease;
+}
+
+.hamburger-btn:hover i {
+  color: #2563eb;
+}
+
+/* Sidebar Overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 45;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+}
+
+/* Mobile close button inside sidebar */
+.sidebar-close-btn {
+  display: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  padding: 0;
+  margin-left: auto;
+}
+
+.sidebar-close-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.sidebar-close-btn i {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.sidebar-close-btn:hover i {
+  color: #dc2626;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .topbar { padding: 12px 18px; }
   .portal-nav { padding: 12px 18px 0 18px; }
-  main { padding: 18px 18px 40px 18px; }
-  .user-meta { display: none; }
-  .sys-status-pill { display: none; }
+  main { padding: 18px 14px 40px 14px; }
   .detail-grid { grid-template-columns: 1fr; }
   .auth-card { padding: 28px 20px; }
+
+  /* Show hamburger button */
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* Sidebar becomes off-canvas drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: none;
+    width: 280px;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 30px rgba(15, 23, 42, 0.12);
+  }
+
+  /* Keep user-meta visible inside sidebar */
+  .sidebar .user-meta {
+    display: block !important;
+  }
+
+  /* Show overlay when sidebar is open */
+  .sidebar-overlay {
+    display: block;
+    pointer-events: none;
+  }
+
+  .sidebar-overlay.active {
+    pointer-events: auto;
+  }
+
+  /* Show close button inside sidebar */
+  .sidebar-close-btn {
+    display: flex;
+  }
+
+  /* Main wrapper takes full width */
+  .main-wrapper {
+    margin-left: 0;
+  }
+
+  /* Topbar adjustments */
+  .main-topbar {
+    padding: 12px 14px;
+    gap: 6px;
+  }
+
+  /* Hide non-essential topbar items on mobile */
+  .main-topbar .sys-status-pill,
+  .sys-status-pill {
+    display: none !important;
+  }
+
+  .main-topbar #topLangSelect {
+    display: none;
+  }
+
+  /* Hide user name text on topbar pill to save space */
+  #topUserMenuBtn span {
+    display: none;
+  }
+
+  #topUserMenuBtn .fa-chevron-down {
+    display: none;
+  }
+
+  #topUserMenuBtn {
+    padding: 0 8px !important;
+    min-width: 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50% !important;
+    justify-content: center;
+  }
+
+  /* Customer header mobile */
+  header {
+    padding: 12px 14px !important;
+  }
+
+  header nav {
+    display: none !important;
+  }
+
+  /* Hide brand text on customer header mobile */
+  #brandHomeBtn div {
+    display: none;
+  }
+
+  #mainView {
+    padding: 18px 14px 60px 14px !important;
+  }
+
+  /* Grid adjustments */
+  .grid-vehicles {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar input,
+  .search-bar select {
+    min-width: 100%;
+  }
+
+  .pill-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .pill {
+    flex-shrink: 0;
+  }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 
 /* Toggle Switches & Settings Controls */
