@@ -307,15 +307,21 @@ async function openNotificationsModal() {
 }
 
 function getVehicleDailyRate(v) {
-  if (v.categories?.daily_rate && Number(v.categories.daily_rate) >= 2000) {
-    return Number(v.categories.daily_rate);
-  }
-  if (v.daily_rate && Number(v.daily_rate) >= 2000) {
+  const name = (v?.name || '').toLowerCase();
+  
+  // Specific motorcycle pricing in ₱400 - ₱600 range
+  if (name.includes('click')) return 400; // Honda Click 125i: ₱400/day
+  if (name.includes('nmax')) return 500;  // Yamaha NMAX 155: ₱500/day
+  if (name.includes('adv')) return 600;   // Honda ADV 160: ₱600/day
+  if (name.includes('motor') || name.includes('scooter')) return 500;
+
+  if (v.daily_rate && Number(v.daily_rate) > 0 && !name.includes('motor') && !name.includes('click') && !name.includes('nmax') && !name.includes('adv')) {
     return Number(v.daily_rate);
   }
+  if (v.categories?.daily_rate && Number(v.categories.daily_rate) > 0 && v.categories.name !== 'Motorcycles') {
+    return Number(v.categories.daily_rate);
+  }
 
-  const name = (v.name || '').toLowerCase();
-  if (name.includes('nmax') || name.includes('click') || name.includes('adv') || name.includes('motor')) return 2000;
   if (name.includes('wigo')) return 2200;
   if (name.includes('mirage')) return 2300;
   if (name.includes('vios')) return 2500;
@@ -332,7 +338,7 @@ function getVehicleDailyRate(v) {
 function getVehicleCategoryName(v) {
   if (v.categories?.name) return v.categories.name;
   const name = (v.name || '').toLowerCase();
-  if (name.includes('nmax') || name.includes('click') || name.includes('adv') || name.includes('motor')) return 'Motorcycles';
+  if (name.includes('nmax') || name.includes('click') || name.includes('adv') || name.includes('motor') || name.includes('scooter')) return 'Motorcycles';
   if (name.includes('wigo') || name.includes('mirage')) return 'Economy & Hatchbacks';
   if (name.includes('vios')) return 'Sedans';
   if (name.includes('innova') || name.includes('xpander')) return 'MPVs & Crossovers';
@@ -634,7 +640,7 @@ const PH_POPULAR_VEHICLES = [
 ];
 
 const PH_CATEGORIES = [
-  { name: 'Motorcycles', daily_rate: 2000, description: 'Automatic scooters & motorbikes (Yamaha NMAX 155, Honda Click 125i, Honda ADV 160)' },
+  { name: 'Motorcycles', daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ ₱400, Yamaha NMAX 155 @ ₱500, Honda ADV 160 @ ₱600)' },
   { name: 'Economy & Hatchbacks', daily_rate: 2200, description: 'Compact fuel-efficient hatchbacks & sedans (Toyota Wigo, Mitsubishi Mirage G4)' },
   { name: 'Sedans', daily_rate: 2500, description: '5-Seater comfortable subcompact sedans (Toyota Vios 1.5 G)' },
   { name: 'MPVs & Crossovers', daily_rate: 3000, description: '7 to 8-Seater family MPVs (Toyota Innova, Mitsubishi Xpander)' },
@@ -644,6 +650,14 @@ const PH_CATEGORIES = [
 
 async function loadCategories() {
   let { data } = await supabase.from('categories').select('*').order('daily_rate');
+
+  if (data && data.length) {
+    const motorCat = data.find(c => (c.name || '').toLowerCase().includes('motor'));
+    if (motorCat && Number(motorCat.daily_rate) > 600) {
+      motorCat.daily_rate = 500;
+      supabase.from('categories').update({ daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ ₱400, Yamaha NMAX 155 @ ₱500, Honda ADV 160 @ ₱600)' }).eq('id', motorCat.id).then(() => {}).catch(() => {});
+    }
+  }
 
   if (!data || data.length < 4) {
     for (const cat of PH_CATEGORIES) {
@@ -1350,6 +1364,7 @@ function vehicleCardHTML(v) {
   const hasAC = v.has_ac !== undefined ? v.has_ac : true;
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
+  const isMotorcycle = catName === 'Motorcycles' || (v.name || '').toLowerCase().includes('motor') || (v.name || '').toLowerCase().includes('click') || (v.name || '').toLowerCase().includes('nmax') || (v.name || '').toLowerCase().includes('adv');
 
   const favs = getFavorites();
   const isFav = favs.includes(v.id);
@@ -1374,12 +1389,12 @@ function vehicleCardHTML(v) {
         <div class="vehicle-name">${v.name}</div>
         <div class="vehicle-meta">
           <span><i class="fa-solid fa-layer-group" style="color:#2563eb;"></i> ${catName}</span>
-          <span><i class="fa-solid fa-users" style="color:#0284c7;"></i> ${v.seats ?? (catName === 'Motorcycles' ? '2' : '5')} seats</span>
+          <span><i class="fa-solid fa-users" style="color:#0284c7;"></i> ${isMotorcycle ? '2 seats' : (v.seats ?? '5 seats')}</span>
           <span><i class="fa-solid fa-gear" style="color:#64748b;"></i> ${v.transmission ?? 'Automatic'}</span>
         </div>
         <div class="vehicle-meta" style="margin-top:-4px;">
           <span><i class="fa-solid fa-gas-pump" style="color:#d97706;"></i> ${fuelType}</span>
-          <span><i class="fa-solid fa-${hasAC ? 'snowflake' : 'fan'}" style="color:${hasAC ? '#0284c7' : '#94a3b8'};"></i> ${hasAC ? 'AC' : 'Non-AC'}</span>
+          <span><i class="fa-solid fa-${isMotorcycle ? 'helmet-safety' : (hasAC ? 'snowflake' : 'fan')}" style="color:${isMotorcycle ? '#059669' : (hasAC ? '#0284c7' : '#94a3b8')};"></i> ${isMotorcycle ? 'Helmet Incl.' : (hasAC ? 'AC' : 'Non-AC')}</span>
           <span style="color:#94a3b8;"><i class="fa-solid fa-id-card"></i> ${maskPlate(v.plate_number)}</span>
         </div>
         <div class="vehicle-foot">
@@ -1415,6 +1430,7 @@ async function openVehicleDetail(id) {
 
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
+  const isMotorcycle = catName === 'Motorcycles' || (v.name || '').toLowerCase().includes('motor') || (v.name || '').toLowerCase().includes('click') || (v.name || '').toLowerCase().includes('nmax') || (v.name || '').toLowerCase().includes('adv');
   const exactImg = getExactVehicleImage(v);
 
   const modal = openModal(`
@@ -1428,11 +1444,11 @@ async function openVehicleDetail(id) {
     <img src="${exactImg}" style="width:100%;border-radius:12px;height:190px;object-fit:cover;margin-bottom:14px;border:1px solid #e2e8f0;" />
     <p class="muted" style="margin-bottom:16px;line-height:1.5;color:#475569;">${v.description ?? 'Comfortable and well-maintained rental vehicle.'}</p>
     <div class="detail-grid" style="margin-bottom:16px;background:#f8fafc;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;">
-      <div><label>Capacity</label><div style="font-weight:700;font-size:0.9rem;color:#0f172a;"><i class="fa-solid fa-users" style="color:#0284c7;"></i> ${v.seats ?? (catName === 'Motorcycles' ? '2' : '5')} Passengers</div></div>
+      <div><label>Capacity</label><div style="font-weight:700;font-size:0.9rem;color:#0f172a;"><i class="fa-solid fa-users" style="color:#0284c7;"></i> ${isMotorcycle ? '2 Passengers' : (v.seats ?? '5 Passengers')}</div></div>
       <div><label>Transmission</label><div style="font-weight:700;font-size:0.9rem;color:#0f172a;"><i class="fa-solid fa-gear" style="color:#2563eb;"></i> ${v.transmission ?? 'Automatic'}</div></div>
       <div><label>Fuel Type</label><div style="font-weight:700;font-size:0.9rem;color:#0f172a;"><i class="fa-solid fa-gas-pump" style="color:#d97706;"></i> ${fuelType}</div></div>
-      <div><label>Air Conditioning</label><div style="font-weight:700;font-size:0.9rem;color:#0f172a;"><i class="fa-solid fa-${hasAC ? 'snowflake' : 'fan'}" style="color:${hasAC ? '#0284c7' : '#94a3b8'};"></i> ${hasAC ? 'With AC' : 'Non-AC'}</div></div>
-      <div><label>Daily Rate</label><div style="font-weight:800;font-size:0.95rem;color:#2563eb;">${fmtMoney(rate)}</div></div>
+      <div><label>${isMotorcycle ? 'Included Gear' : 'Air Conditioning'}</label><div style="font-weight:700;font-size:0.9rem;color:#0f172a;"><i class="fa-solid fa-${isMotorcycle ? 'helmet-safety' : (hasAC ? 'snowflake' : 'fan')}" style="color:${isMotorcycle ? '#059669' : (hasAC ? '#0284c7' : '#94a3b8')};"></i> ${isMotorcycle ? 'Standard Helmet Included' : (hasAC ? 'With AC' : 'Non-AC')}</div></div>
+      <div><label>Daily Rate</label><div style="font-weight:800;font-size:0.95rem;color:#2563eb;">${fmtMoney(rate)} / day</div></div>
       <div><label>Status</label><div><span class="badge badge-${v.status}">${v.status}</span> ${v.status === 'maintenance' && v.maintenance_days ? `<span style="font-size:0.75rem;color:#dc2626;font-weight:700;">(${v.maintenance_days} days)</span>` : ''}</div></div>
     </div>
 
