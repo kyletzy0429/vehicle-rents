@@ -487,19 +487,167 @@ function openUserProfileModal() {
   });
 }
 
+const PH_CATEGORIES = [
+  { id: 1, name: 'Motorcycles', daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ ₱400, Yamaha NMAX 155 @ ₱500, Honda ADV 160 @ ₱600)' },
+  { id: 2, name: 'Sedans', daily_rate: 2500, description: '5-Seater comfortable subcompact sedans (Toyota Vios 1.5 G)' },
+  { id: 3, name: 'SUVs & Pickups', daily_rate: 4200, description: 'Midsize 7-Seater SUVs & Pickup Trucks (Toyota Fortuner, Montero Sport, Ford Ranger Raptor)' },
+  { id: 4, name: 'MPVs & Crossovers', daily_rate: 3000, description: '7 to 8-Seater family MPVs (Toyota Innova, Mitsubishi Xpander)' },
+  { id: 5, name: 'Economy & Hatchbacks', daily_rate: 2200, description: 'Compact fuel-efficient hatchbacks & sedans (Toyota Wigo, Mitsubishi Mirage G4)' },
+  { id: 6, name: 'Passenger Vans', daily_rate: 5000, description: '14-Seater full-size passenger vans for tours and group trips (Toyota HiAce Commuter Deluxe)' }
+];
+
+const PH_POPULAR_VEHICLES = [
+  {
+    id: 1,
+    name: 'Toyota Fortuner 2.8 V 4x2 AT',
+    plate_number: 'NBD-8842',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+    description: '7-Seater Premium Diesel SUV. High ground clearance, leather seats, dual aircon. Ideal for family trips across the Philippines.',
+    seats: 7,
+    transmission: 'Automatic',
+    fuel_type: 'Diesel',
+    has_ac: true,
+    categories: { id: 3, name: 'SUVs & Pickups', daily_rate: 4200 }
+  },
+  {
+    id: 2,
+    name: 'Toyota Vios 1.5 G CVT',
+    plate_number: 'NCO-2914',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80',
+    description: '5-Seater Subcompact Sedan. Excellent fuel efficiency, automatic transmission. Best choice for city driving and errands.',
+    seats: 5,
+    transmission: 'Automatic',
+    fuel_type: 'Gasoline',
+    has_ac: true,
+    categories: { id: 2, name: 'Sedans', daily_rate: 2500 }
+  },
+  {
+    id: 3,
+    name: 'Honda Click 125i (Motorcycle)',
+    plate_number: '904-CLK',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80',
+    description: '125cc Automatic Scooter. Sporty design, combi-brake system, spacious under-seat storage box. Helmet included.',
+    seats: 2,
+    transmission: 'Automatic',
+    fuel_type: 'Gasoline',
+    has_ac: false,
+    categories: { id: 1, name: 'Motorcycles', daily_rate: 400 }
+  },
+  {
+    id: 4,
+    name: 'Yamaha NMAX 155 ABS (Motorcycle)',
+    plate_number: '128-NMX',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
+    description: '155cc Automatic Maxi Scooter. Variable Valve Actuation (VVA), ABS front/rear, digital panel. Helmet included.',
+    seats: 2,
+    transmission: 'Automatic',
+    fuel_type: 'Gasoline',
+    has_ac: false,
+    categories: { id: 1, name: 'Motorcycles', daily_rate: 500 }
+  },
+  {
+    id: 5,
+    name: 'Honda ADV 160 (Motorcycle)',
+    plate_number: '481-ADV',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=800&q=80',
+    description: '160cc Adventure Scooter. Long-travel suspension, HSTC torque control, adjustable windshield. Helmet included.',
+    seats: 2,
+    transmission: 'Automatic',
+    fuel_type: 'Gasoline',
+    has_ac: false,
+    categories: { id: 1, name: 'Motorcycles', daily_rate: 600 }
+  },
+  {
+    id: 6,
+    name: 'Toyota Innova 2.8 E Diesel AT',
+    plate_number: 'DAR-4921',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
+    description: '8-Seater MPV. Powerful 2.8L Diesel engine with dual AC. Spacious and reliable family vehicle.',
+    seats: 8,
+    transmission: 'Automatic',
+    fuel_type: 'Diesel',
+    has_ac: true,
+    categories: { id: 4, name: 'MPVs & Crossovers', daily_rate: 3000 }
+  },
+  {
+    id: 7,
+    name: 'Mitsubishi Montero Sport GT 4x2',
+    plate_number: 'NGF-7102',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=800&q=80',
+    description: '7-Seater SUV. 2.4L MIVEC Turbo Diesel engine, smooth 8-speed automatic, sunroof.',
+    seats: 7,
+    transmission: 'Automatic',
+    fuel_type: 'Diesel',
+    has_ac: true,
+    categories: { id: 3, name: 'SUVs & Pickups', daily_rate: 4200 }
+  },
+  {
+    id: 8,
+    name: 'Ford Ranger Raptor 2.0L Bi-Turbo',
+    plate_number: 'CBL-9481',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80',
+    description: '5-Seater Pickup Truck. FOX Racing shocks, 4x4 Off-road mode. Great for heavy loads and provincial roads.',
+    seats: 5,
+    transmission: 'Automatic',
+    fuel_type: 'Diesel',
+    has_ac: true,
+    categories: { id: 3, name: 'SUVs & Pickups', daily_rate: 4500 }
+  },
+  {
+    id: 9,
+    name: 'Toyota HiAce Commuter Deluxe 2.8',
+    plate_number: 'VAA-8012',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+    description: '14-Seater Full-size Passenger Van. Front engine layout, strong rear AC. Ideal for group tours and outings.',
+    seats: 14,
+    transmission: 'Manual',
+    fuel_type: 'Diesel',
+    has_ac: true,
+    categories: { id: 6, name: 'Passenger Vans', daily_rate: 5000 }
+  },
+  {
+    id: 10,
+    name: 'Toyota Wigo 1.0 G CVT',
+    plate_number: 'NCL-1049',
+    status: 'available',
+    image_url: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80',
+    description: '5-Seater Hatchback. Compact city hatchback with agile handling and low gas consumption.',
+    seats: 5,
+    transmission: 'Automatic',
+    fuel_type: 'Gasoline',
+    has_ac: true,
+    categories: { id: 5, name: 'Economy & Hatchbacks', daily_rate: 2000 }
+  }
+];
+
 // ---------------------------------------------------------------------
 // Fleet & Public Data Loading
 // ---------------------------------------------------------------------
 async function loadPublicFleet() {
-  const [{ data: cats }, { data: vechs }, { data: drvs }] = await Promise.all([
-    supabase.from('categories').select('*').order('daily_rate'),
-    supabase.from('vehicles').select('*, categories(name, daily_rate)').order('name'),
-    supabase.from('drivers').select('*').order('name'),
-  ]);
+  try {
+    const [{ data: cats }, { data: vechs }, { data: drvs }] = await Promise.all([
+      supabase.from('categories').select('*').order('daily_rate'),
+      supabase.from('vehicles').select('*, categories(name, daily_rate)').order('name'),
+      supabase.from('drivers').select('*').order('name'),
+    ]);
 
-  state.categories = cats || [];
-  state.vehicles = vechs || [];
-  state.drivers = drvs || [];
+    state.categories = (cats && cats.length > 0) ? cats : PH_CATEGORIES;
+    state.vehicles = (vechs && vechs.length > 0) ? vechs : PH_POPULAR_VEHICLES;
+    state.drivers = drvs || [];
+  } catch (err) {
+    state.categories = PH_CATEGORIES;
+    state.vehicles = PH_POPULAR_VEHICLES;
+    state.drivers = [];
+  }
 
   const statCount = $('#statVehiclesCount');
   if (statCount) statCount.textContent = `${state.vehicles.length}+`;
