@@ -465,9 +465,9 @@ function renderAuth() {
             <div class="field">
               <label>Sign up as</label>
               <div class="role-picker" id="rolePicker">
-                <div class="role-opt selected" data-role="customer"><i class="fa-solid fa-user" style="margin-right:4px;"></i> Customer</div>
-                <div class="role-opt" data-role="staff"><i class="fa-solid fa-user-tie" style="margin-right:4px;"></i> Staff</div>
-                <div class="role-opt" data-role="admin"><i class="fa-solid fa-shield-halved" style="margin-right:4px;"></i> Admin</div>
+                <div class="role-opt selected" data-role="customer"><i class="fa-solid fa-user" style="margin-right:4px;"></i> Guest</div>
+                <div class="role-opt" data-role="staff"><i class="fa-solid fa-user-tie" style="margin-right:4px;"></i> Manager</div>
+                <div class="role-opt" data-role="admin"><i class="fa-solid fa-shield-halved" style="margin-right:4px;"></i> Administrator</div>
               </div>
             </div>
           ` : ''}
@@ -918,10 +918,18 @@ const PORTAL_TABS = {
   ],
 };
 
+function getRoleDisplayName(role) {
+  const r = (role || '').toLowerCase();
+  if (r === 'customer' || r === 'guest') return 'Guest';
+  if (r === 'staff' || r === 'manager') return 'Manager';
+  if (r === 'admin' || r === 'administrator') return 'Administrator';
+  return role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User';
+}
+
 function openUserMenuModal() {
   const p = state.profile || {};
   const initials = (p.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  const roleTitle = p.role ? p.role.charAt(0).toUpperCase() + p.role.slice(1) : 'User';
+  const roleTitle = getRoleDisplayName(p.role);
 
   openModal(`
     <div class="modal-head">
@@ -1030,14 +1038,14 @@ function renderShell() {
   if (!state.tab || !tabs.find(t => t.id === state.tab)) state.tab = tabs[0]?.id;
 
   const initials = (state.profile.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  const roleTitle = state.portal ? state.portal.charAt(0).toUpperCase() + state.portal.slice(1) : 'User';
+  const roleTitle = getRoleDisplayName(state.portal);
   const activeTabObj = tabs.find(t => t.id === state.tab);
 
   const isDark = getTheme() === 'dark';
   const currentLang = getLang();
   const unreadNotifs = getNotifications().filter(n => !n.read).length;
 
-  // Full-width layout for Customer Portal (No sidebar)
+  // Full-width layout for Customer / Guest Portal (No sidebar)
   if (state.portal === 'customer') {
     $('#app').innerHTML = `
       <div style="min-height:100vh;background:var(--bg-dark);">
@@ -1047,7 +1055,7 @@ function renderShell() {
               <img src="logo.png" style="width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid #cbd5e1;" />
               <div>
                 <div style="font-weight:800;font-size:0.95rem;line-height:1.2;color:#0f172a;">Vehicle Rental Management System</div>
-                <div style="font-size:0.7rem;color:#2563eb;font-weight:700;">Customer Portal</div>
+                <div style="font-size:0.7rem;color:#2563eb;font-weight:700;">Guest Portal</div>
               </div>
             </div>
 
@@ -1106,7 +1114,7 @@ function renderShell() {
     return;
   }
 
-  // Sidebar Layout for Staff & Admin Portals
+  // Sidebar Layout for Manager & Administrator Portals
   $('#app').innerHTML = `
     <div class="app-shell">
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -1131,7 +1139,7 @@ function renderShell() {
             <div class="user-avatar">${initials}</div>
             <div class="user-meta" style="flex:1;">
               <div class="user-name">${state.profile.full_name}</div>
-              <div class="user-role"><i class="fa-solid fa-id-card" style="color:#2563eb;margin-right:2px;"></i> ${state.profile.role} · Menu</div>
+              <div class="user-role"><i class="fa-solid fa-id-card" style="color:#2563eb;margin-right:2px;"></i> ${getRoleDisplayName(state.profile.role)} · Menu</div>
             </div>
             <i class="fa-solid fa-ellipsis-vertical" style="color:#94a3b8;font-size:0.9rem;"></i>
           </div>
@@ -3799,9 +3807,9 @@ async function renderAdminUsers(view) {
 
       <div class="pill-row" id="userRolePills" style="margin-bottom:18px;">
         <div class="pill ${userRoleFilter === 'all' ? 'active' : ''}" data-role="all">All Users (${users.length})</div>
-        <div class="pill ${userRoleFilter === 'customer' ? 'active' : ''}" data-role="customer">Customers (${customersCount})</div>
-        <div class="pill ${userRoleFilter === 'staff' ? 'active' : ''}" data-role="staff">Staff (${staffCount})</div>
-        <div class="pill ${userRoleFilter === 'admin' ? 'active' : ''}" data-role="admin">Admins (${adminCount})</div>
+        <div class="pill ${userRoleFilter === 'customer' ? 'active' : ''}" data-role="customer">Guests (${customersCount})</div>
+        <div class="pill ${userRoleFilter === 'staff' ? 'active' : ''}" data-role="staff">Managers (${staffCount})</div>
+        <div class="pill ${userRoleFilter === 'admin' ? 'active' : ''}" data-role="admin">Administrators (${adminCount})</div>
       </div>
 
       <div class="glass" style="overflow-x:auto;">
@@ -3837,13 +3845,13 @@ async function renderAdminUsers(view) {
                   ` : '<span class="muted">—</span>'}
                 </td>
                 <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;color:#475569;">${u.address ?? '—'}</td>
-                <td><span class="badge badge-${u.role === 'admin' ? 'approved' : u.role === 'staff' ? 'pending' : 'available'}">${u.role}</span></td>
+                <td><span class="badge badge-${u.role === 'admin' ? 'approved' : u.role === 'staff' ? 'pending' : 'available'}">${getRoleDisplayName(u.role)}</span></td>
                 <td style="font-size:0.8rem;color:#64748b;">${fmtDate(u.created_at)}</td>
                 <td>
                   <select data-role-select="${u.id}" ${u.id === state.user.id ? 'disabled' : ''} style="font-size:0.8rem;padding:4px 8px;">
-                    <option value="customer" ${u.role==='customer'?'selected':''}>customer</option>
-                    <option value="staff" ${u.role==='staff'?'selected':''}>staff</option>
-                    <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
+                    <option value="customer" ${u.role==='customer'?'selected':''}>Guest</option>
+                    <option value="staff" ${u.role==='staff'?'selected':''}>Manager</option>
+                    <option value="admin" ${u.role==='admin'?'selected':''}>Administrator</option>
                   </select>
                 </td>
               </tr>
