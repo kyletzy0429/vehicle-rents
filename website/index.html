@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DriveEase Philippines | Online Car & Motorcycle Rental Booking</title>
+  <meta name="description" content="Rent premium cars, SUVs, vans, and motorcycles across the Philippines with instant online booking, verified customer reviews, and best daily rates." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Website Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- Main Website Wrapper -->
+  <div id="siteApp">
+    <!-- Header Navigation -->
+    <header class="site-header" id="siteHeader">
+      <div class="header-inner">
+        <a href="#hero" class="brand-logo" id="brandHomeBtn">
+          <img src="../logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'" />
+          <div class="brand-text">
+            <span class="brand-title">Vehicle Rentals</span>
+            <span class="brand-sub">Official Booking Portal</span>
+          </div>
+        </a>
+
+        <nav class="nav-links">
+          <a href="#fleetSection" class="nav-link"><i class="fa-solid fa-car"></i> Browse Fleet</a>
+          <a href="#categoriesSection" class="nav-link"><i class="fa-solid fa-layer-group"></i> Categories</a>
+          <a href="#howItWorksSection" class="nav-link"><i class="fa-solid fa-shield-halved"></i> How It Works</a>
+          <a href="#reviewsSection" class="nav-link"><i class="fa-solid fa-star"></i> Customer Reviews</a>
+        </nav>
+
+        <div class="header-actions" id="headerActions">
+          <!-- Theme Switcher -->
+          <button type="button" class="icon-btn" id="siteThemeBtn" title="Toggle Light/Dark Mode">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+
+          <!-- Auth / Profile Area (Dynamically rendered by app.js) -->
+          <div id="authHeaderSlot">
+            <button class="btn btn-outline btn-sm" id="navLoginBtn"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+            <button class="btn btn-primary btn-sm" id="navRegisterBtn"><i class="fa-solid fa-user-plus"></i> Register</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="mainContainer">
+      <!-- Hero Section -->
+      <section class="hero-section" id="hero">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <i class="fa-solid fa-certificate" style="color:#059669;"></i> Best Daily Rental Rates in the Philippines
+          </div>
+          <h1 class="hero-title">
+            Rent Your Ideal <span class="gradient-text">Car &amp; Motorcycle</span> with Total Freedom
+          </h1>
+          <p class="hero-subtitle">
+            Explore hundreds of verified sedans, spacious SUVs, family vans, and fuel-efficient motorcycles. Clean, fully insured, and ready for pickup today.
+          </p>
+
+          <!-- Quick Stats Counter -->
+          <div class="hero-stats">
+            <div class="hero-stat-card">
+              <div class="stat-num" id="statVehiclesCount">24+</div>
+              <div class="stat-desc">Ready Vehicles</div>
+            </div>
+            <div class="hero-stat-card">
+              <div class="stat-num">⭐ 4.9 / 5</div>
+              <div class="stat-desc">Customer Rating</div>
+            </div>
+            <div class="hero-stat-card">
+              <div class="stat-num">₱400/day</div>
+              <div class="stat-desc">Starting Price</div>
+            </div>
+            <div class="hero-stat-card">
+              <div class="stat-num">24/7</div>
+              <div class="stat-desc">Roadside Assist</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Search & Filter Widget -->
+        <div class="hero-search-card glass" id="heroSearchWidget">
+          <div class="search-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--accent);"></i> Search &amp; Filter Vehicles</div>
+          <div class="search-form-grid">
+            <div class="search-field">
+              <label><i class="fa-solid fa-car-side"></i> Vehicle Name or Model</label>
+              <input type="text" id="quickSearchInput" placeholder="e.g. Vios, Fortuner, Click, NMAX…" />
+            </div>
+            <div class="search-field">
+              <label><i class="fa-solid fa-layer-group"></i> Category</label>
+              <select id="quickCatSelect">
+                <option value="all">All Vehicle Types</option>
+              </select>
+            </div>
+            <div class="search-field">
+              <label><i class="fa-solid fa-money-bill-wave"></i> Price Range</label>
+              <select id="quickPriceSelect">
+                <option value="all">Any Price</option>
+                <option value="budget">Budget (₱400 - ₱1,500/day)</option>
+                <option value="mid">Mid-range (₱1,500 - ₱3,000/day)</option>
+                <option value="premium">Premium (₱3,000+/day)</option>
+              </select>
+            </div>
+            <div class="search-field" style="align-self:flex-end;">
+              <button type="button" class="btn btn-primary btn-block" id="btnFilterFleet" style="height:44px;">
+                <i class="fa-solid fa-sliders"></i> Filter Fleet
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Filter Pills -->
+      <section class="section-container" id="categoriesSection" style="padding-top:10px;">
+        <div class="section-header">
+          <div>
+            <h2 class="section-heading"><i class="fa-solid fa-layer-group" style="color:var(--accent);margin-right:6px;"></i> Browse by Vehicle Type</h2>
+            <p class="section-subtext">Find the ideal ride tailored for city commutes, provincial trips, or executive travels.</p>
+          </div>
+        </div>
+        <div class="pill-carousel" id="categoryPillBar">
+          <div class="filter-pill active" data-cat="all"><i class="fa-solid fa-border-all"></i> All Vehicles</div>
+        </div>
+      </section>
+
+      <!-- Live Vehicles Fleet Grid -->
+      <section class="section-container" id="fleetSection">
+        <div class="section-header">
+          <div>
+            <h2 class="section-heading"><i class="fa-solid fa-car" style="color:var(--accent);margin-right:6px;"></i> Available Fleet for Rent</h2>
+            <p class="section-subtext">Transparent pricing, real-time availability, and verified customer ratings.</p>
+          </div>
+          <div class="fleet-status-filter">
+            <button class="status-btn active" data-status="all">All Fleet</button>
+            <button class="status-btn" data-status="available"><i class="fa-solid fa-circle-check" style="color:#059669;"></i> Available Only</button>
+          </div>
+        </div>
+
+        <div class="fleet-grid" id="fleetGridContainer">
+          <div class="loading-spin"></div>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section class="section-container" id="howItWorksSection">
+        <div class="section-header center">
+          <h2 class="section-heading">How Booking Works</h2>
+          <p class="section-subtext">Renting your next vehicle in the Philippines has never been this fast and transparent.</p>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card glass">
+            <div class="step-icon"><i class="fa-solid fa-car-on"></i></div>
+            <div class="step-num">01</div>
+            <h3>Select Your Vehicle</h3>
+            <p>Browse our verified fleet of cars and motorcycles. Check daily rates, seating capacity, AC/helmet inclusion, and customer reviews.</p>
+          </div>
+          <div class="step-card glass">
+            <div class="step-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="step-num">02</div>
+            <h3>Book &amp; Reserve Online</h3>
+            <p>Select your rental dates on our interactive calendar, choose self-drive or driver option, and reserve with 20% downpayment or full pay.</p>
+          </div>
+          <div class="step-card glass">
+            <div class="step-icon"><i class="fa-solid fa-key"></i></div>
+            <div class="step-num">03</div>
+            <h3>Pickup &amp; Drive with Peace of Mind</h3>
+            <p>Present your valid ID/driver license upon pickup, inspect your vehicle, and enjoy 24/7 roadside assistance on all your journeys.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Verified Customer Reviews Section -->
+      <section class="section-container" id="reviewsSection">
+        <div class="section-header">
+          <div>
+            <h2 class="section-heading"><i class="fa-solid fa-comments" style="color:#f59e0b;margin-right:6px;"></i> Verified Customer Reviews</h2>
+            <p class="section-subtext">Real feedback from verified renters who have driven our cars and motorcycles.</p>
+          </div>
+        </div>
+        <div class="reviews-grid" id="homepageReviewsContainer">
+          <div class="loading-spin"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="brand-logo">
+            <img src="../logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'" />
+            <div class="brand-text">
+              <span class="brand-title">Vehicle Rentals</span>
+              <span class="brand-sub">Philippines Premier Rental Service</span>
+            </div>
+          </div>
+          <p class="footer-desc">
+            Providing premium, reliable, and affordable car and motorcycle rentals across Luzon, Visayas, and Mindanao.
+          </p>
+          <div class="hotline-box">
+            <i class="fa-solid fa-headset hotline-icon"></i>
+            <div>
+              <div style="font-size:0.75rem;color:#64748b;font-weight:700;">24/7 RESERVATION &amp; SUPPORT</div>
+              <div style="font-size:1rem;color:var(--text-dark);font-weight:800;">+63 (2) 8888-RENT</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Vehicle Categories</h4>
+          <ul>
+            <li><a href="#fleetSection" onclick="filterByCategory('Sedans')">Economy &amp; Sedans</a></li>
+            <li><a href="#fleetSection" onclick="filterByCategory('SUVs')">Family SUVs &amp; MPVs</a></li>
+            <li><a href="#fleetSection" onclick="filterByCategory('Vans')">Commuter &amp; Luxury Vans</a></li>
+            <li><a href="#fleetSection" onclick="filterByCategory('Motorcycles')">Scooters &amp; Motorcycles (₱400-₱600)</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Rental Information</h4>
+          <ul>
+            <li><a href="javascript:void(0)" onclick="openRentalPolicyModal()">Rental Terms &amp; Policies</a></li>
+            <li><a href="javascript:void(0)" onclick="openRentalPolicyModal()">Driver License Requirements</a></li>
+            <li><a href="javascript:void(0)" onclick="openRentalPolicyModal()">Payment Options (GCash / Maya / Card)</a></li>
+            <li><a href="javascript:void(0)" onclick="openRentalPolicyModal()">Cancellation &amp; Refund Policy</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Office Location</h4>
+          <p style="font-size:0.85rem;line-height:1.6;color:#64748b;">
+            <i class="fa-solid fa-location-dot" style="color:var(--accent);margin-right:6px;"></i> 123 Main Avenue, Metro Manila, Philippines<br>
+            <i class="fa-solid fa-envelope" style="color:var(--accent);margin-right:6px;margin-top:8px;"></i> support@rentflow.ph<br>
+            <i class="fa-solid fa-clock" style="color:var(--accent);margin-right:6px;margin-top:8px;"></i> 8:00 AM - 8:00 PM Daily
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 Vehicle Rental Management System. All rights reserved.</div>
+        <div style="display:flex;gap:16px;">
+          <a href="javascript:void(0)" style="color:#64748b;">Privacy Policy</a>
+          <a href="javascript:void(0)" style="color:#64748b;">Terms of Service</a>
+          <a href="../index.html" style="color:var(--accent);font-weight:700;"><i class="fa-solid fa-shield-halved"></i> Staff &amp; Admin Portal</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Global Modal Mount Point -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal-card glass" id="modalCard">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- Website Logic Module Script -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
