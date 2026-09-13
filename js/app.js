@@ -6,8 +6,8 @@ import {
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
 import { renderAuth, logout, bootstrapSession, switchSystemRole } from './auth.js';
-import { renderCustomer } from './customer.js?v=2.3';
-import { renderStaff, renderAdmin } from './admin.js?v=2.3';
+import { renderCustomer } from './customer.js?v=2.4';
+import { renderStaff, renderAdmin } from './admin.js?v=2.4';
 
 export function renderRoleSwitcherHTML(currentRole) {
   const roleLabels = {

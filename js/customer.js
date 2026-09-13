@@ -245,63 +245,74 @@ export async function renderMyBookings(view) {
       openPaymentModal(btn.dataset.payBalanceId, true);
     });
   });
-  $$('[data-receipt-id]', view).forEach(btn => btn.addEventListener('click', () => openPaidReceiptModal(btn.dataset.receiptId)));
-  $$('[data-refund-req-id]', view).forEach(btn => btn.addEventListener('click', () => openRefundRequestModal(btn.dataset.refundReqId)));
-  $$('[data-refund-voucher-id]', view).forEach(btn => btn.addEventListener('click', () => openRefundVoucherModal(btn.dataset.refundVoucherId)));
-  $$('[data-cancel-id]', view).forEach(btn => btn.addEventListener('click', async () => {
-    const bookingId = btn.dataset.cancelId;
-    if (!confirm('Are you sure you want to cancel this booking request?')) return;
-
-    btn.disabled = true;
-    btn.textContent = 'Cancelling…';
-
-    updateLocalBookingStatus(bookingId, 'cancelled', { review_notes: 'Cancelled by customer.' });
-
-    try {
-      const { data: b } = await supabase.from('bookings').select('vehicle_id, status').eq('id', bookingId).single();
-      await supabase.from('bookings').update({
-        status: 'cancelled',
-        review_notes: 'Cancelled by customer.'
-      }).eq('id', bookingId);
-
-      if (b && b.vehicle_id) {
-        await supabase.from('vehicles').update({ status: 'available' }).eq('id', b.vehicle_id).then(() => { }).catch(() => { });
-      }
-    } catch (e) {
-      console.warn('DB cancel fallback:', e);
-    }
-
-    toast('Booking request has been cancelled.', 'info');
-    await loadVehicles();
-    if (window.renderTab) window.renderTab();
+  $$('[data-receipt-id]', view).forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openPaidReceiptModal(btn.dataset.receiptId);
+  }));
+  $$('[data-refund-req-id]', view).forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openRefundRequestModal(btn.dataset.refundReqId);
+  }));
+  $$('[data-refund-voucher-id]', view).forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openRefundVoucherModal(btn.dataset.refundVoucherId);
+  }));
+  $$('[data-cancel-id]', view).forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    cancelCustomerBooking(btn.dataset.cancelId);
   }));
 }
+
+export async function cancelCustomerBooking(bookingId) {
+  if (!confirm('Are you sure you want to cancel this booking request?')) return;
+  updateLocalBookingStatus(bookingId, 'cancelled', { review_notes: 'Cancelled by customer.' });
+
+  try {
+    const { data: b } = await supabase.from('bookings').select('vehicle_id, status').eq('id', bookingId).maybeSingle();
+    await supabase.from('bookings').update({
+      status: 'cancelled',
+      review_notes: 'Cancelled by customer.'
+    }).eq('id', bookingId).catch(() => {});
+
+    if (b && b.vehicle_id) {
+      await supabase.from('vehicles').update({ status: 'available' }).eq('id', b.vehicle_id).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('DB cancel fallback:', e);
+  }
+
+  toast('Booking request has been cancelled.', 'info');
+  await loadVehicles();
+  if (window.renderTab) window.renderTab();
+}
+
+window.cancelCustomerBooking = cancelCustomerBooking;
 
 export function customerBookingRow(b) {
   const v = b.vehicles;
   const isPartial = b.balance_due && Number(b.balance_due) > 0 && Number(b.paid_amount || 0) > 0;
   let actions = '';
   if (b.status === 'pending') {
-    actions = `<button class="btn btn-danger btn-sm" data-cancel-id="${b.id}"><i class="fa-solid fa-xmark"></i> Cancel Request</button>`;
+    actions = `<button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel Request</button>`;
   } else if (b.status === 'approved') {
     actions = `
       <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay / Reserve</button>
-      <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}"><i class="fa-solid fa-xmark"></i> Cancel</button>
+      <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
     `;
   } else if (b.status === 'active' || b.status === 'completed') {
     actions = `
       ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)" style="background:#2563eb;border-color:#2563eb;"><i class="fa-solid fa-wallet"></i> Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
-      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}"><i class="fa-solid fa-print"></i> Receipt</button>
-      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')"><i class="fa-solid fa-print"></i> Receipt</button>
+      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
     `;
   } else if (b.status === 'cancelled' || b.status === 'rejected') {
     actions = `
-      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
+      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
     `;
   } else if (b.status === 'refund_requested') {
     actions = `<span class="muted" style="font-size:0.78rem;color:#b45309;font-weight:600;"><i class="fa-solid fa-clock"></i> Refund Pending</span>`;
   } else if (b.status === 'refunded') {
-    actions = `<button type="button" class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}"><i class="fa-solid fa-receipt"></i> Refund Voucher</button>`;
+    actions = `<button type="button" class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}" onclick="window.openRefundVoucherModal && window.openRefundVoucherModal('${b.id}')"><i class="fa-solid fa-receipt"></i> Refund Voucher</button>`;
   }
 
   const badgeHTML = isPartial
@@ -698,30 +709,36 @@ window.handlePayClick = openPaymentModal;
 
 export async function openPaidReceiptModal(bookingId, payMethod = 'Online Payment', refNo = '') {
   let b = null;
-  try {
-    const res = await supabase
-      .from('bookings')
-      .select('*, vehicles(*, categories(name, daily_rate))')
-      .eq('id', bookingId)
-      .single();
-    b = res.data;
-  } catch (err) {
-    console.warn('Booking fetch notice:', err);
+  if (typeof window !== 'undefined' && window._activeCustomerBookings && window._activeCustomerBookings.length) {
+    b = window._activeCustomerBookings.find(item => String(item.id) === String(bookingId));
   }
-
   if (!b) {
     const local = getLocalBookings().find(item => String(item.id) === String(bookingId));
     if (local) {
       b = { ...local };
-    } else {
-      b = {
-        id: bookingId,
-        start_date: new Date().toISOString(),
-        end_date: new Date().toISOString(),
-        total_amount: 0,
-        vehicles: state.vehicles[0] || {}
-      };
     }
+  }
+  if (!b) {
+    try {
+      const res = await supabase
+        .from('bookings')
+        .select('*, vehicles(*, categories(name, daily_rate))')
+        .eq('id', bookingId)
+        .maybeSingle();
+      if (res && res.data) b = res.data;
+    } catch (err) {
+      console.warn('Booking fetch notice:', err);
+    }
+  }
+
+  if (!b) {
+    b = {
+      id: bookingId,
+      start_date: new Date().toISOString(),
+      end_date: new Date().toISOString(),
+      total_amount: 0,
+      vehicles: state.vehicles[0] || {}
+    };
   }
 
   const v = b.vehicles || {};
@@ -824,29 +841,55 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
 }
 
 export async function openRefundRequestModal(bookingId) {
-  const { data: b } = await supabase.from('bookings').select('*, vehicles(name, plate_number)').eq('id', bookingId).single();
-  if (!b) return;
+  let b = null;
+  if (typeof window !== 'undefined' && window._activeCustomerBookings && window._activeCustomerBookings.length) {
+    b = window._activeCustomerBookings.find(item => String(item.id) === String(bookingId));
+  }
+  if (!b) {
+    const local = getLocalBookings().find(item => String(item.id) === String(bookingId));
+    if (local) b = { ...local };
+  }
+  if (!b) {
+    try {
+      const res = await supabase.from('bookings').select('*, vehicles(name, plate_number)').eq('id', bookingId).maybeSingle();
+      if (res && res.data) b = res.data;
+    } catch (e) {
+      console.warn('Refund modal booking fetch warning:', e);
+    }
+  }
+  if (!b) {
+    b = {
+      id: bookingId,
+      total_amount: 0,
+      vehicles: state.vehicles[0] || { name: 'Rental Vehicle', plate_number: '—' }
+    };
+  }
+
+  const v = b.vehicles || state.vehicles.find(veh => veh.id === b.vehicle_id) || { name: 'Rental Vehicle', plate_number: '—' };
+  const refundAmount = Number(b.paid_amount || b.total_amount || 0);
+  const defaultAccName = state.profile?.full_name || state.user?.full_name || (b.customer_name) || '';
+  const defaultAccPhone = state.profile?.phone || state.user?.phone || (b.customer_phone) || '';
 
   const modal = openModal(`
     <div class="modal-head">
       <div>
         <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">Request Refund</h3>
-        <span class="muted" style="font-size:0.78rem;">Booking #${b.id} · ${b.vehicles?.name ?? 'Vehicle'}</span>
+        <span class="muted" style="font-size:0.78rem;">Booking #${b.id} · ${v.name ?? 'Vehicle'}</span>
       </div>
       <div class="modal-close" id="mClose" onclick="window.closeModal()">✕</div>
     </div>
 
     <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
       <div style="font-size:0.82rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:6px;">
-        <i class="fa-solid fa-shield-halved"></i> Refund Policy & Guarantee
+        <i class="fa-solid fa-shield-halved"></i> Refund Policy &amp; Guarantee
       </div>
       <div style="font-size:0.78rem;color:#78350f;margin-top:4px;line-height:1.5;">
-        Submit your GCash or Bank details. Approved refunds are transferred within 24 hours.
+        Submit your GCash, Maya, or Bank details. Approved refunds are transferred within 24 hours.
       </div>
     </div>
 
     <div class="receipt" style="margin-bottom:16px;">
-      <div class="receipt-row receipt-total"><span>Total Paid Amount</span><span>${fmtMoney(b.total_amount)}</span></div>
+      <div class="receipt-row receipt-total"><span>Total Paid Amount</span><span>${fmtMoney(refundAmount)}</span></div>
     </div>
 
     <form id="refundReqForm">
@@ -864,12 +907,12 @@ export async function openRefundRequestModal(bookingId) {
 
       <div class="field" style="margin-bottom:12px;">
         <label>Account Name / Recipient Name</label>
-        <input type="text" id="refAccName" value="${state.profile?.full_name ?? ''}" placeholder="Recipient Full Name" required />
+        <input type="text" id="refAccName" value="${defaultAccName}" placeholder="Recipient Full Name" required />
       </div>
 
       <div class="field" style="margin-bottom:12px;">
         <label>Account Number / Mobile Number</label>
-        <input type="text" id="refAccNo" value="${state.profile?.phone ?? ''}" placeholder="0917 123 4567" required />
+        <input type="text" id="refAccNo" value="${defaultAccPhone}" placeholder="0917 123 4567" required />
       </div>
 
       <div class="field" style="margin-bottom:18px;">
@@ -895,7 +938,13 @@ export async function openRefundRequestModal(bookingId) {
     const reason = $('#refReason').value.trim();
     const notes = `Refund Request: ${method} (${accNo} - ${accName}). Reason: ${reason}`;
 
-    updateLocalBookingStatus(bookingId, 'refund_requested', { review_notes: notes });
+    updateLocalBookingStatus(bookingId, 'refund_requested', {
+      review_notes: notes,
+      refund_method: method,
+      refund_account_name: accName,
+      refund_account_number: accNo,
+      refund_reason: reason
+    });
 
     try {
       let { error } = await supabase.from('bookings').update({
@@ -908,7 +957,7 @@ export async function openRefundRequestModal(bookingId) {
         await supabase.from('bookings').update({
           status: 'cancelled',
           review_notes: fallbackNotes,
-        }).eq('id', bookingId);
+        }).eq('id', bookingId).catch(() => {});
       }
     } catch (e) {
       console.warn('DB refund request notice:', e);
@@ -921,11 +970,33 @@ export async function openRefundRequestModal(bookingId) {
 }
 
 export async function openRefundVoucherModal(bookingId) {
-  const { data: b } = await supabase.from('bookings').select('*, vehicles(name, plate_number), profiles!customer_id(full_name, phone)').eq('id', bookingId).single();
-  if (!b) return;
+  let b = null;
+  if (typeof window !== 'undefined' && window._activeCustomerBookings && window._activeCustomerBookings.length) {
+    b = window._activeCustomerBookings.find(item => String(item.id) === String(bookingId));
+  }
+  if (!b) {
+    const local = getLocalBookings().find(item => String(item.id) === String(bookingId));
+    if (local) b = { ...local };
+  }
+  if (!b) {
+    try {
+      const res = await supabase.from('bookings').select('*, vehicles(name, plate_number), profiles!customer_id(full_name, phone)').eq('id', bookingId).maybeSingle();
+      if (res && res.data) b = res.data;
+    } catch (e) {
+      console.warn('Voucher fetch notice:', e);
+    }
+  }
+  if (!b) {
+    b = {
+      id: bookingId,
+      total_amount: 0,
+      vehicles: state.vehicles[0] || { name: 'Rental Vehicle' }
+    };
+  }
 
-  const v = b.vehicles || {};
-  const cName = b.profiles?.full_name ?? state.profile?.full_name ?? 'Customer';
+  const v = b.vehicles || state.vehicles.find(veh => veh.id === b.vehicle_id) || { name: 'Vehicle', plate_number: '—' };
+  const cName = b.profiles?.full_name ?? b.customer_name ?? state.profile?.full_name ?? 'Customer';
+  const cPhone = b.profiles?.phone ?? b.customer_phone ?? state.profile?.phone ?? '—';
   const refCode = `RFND-${bookingId}-${Date.now().toString().slice(-4)}`;
 
   openModal(`
@@ -945,7 +1016,7 @@ export async function openRefundVoucherModal(bookingId) {
     <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-user" style="color:#2563eb;"></i> Beneficiary Details</h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
       <div class="receipt-row"><span style="color:#64748b;">Customer Name</span><span style="font-weight:700;color:#0f172a;">${cName}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Phone Number</span><span style="color:#0f172a;">${b.profiles?.phone || '—'}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Phone Number</span><span style="color:#0f172a;">${cPhone}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name ?? 'Vehicle'}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Rental Dates</span><span style="color:#0f172a;">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span></div>
       ${b.review_notes ? `<div class="receipt-row" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:4px;"><span style="color:#64748b;">Refund Transfer Notes</span><span style="color:#b45309;font-weight:600;">${b.review_notes}</span></div>` : ''}
@@ -961,3 +1032,7 @@ export async function openRefundVoucherModal(bookingId) {
     <button class="btn btn-primary btn-block" onclick="window.print()" style="margin-top:8px;background:#059669;border-color:#059669;"><i class="fa-solid fa-print"></i> Print Refund Voucher</button>
   `);
 }
+
+window.openRefundRequestModal = openRefundRequestModal;
+window.openPaidReceiptModal = openPaidReceiptModal;
+window.openRefundVoucherModal = openRefundVoucherModal;

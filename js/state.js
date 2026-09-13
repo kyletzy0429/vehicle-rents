@@ -91,17 +91,36 @@ export function saveLocalBooking(b) {
 export function updateLocalBookingStatus(bookingId, status, extraOrNotes = null) {
   try {
     const list = getLocalBookings();
-    const b = list.find(x => String(x.id) === String(bookingId));
-    if (b) {
-      b.status = status;
-      if (typeof extraOrNotes === 'string') {
-        b.review_notes = extraOrNotes;
-      } else if (extraOrNotes && typeof extraOrNotes === 'object') {
-        Object.assign(b, extraOrNotes);
+    let b = list.find(x => String(x.id) === String(bookingId));
+    if (!b && typeof window !== 'undefined' && window._activeCustomerBookings) {
+      const fromActive = window._activeCustomerBookings.find(x => String(x.id) === String(bookingId));
+      if (fromActive) {
+        b = JSON.parse(JSON.stringify(fromActive));
+        list.push(b);
       }
-      localStorage.setItem('rentflow_local_bookings', JSON.stringify(list));
-      return b;
     }
+    if (!b) {
+      b = { id: bookingId };
+      list.push(b);
+    }
+
+    b.status = status;
+    if (typeof extraOrNotes === 'string') {
+      b.review_notes = extraOrNotes;
+    } else if (extraOrNotes && typeof extraOrNotes === 'object') {
+      Object.assign(b, extraOrNotes);
+    }
+    localStorage.setItem('rentflow_local_bookings', JSON.stringify(list));
+
+    if (typeof window !== 'undefined' && window._activeCustomerBookings) {
+      const inMem = window._activeCustomerBookings.find(x => String(x.id) === String(bookingId));
+      if (inMem) {
+        inMem.status = status;
+        if (typeof extraOrNotes === 'string') inMem.review_notes = extraOrNotes;
+        else if (extraOrNotes && typeof extraOrNotes === 'object') Object.assign(inMem, extraOrNotes);
+      }
+    }
+    return b;
   } catch (e) {
     console.warn('updateLocalBookingStatus error:', e);
   }
