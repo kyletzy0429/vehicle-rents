@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getPromoCodes, savePromoCodes, getLocalBookings, updateLocalBookingStatus } from './state.js';
+import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getPromoCodes, savePromoCodes, getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS } from './state.js';
 import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, closeModal, emptyState, getRoleDisplayName, applyTheme } from './utils.js';
 import { getExactVehicleImage, getVehicleDailyRate, setVehicleCustomRate, getVehicleCategoryName, loadVehicles, loadCategories, PH_CATEGORIES } from './vehicles.js';
 import { openRefundVoucherModal } from './customer.js';
@@ -331,6 +331,108 @@ export async function fetchMergedBookings(filterFn = null) {
 
   merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   return filterFn ? merged.filter(filterFn) : merged;
+}
+
+function getSavedUserRoles() {
+  try {
+    return JSON.parse(localStorage.getItem('rentflow_user_roles') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveUserRole(userId, role) {
+  try {
+    const roles = getSavedUserRoles();
+    roles[userId] = role;
+    localStorage.setItem('rentflow_user_roles', JSON.stringify(roles));
+  } catch (e) {}
+}
+
+function getCustomProfiles() {
+  try {
+    return JSON.parse(localStorage.getItem('rentflow_custom_profiles') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveCustomProfile(userId, data) {
+  try {
+    const profiles = getCustomProfiles();
+    profiles[userId] = { ...(profiles[userId] || {}), ...data };
+    localStorage.setItem('rentflow_custom_profiles', JSON.stringify(profiles));
+  } catch (e) {}
+}
+
+export function getSystemDemoAccounts() {
+  const roles = getSavedUserRoles();
+  const custom = getCustomProfiles();
+  const custCustom = custom[DEMO_ACCOUNTS.customer.id] || {};
+  const staffCustom = custom[DEMO_ACCOUNTS.staff.id] || {};
+  const adminCustom = custom[DEMO_ACCOUNTS.admin.id] || {};
+
+  return [
+    {
+      id: DEMO_ACCOUNTS.customer.id,
+      full_name: custCustom.full_name || DEMO_ACCOUNTS.customer.full_name,
+      email: custCustom.email || DEMO_ACCOUNTS.customer.email,
+      phone: custCustom.phone || DEMO_ACCOUNTS.customer.phone,
+      address: custCustom.address || DEMO_ACCOUNTS.customer.address,
+      license_number: custCustom.license_number !== undefined ? custCustom.license_number : DEMO_ACCOUNTS.customer.license_number,
+      license_expiry: custCustom.license_expiry || '2028-11-20',
+      license_id_url: custCustom.license_id_url || null,
+      role: roles[DEMO_ACCOUNTS.customer.id] || DEMO_ACCOUNTS.customer.role || 'customer',
+      created_at: '2026-08-15T08:00:00.000Z'
+    },
+    {
+      id: DEMO_ACCOUNTS.staff.id,
+      full_name: staffCustom.full_name || DEMO_ACCOUNTS.staff.full_name,
+      email: staffCustom.email || DEMO_ACCOUNTS.staff.email,
+      phone: staffCustom.phone || DEMO_ACCOUNTS.staff.phone,
+      address: staffCustom.address || 'RentFlow Operations Hub, Puerto Princesa City',
+      license_number: staffCustom.license_number || null,
+      license_expiry: staffCustom.license_expiry || null,
+      license_id_url: staffCustom.license_id_url || null,
+      role: roles[DEMO_ACCOUNTS.staff.id] || DEMO_ACCOUNTS.staff.role || 'staff',
+      created_at: '2026-07-10T09:30:00.000Z'
+    },
+    {
+      id: DEMO_ACCOUNTS.admin.id,
+      full_name: adminCustom.full_name || DEMO_ACCOUNTS.admin.full_name,
+      email: adminCustom.email || DEMO_ACCOUNTS.admin.email,
+      phone: adminCustom.phone || DEMO_ACCOUNTS.admin.phone,
+      address: adminCustom.address || 'RentFlow Executive Office, Palawan HQ',
+      license_number: adminCustom.license_number || null,
+      license_expiry: adminCustom.license_expiry || null,
+      license_id_url: adminCustom.license_id_url || null,
+      role: roles[DEMO_ACCOUNTS.admin.id] || DEMO_ACCOUNTS.admin.role || 'admin',
+      created_at: '2026-06-01T08:00:00.000Z'
+    }
+  ];
+}
+
+export async function fetchMergedProfiles() {
+  let dbProfiles = [];
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (!error && data) dbProfiles = data;
+  } catch (e) {
+    console.warn('Profiles load notice:', e);
+  }
+
+  const systemAccounts = getSystemDemoAccounts();
+  const dbIds = new Set(dbProfiles.map(p => String(p.id)));
+  const merged = [...dbProfiles];
+
+  for (const sa of systemAccounts) {
+    if (!dbIds.has(String(sa.id))) {
+      merged.push(sa);
+    }
+  }
+
+  merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  return merged;
 }
 
 export async function renderStaffRefunds(view) {
@@ -1187,15 +1289,15 @@ let customerStatusFilter = 'all';
 let customerSearchQuery = '';
 
 export async function renderAdminCustomers(view) {
-  const [{ data: customers, error: profErr }, { data: bookings, error: bookErr }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('role', 'customer').order('created_at', { ascending: false }),
-    supabase.from('bookings').select('*, vehicles(name, plate_number)').order('created_at', { ascending: false }),
+  const [allProfiles, bookings] = await Promise.all([
+    fetchMergedProfiles(),
+    fetchMergedBookings()
   ]);
 
-  if (profErr) throw profErr;
+  const customers = allProfiles.filter(p => p.role === 'customer');
 
   const customerList = (customers || []).map(c => {
-    const cBookings = (bookings || []).filter(b => b.customer_id === c.id);
+    const cBookings = (bookings || []).filter(b => b.customer_id === c.id || (b.profiles && b.profiles.full_name === c.full_name));
     const activeRental = cBookings.find(b => b.status === 'active');
     const pendingBooking = cBookings.find(b => b.status === 'pending');
     const approvedBooking = cBookings.find(b => b.status === 'approved');
@@ -1482,11 +1584,14 @@ export async function renderAdminCustomers(view) {
         address: $('#admCustAddress').value.trim() || null,
       };
 
-      let { error } = await supabase.from('profiles').update(updated).eq('id', c.id);
-      if (error) {
-        const standardPayload = { full_name: updated.full_name, phone: updated.phone };
-        await supabase.from('profiles').update(standardPayload).eq('id', c.id).catch(() => { });
-      }
+      saveCustomProfile(c.id, updated);
+      try {
+        let { error } = await supabase.from('profiles').update(updated).eq('id', c.id);
+        if (error) {
+          const standardPayload = { full_name: updated.full_name, phone: updated.phone };
+          await supabase.from('profiles').update(standardPayload).eq('id', c.id).catch(() => { });
+        }
+      } catch (err) {}
 
       toast('Customer details updated successfully!', 'success');
       closeModal();
@@ -1505,8 +1610,7 @@ let userRoleFilter = 'all';
 let userSearchQuery = '';
 
 export async function renderAdminUsers(view) {
-  const { data: users, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-  if (error) throw error;
+  const users = await fetchMergedProfiles();
 
   const customersCount = users.filter(u => u.role === 'customer').length;
   const staffCount = users.filter(u => u.role === 'staff').length;
@@ -1605,10 +1709,15 @@ export async function renderAdminUsers(view) {
     renderAdminUsers(view);
   }));
 
-  $$('[data-role-select]').forEach(sel => sel.addEventListener('change', async () => {
-    const { error } = await supabase.from('profiles').update({ role: sel.value }).eq('id', sel.dataset.roleSelect);
-    if (error) { toast(error.message, 'error'); return; }
-    toast('User role updated.', 'success');
+  $$('[data-role-select]').forEach(sel => sel.addEventListener('change', async (e) => {
+    const newRole = e.target.value;
+    const userId = sel.dataset.roleSelect;
+    saveUserRole(userId, newRole);
+    try {
+      await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+    } catch (err) {}
+    toast(`User role updated to ${getRoleDisplayName(newRole)}.`, 'success');
+    renderAdminUsers(view);
   }));
 
   $$('[data-view-id]').forEach(btn => btn.addEventListener('click', () => {
