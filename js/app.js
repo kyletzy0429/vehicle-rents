@@ -84,46 +84,171 @@ export function bindRoleSwitcherEvents() {
 export function openUserMenuModal() {
   const p = state.profile || {};
   const initials = (p.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  const roleTitle = getRoleDisplayName(p.role);
+  const currentRole = state.portal || p.role || 'customer';
+  const roleTitle = getRoleDisplayName(currentRole);
   const comp = getSystemSettings().company || DEFAULT_SETTINGS.company;
 
-  openModal(`
-    <div class="modal-head">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,99,235,0.25);">${initials}</div>
-        <div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'User Account'}</h3>
-          <span style="font-size:0.78rem;color:#2563eb;font-weight:700;"><i class="fa-solid fa-shield-halved" style="margin-right:3px;"></i> ${roleTitle} Account</span>
-        </div>
-      </div>
-      <div class="modal-close" id="mClose">✕</div>
-    </div>
+  let modalContent = '';
 
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-      <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Email</span><span style="font-weight:600;color:#0f172a;">${state.user?.email || '—'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || 'Not set'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-id-card" style="margin-right:5px;"></i> Driver License</span><span style="font-weight:600;color:#0f172a;">${p.license_number || 'Verify at meetup'}</span></div>
-    </div>
-
-    <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-bars-staggered" style="color:#2563eb;margin-right:6px;"></i> User Menu &amp; Quick Actions</h4>
-    
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-      <button class="btn btn-ghost" id="umProfile" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-        <i class="fa-solid fa-user-gear" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
-        <div>
-          <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Profile &amp; Contact Details</div>
-          <div style="font-size:0.75rem;color:#64748b;">View &amp; update personal info, phone, and address</div>
-        </div>
-      </button>
-
-      ${state.portal === 'customer' ? `
-        <button class="btn btn-ghost" id="umFavorites" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-heart" style="color:#e11d48;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+  if (currentRole === 'admin') {
+    modalContent = `
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,99,235,0.25);">${initials}</div>
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Favorites</div>
-            <div style="font-size:0.75rem;color:#64748b;">View your saved cars &amp; motorcycles</div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Roland S. Bautista'}</h3>
+            <span style="font-size:0.78rem;color:#2563eb;font-weight:700;"><i class="fa-solid fa-shield-halved" style="margin-right:3px;"></i> System Administrator</span>
+          </div>
+        </div>
+        <div class="modal-close" id="mClose">✕</div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Admin Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'roland.bautista@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Contact Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 992 3341'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-user-shield" style="margin-right:5px;"></i> Access Level</span><span style="font-weight:700;color:#2563eb;">Full System &amp; Financial Control</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-building" style="margin-right:5px;"></i> Department</span><span style="font-weight:600;color:#0f172a;">Executive Fleet Management</span></div>
+      </div>
+
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-screwdriver-wrench" style="color:#2563eb;margin-right:6px;"></i> Administrator Controls &amp; Shortcuts</h4>
+      
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        <button class="btn btn-ghost" id="adminGoSettings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-gear" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Settings &amp; Policies</div>
+            <div style="font-size:0.75rem;color:#64748b;">Configure company profile, rental policies, and pricing rules</div>
           </div>
         </button>
+
+        <button class="btn btn-ghost" id="adminGoVehicles" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-car-side" style="color:#059669;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Fleet &amp; Vehicle Inventory</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage vehicle fleet, daily rental rates, and categories</div>
+          </div>
+        </button>
+
+        <button class="btn btn-ghost" id="adminGoReports" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-file-invoice-dollar" style="color:#d97706;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Reports &amp; Financial Analytics</div>
+            <div style="font-size:0.75rem;color:#64748b;">View revenue summaries, payment breakdown, and accounting audit logs</div>
+          </div>
+        </button>
+
+        <button class="btn btn-ghost" id="adminGoCustomers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-users" style="color:#7c3aed;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Customer Directory &amp; Licenses</div>
+            <div style="font-size:0.75rem;color:#64748b;">Inspect verified customer records and driver licenses</div>
+          </div>
+        </button>
+
+        <button class="btn btn-ghost" id="adminGoUsers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-user-gear" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Roles &amp; Permissions</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage Administrator, Operations Manager, and Guest access</div>
+          </div>
+        </button>
+      </div>
+
+      <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
+        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out of Admin</button>
+      </div>
+    `;
+  } else if (currentRole === 'staff') {
+    modalContent = `
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(5,150,105,0.25);">${initials}</div>
+          <div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Sarah Jane Villanueva'}</h3>
+            <span style="font-size:0.78rem;color:#059669;font-weight:700;"><i class="fa-solid fa-user-tie" style="margin-right:3px;"></i> Operations Staff / Manager</span>
+          </div>
+        </div>
+        <div class="modal-close" id="mClose">✕</div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'sarah.villanueva@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 882 1450'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-list-check" style="margin-right:5px;"></i> Operations Role</span><span style="font-weight:700;color:#059669;">Fleet Dispatch &amp; Booking Approvals</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-building" style="margin-right:5px;"></i> Station</span><span style="font-weight:600;color:#0f172a;">RentFlow Main Hub Operations</span></div>
+      </div>
+
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-list-check" style="color:#059669;margin-right:6px;"></i> Operations Shortcuts</h4>
+      
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        <button class="btn btn-ghost" id="staffGoDashboard" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-chart-pie" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Operations Dashboard</div>
+            <div style="font-size:0.75rem;color:#64748b;">Overview of booking queue and fleet status</div>
+          </div>
+        </button>
+
+        <button class="btn btn-ghost" id="staffGoRequests" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-clipboard-question" style="color:#f59e0b;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Booking Requests &amp; Approvals</div>
+            <div style="font-size:0.75rem;color:#64748b;">Review and approve incoming reservations</div>
+          </div>
+        </button>
+
+        <button class="btn btn-ghost" id="staffGoActive" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-key" style="color:#059669;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Active Rentals &amp; Dispatches</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage vehicles currently on road and key release</div>
+          </div>
+        </button>
+
+        <button class="btn btn-ghost" id="staffGoReturns" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-rotate-left" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Vehicle Returns &amp; Inspections</div>
+            <div style="font-size:0.75rem;color:#64748b;">Check-in returned vehicles and verify fuel level</div>
+          </div>
+        </button>
+      </div>
+
+      <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
+        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out</button>
+      </div>
+    `;
+  } else {
+    // Customer (Guest)
+    modalContent = `
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,99,235,0.25);">${initials}</div>
+          <div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Mark Lester Ramos'}</h3>
+            <span style="font-size:0.78rem;color:#2563eb;font-weight:700;"><i class="fa-solid fa-user-check" style="margin-right:3px;"></i> Verified Customer</span>
+          </div>
+        </div>
+        <div class="modal-close" id="mClose">✕</div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'mark.ramos@gmail.com'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 582 9140'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-id-card" style="margin-right:5px;"></i> Driver License</span><span style="font-weight:600;color:#0f172a;">${p.license_number || 'N02-19-482019'}</span></div>
+      </div>
+
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-bars-staggered" style="color:#2563eb;margin-right:6px;"></i> Customer Menu</h4>
+      
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        <button class="btn btn-ghost" id="umProfile" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-user-gear" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Profile &amp; Contact Details</div>
+            <div style="font-size:0.75rem;color:#64748b;">View &amp; update personal info, phone, and address</div>
+          </div>
+        </button>
+
         <button class="btn btn-ghost" id="umBookings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <i class="fa-solid fa-calendar-check" style="color:#059669;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
@@ -131,63 +256,69 @@ export function openUserMenuModal() {
             <div style="font-size:0.75rem;color:#64748b;">View active reservations, receipts, and refund requests</div>
           </div>
         </button>
-      ` : ''}
 
-      <button class="btn btn-ghost" id="umSupport" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-        <i class="fa-solid fa-headset" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
-        <div>
-          <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Support Contact</div>
-          <div style="font-size:0.75rem;color:#64748b;">Hotline: ${comp.phone || '+63 67676767'} | Email: ${comp.email || 'vehicleretal.ph'}</div>
-        </div>
-      </button>
-    </div>
+        <button class="btn btn-ghost" id="umFavorites" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-heart" style="color:#e11d48;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Favorites</div>
+            <div style="font-size:0.75rem;color:#64748b;">View your saved cars &amp; motorcycles</div>
+          </div>
+        </button>
 
-    <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
-      <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out of Account</button>
-    </div>
-  `);
+        <button class="btn btn-ghost" id="umSupport" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <i class="fa-solid fa-headset" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Support Contact</div>
+            <div style="font-size:0.75rem;color:#64748b;">Hotline: ${comp.phone || '+63 67676767'} | Email: ${comp.email || 'vehicleretal.ph'}</div>
+          </div>
+        </button>
+      </div>
+
+      <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
+        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out of Account</button>
+      </div>
+    `;
+  }
+
+  openModal(modalContent);
 
   $('#mClose').addEventListener('click', closeModal);
   $('#umLogout').addEventListener('click', () => { closeModal(); logout(); });
 
+  // Admin shortcuts
+  const aSet = $('#adminGoSettings');
+  if (aSet) aSet.addEventListener('click', () => { closeModal(); state.tab = 'settings'; renderShell(); });
+  const aVeh = $('#adminGoVehicles');
+  if (aVeh) aVeh.addEventListener('click', () => { closeModal(); state.tab = 'vehicles'; renderShell(); });
+  const aRep = $('#adminGoReports');
+  if (aRep) aRep.addEventListener('click', () => { closeModal(); state.tab = 'reports'; renderShell(); });
+  const aCus = $('#adminGoCustomers');
+  if (aCus) aCus.addEventListener('click', () => { closeModal(); state.tab = 'customers'; renderShell(); });
+  const aUsr = $('#adminGoUsers');
+  if (aUsr) aUsr.addEventListener('click', () => { closeModal(); state.tab = 'users'; renderShell(); });
+
+  // Staff shortcuts
+  const sDsh = $('#staffGoDashboard');
+  if (sDsh) sDsh.addEventListener('click', () => { closeModal(); state.tab = 'dashboard'; renderShell(); });
+  const sReq = $('#staffGoRequests');
+  if (sReq) sReq.addEventListener('click', () => { closeModal(); state.tab = 'requests'; renderShell(); });
+  const sAct = $('#staffGoActive');
+  if (sAct) sAct.addEventListener('click', () => { closeModal(); state.tab = 'active'; renderShell(); });
+  const sRet = $('#staffGoReturns');
+  if (sRet) sRet.addEventListener('click', () => { closeModal(); state.tab = 'returns'; renderShell(); });
+
+  // Customer shortcuts
   const pBtn = $('#umProfile');
-  if (pBtn) {
-    pBtn.addEventListener('click', () => {
-      closeModal();
-      if (state.portal === 'customer') {
-        state.tab = 'profile';
-        renderShell();
-      } else {
-        toast(`Profile info for ${state.profile.full_name}`, 'info');
-      }
-    });
-  }
-
-  const fBtn = $('#umFavorites');
-  if (fBtn) {
-    fBtn.addEventListener('click', () => {
-      closeModal();
-      state.tab = 'favorites';
-      renderShell();
-    });
-  }
-
+  if (pBtn) pBtn.addEventListener('click', () => { closeModal(); state.tab = 'profile'; renderShell(); });
   const bBtn = $('#umBookings');
-  if (bBtn) {
-    bBtn.addEventListener('click', () => {
-      closeModal();
-      state.tab = 'bookings';
-      renderShell();
-    });
-  }
-
+  if (bBtn) bBtn.addEventListener('click', () => { closeModal(); state.tab = 'bookings'; renderShell(); });
+  const fBtn = $('#umFavorites');
+  if (fBtn) fBtn.addEventListener('click', () => { closeModal(); state.tab = 'favorites'; renderShell(); });
   const sBtn = $('#umSupport');
-  if (sBtn) {
-    sBtn.addEventListener('click', () => {
-      const curComp = getSystemSettings().company || DEFAULT_SETTINGS.company;
-      toast(`Support Hotline: ${curComp.phone || '+63 67676767'} | Email: ${curComp.email || 'vehicleretal.ph'}`, 'info');
-    });
-  }
+  if (sBtn) sBtn.addEventListener('click', () => {
+    const curComp = getSystemSettings().company || DEFAULT_SETTINGS.company;
+    toast(`Support Hotline: ${curComp.phone || '+63 67676767'} | Email: ${curComp.email || 'vehicleretal.ph'}`, 'info');
+  });
 }
 
 export function renderShell() {
@@ -285,7 +416,7 @@ export function renderShell() {
             <div class="user-avatar">${initials}</div>
             <div class="user-meta" style="flex:1;">
               <div class="user-name">${state.profile?.full_name || 'User'}</div>
-              <div class="user-role"><i class="fa-solid fa-id-card" style="color:#2563eb;margin-right:2px;"></i> ${getRoleDisplayName(state.profile?.role)} · Menu</div>
+              <div class="user-role"><i class="fa-solid ${state.portal === 'admin' ? 'fa-shield-halved' : state.portal === 'staff' ? 'fa-user-tie' : 'fa-user-check'}" style="color:#2563eb;margin-right:2px;"></i> ${getRoleDisplayName(state.profile?.role)} · Menu</div>
             </div>
             <i class="fa-solid fa-ellipsis-vertical" style="color:#94a3b8;font-size:0.9rem;"></i>
           </div>
