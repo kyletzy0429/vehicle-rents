@@ -218,6 +218,9 @@ export async function renderMyBookings(view) {
   }
   bookings.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
+  // Store in memory for instant modal retrieval (0ms)
+  window._activeCustomerBookings = bookings;
+
   view.innerHTML = `
     <div class="view">
       <div class="section-head">
@@ -229,12 +232,23 @@ export async function renderMyBookings(view) {
     </div>
   `;
 
-  $$('[data-pay-id]').forEach(btn => btn.addEventListener('click', () => openPaymentModal(btn.dataset.payId)));
-  $$('[data-pay-balance-id]').forEach(btn => btn.addEventListener('click', () => openPaymentModal(btn.dataset.payBalanceId, true)));
-  $$('[data-receipt-id]').forEach(btn => btn.addEventListener('click', () => openPaidReceiptModal(btn.dataset.receiptId)));
-  $$('[data-refund-req-id]').forEach(btn => btn.addEventListener('click', () => openRefundRequestModal(btn.dataset.refundReqId)));
-  $$('[data-refund-voucher-id]').forEach(btn => btn.addEventListener('click', () => openRefundVoucherModal(btn.dataset.refundVoucherId)));
-  $$('[data-cancel-id]').forEach(btn => btn.addEventListener('click', async () => {
+  // Attach event listeners directly to buttons
+  $$('[data-pay-id]', view).forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPaymentModal(btn.dataset.payId);
+    });
+  });
+  $$('[data-pay-balance-id]', view).forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPaymentModal(btn.dataset.payBalanceId, true);
+    });
+  });
+  $$('[data-receipt-id]', view).forEach(btn => btn.addEventListener('click', () => openPaidReceiptModal(btn.dataset.receiptId)));
+  $$('[data-refund-req-id]', view).forEach(btn => btn.addEventListener('click', () => openRefundRequestModal(btn.dataset.refundReqId)));
+  $$('[data-refund-voucher-id]', view).forEach(btn => btn.addEventListener('click', () => openRefundVoucherModal(btn.dataset.refundVoucherId)));
+  $$('[data-cancel-id]', view).forEach(btn => btn.addEventListener('click', async () => {
     const bookingId = btn.dataset.cancelId;
     if (!confirm('Are you sure you want to cancel this booking request?')) return;
 
@@ -271,23 +285,23 @@ export function customerBookingRow(b) {
     actions = `<button class="btn btn-danger btn-sm" data-cancel-id="${b.id}"><i class="fa-solid fa-xmark"></i> Cancel Request</button>`;
   } else if (b.status === 'approved') {
     actions = `
-      <button class="btn btn-primary btn-sm" data-pay-id="${b.id}"><i class="fa-solid fa-credit-card"></i> Pay / Reserve</button>
-      <button class="btn btn-danger btn-sm" data-cancel-id="${b.id}"><i class="fa-solid fa-xmark"></i> Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay / Reserve</button>
+      <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}"><i class="fa-solid fa-xmark"></i> Cancel</button>
     `;
   } else if (b.status === 'active' || b.status === 'completed') {
     actions = `
-      ${isPartial ? `<button class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" style="background:#2563eb;border-color:#2563eb;"><i class="fa-solid fa-wallet"></i> Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
-      <button class="btn btn-ghost btn-sm" data-receipt-id="${b.id}"><i class="fa-solid fa-print"></i> Receipt</button>
-      <button class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
+      ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)" style="background:#2563eb;border-color:#2563eb;"><i class="fa-solid fa-wallet"></i> Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}"><i class="fa-solid fa-print"></i> Receipt</button>
+      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
     `;
   } else if (b.status === 'cancelled' || b.status === 'rejected') {
     actions = `
-      <button class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
+      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
     `;
   } else if (b.status === 'refund_requested') {
     actions = `<span class="muted" style="font-size:0.78rem;color:#b45309;font-weight:600;"><i class="fa-solid fa-clock"></i> Refund Pending</span>`;
   } else if (b.status === 'refunded') {
-    actions = `<button class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}"><i class="fa-solid fa-receipt"></i> Refund Voucher</button>`;
+    actions = `<button type="button" class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}"><i class="fa-solid fa-receipt"></i> Refund Voucher</button>`;
   }
 
   const badgeHTML = isPartial
@@ -327,33 +341,42 @@ export function customerBookingRow(b) {
 
 export async function openPaymentModal(bookingId, isPayingBalance = false) {
   let b = null;
-  try {
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*, vehicles(name)')
-      .eq('id', bookingId)
-      .single();
-    if (!error && data) {
-      b = data;
-    }
-  } catch (e) {
-    console.warn('Supabase booking query error:', e);
+
+  // 1. Instant check in memory (0ms)
+  if (window._activeCustomerBookings) {
+    b = window._activeCustomerBookings.find(item => String(item.id) === String(bookingId));
   }
 
+  // 2. Instant check in local bookings storage
   if (!b) {
-    const local = getLocalBookings().find(item => String(item.id) === String(bookingId));
-    if (local) {
-      b = { ...local };
-      if (!b.vehicles) {
-        const v = (state.vehicles || []).find(v => String(v.id) === String(b.vehicle_id));
-        b.vehicles = { name: v ? v.name : (b.vehicle_name || 'Vehicle') };
+    b = getLocalBookings().find(item => String(item.id) === String(bookingId));
+  }
+
+  // 3. Fallback to Supabase if numeric/DB id and not yet found
+  if (!b && !String(bookingId).startsWith('bk-')) {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*, vehicles(name, plate_number, image_url)')
+        .eq('id', bookingId)
+        .single();
+      if (!error && data) {
+        b = data;
       }
+    } catch (e) {
+      console.warn('Supabase booking query error:', e);
     }
   }
 
   if (!b) {
-    toast('Booking details not found.', 'error');
+    toast('Booking details not found. Please refresh the page.', 'error');
     return;
+  }
+
+  // Ensure vehicles object is safely populated
+  if (!b.vehicles || typeof b.vehicles !== 'object') {
+    const v = (state.vehicles || []).find(v => String(v.id) === String(b.vehicle_id));
+    b.vehicles = v ? { ...v } : { name: b.vehicle_name || 'Vehicle' };
   }
 
   let selectedMethod = 'gcash';
@@ -361,7 +384,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
   const totalAmount = Number(b.total_amount || 0);
   const currentPaid = Number(b.paid_amount || 0);
-  const currentBalance = Number(b.balance_due || (totalAmount - currentPaid));
+  const currentBalance = Number(b.balance_due ?? (totalAmount - currentPaid));
 
   function getCalculatedPayNow(pct) {
     if (isPayingBalance) return currentBalance;
@@ -371,17 +394,19 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
   function getCalculatedBalance(pct) {
     if (isPayingBalance) return 0;
-    return totalAmount - getCalculatedPayNow(pct);
+    return Math.max(0, totalAmount - getCalculatedPayNow(pct));
   }
 
   let payNow = getCalculatedPayNow(selectedPct);
   let balanceDue = getCalculatedBalance(selectedPct);
 
+  const vehicleName = b.vehicles?.name || b.vehicle_name || 'Vehicle';
+
   const modal = openModal(`
     <div class="modal-head">
       <div>
         <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">${isPayingBalance ? 'Pay Remaining Balance' : 'Pay / Reserve Booking'}</h3>
-        <span class="muted" style="font-size:0.78rem;">${b.vehicles?.name || 'Vehicle'} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
+        <span class="muted" style="font-size:0.78rem;">${vehicleName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
       </div>
       <div class="modal-close" id="mClose">✕</div>
     </div>
@@ -426,7 +451,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
     <div class="auth-tabs" style="margin-bottom:16px;">
       <div class="auth-tab" data-pay-method="cash">
-        <i class="fa-solid fa-money-bill-wave" style="color:#16a34a;margin-right:4px;"></i> Cash
+        <i class="fa-solid fa-money-bill-wave" style="color:#16a34a;margin-right:4px;"></i> Cash on Pickup
       </div>
       <div class="auth-tab active" data-pay-method="gcash">
         <i class="fa-solid fa-qrcode" style="color:#2563eb;margin-right:4px;"></i> GCash QR
@@ -441,31 +466,32 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
     <div id="payContent"></div>
 
-    <button class="btn btn-primary btn-block" id="payBtn" style="margin-top:16px;">Confirm Payment of ${fmtMoney(payNow)}</button>
+    <button type="button" class="btn btn-primary btn-block" id="payBtn" style="margin-top:16px;">Confirm Payment of ${fmtMoney(payNow)}</button>
   `, false);
 
-  $('#mClose').addEventListener('click', closeModal);
+  const mClose = modal.querySelector('#mClose');
+  if (mClose) mClose.addEventListener('click', closeModal);
 
   if (!isPayingBalance) {
-    $$('#tierGrid .pay-tier-btn', modal).forEach(btn => {
+    modal.querySelectorAll('.pay-tier-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        $$('#tierGrid .pay-tier-btn', modal).forEach(b => b.classList.remove('active'));
+        modal.querySelectorAll('.pay-tier-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedPct = Number(btn.dataset.pct);
         payNow = getCalculatedPayNow(selectedPct);
         balanceDue = getCalculatedBalance(selectedPct);
 
-        const lbl = $('#summaryTierLabel', modal);
+        const lbl = modal.querySelector('#summaryTierLabel');
         if (lbl) lbl.textContent = selectedPct === 100 ? 'Full Payment (100%)' : `${selectedPct}% Partial Downpayment`;
-        const balEl = $('#summaryBalance', modal);
+        const balEl = modal.querySelector('#summaryBalance');
         if (balEl) balEl.textContent = fmtMoney(balanceDue);
-        const payEl = $('#summaryPayNow', modal);
+        const payEl = modal.querySelector('#summaryPayNow');
         if (payEl) payEl.textContent = fmtMoney(payNow);
 
-        const pBtn = $('#payBtn', modal);
+        const pBtn = modal.querySelector('#payBtn');
         if (pBtn) {
           pBtn.textContent = selectedMethod === 'cash'
-            ? `Confirm Cash Reservation (${fmtMoney(payNow)})`
+            ? `Reserve Vehicle (Cash on Pickup · ${fmtMoney(payNow)})`
             : `Confirm Payment of ${fmtMoney(payNow)}`;
         }
 
@@ -475,8 +501,10 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
   }
 
   function renderPaymentMethodContent() {
-    const container = $('#payContent');
-    const pBtn = $('#payBtn', modal);
+    const container = modal.querySelector('#payContent');
+    const pBtn = modal.querySelector('#payBtn');
+    if (!container) return;
+
     if (selectedMethod === 'cash') {
       container.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
@@ -485,7 +513,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           </div>
           <div style="font-weight:700;font-size:0.95rem;color:#166534;margin-bottom:4px;">Cash on Pickup / Counter</div>
           <p style="font-size:0.82rem;color:#15803d;margin:0 0 12px 0;line-height:1.4;">
-            Magbayad ng cash nang direkta sa counter bago i-release ang sasakyan.
+            Magbayad ng cash nang direkta sa branch counter bago kunin ang susi ng sasakyan.
           </p>
           <div style="background:#ffffff;border:1px dashed #86efac;border-radius:8px;padding:12px;text-align:left;font-size:0.78rem;color:#334155;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
@@ -497,12 +525,12 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
               <strong style="color:#0f172a;">RentFlow Main Hub Counter</strong>
             </div>
             <div style="font-size:0.72rem;color:#64748b;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:6px;">
-              <i class="fa-solid fa-circle-check" style="color:#16a34a;margin-right:4px;"></i> I-confirm ang reservation para mai-hold agad ang unit para sa iyo.
+              <i class="fa-solid fa-circle-check" style="color:#16a34a;margin-right:4px;"></i> I-confirm ang reservation para mai-reserve agad ang sasakyan para sa iyo.
             </div>
           </div>
         </div>
       `;
-      if (pBtn) pBtn.textContent = `Confirm Cash Reservation (${fmtMoney(payNow)})`;
+      if (pBtn) pBtn.textContent = `Reserve Vehicle (Cash on Pickup · ${fmtMoney(payNow)})`;
     } else if (selectedMethod === 'gcash') {
       container.innerHTML = `
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
@@ -575,9 +603,9 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
   renderPaymentMethodContent();
 
-  $$('.auth-tab', modal).forEach(tab => {
+  modal.querySelectorAll('.auth-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      $$('.auth-tab', modal).forEach(t => t.classList.remove('active'));
+      modal.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       selectedMethod = tab.dataset.payMethod;
       renderPaymentMethodContent();
@@ -605,26 +633,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       const newPaymentType = newBalance === 0 ? 'full' : 'partial';
       const finalRefNo = selectedMethod === 'cash' ? `CASH-${bookingId}-${Date.now().toString().slice(-4)}` : (refNo || `RCPT-${bookingId}`);
 
-      try {
-        await supabase.from('payments').insert({
-          booking_id: bookingId,
-          amount: payNow,
-          status: 'successful',
-          method: methodName,
-          paid_at: new Date().toISOString(),
-        });
-      } catch (e) {
-        console.warn('Payment insert DB notice:', e);
-      }
-
-      let updatePayload = {
-        status: 'active',
-        paid_amount: newTotalPaid,
-        balance_due: newBalance,
-        payment_type: newPaymentType,
-        downpayment_percent: selectedPct
-      };
-
+      // Update local storage booking immediately
       updateLocalBookingStatus(bookingId, 'active', {
         paid_amount: newTotalPaid,
         balance_due: newBalance,
@@ -632,26 +641,38 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         downpayment_percent: selectedPct
       });
 
-      try {
-        let { error: updateErr } = await supabase.from('bookings').update(updatePayload).eq('id', bookingId);
-        if (updateErr) {
-          delete updatePayload.paid_amount;
-          delete updatePayload.balance_due;
-          delete updatePayload.payment_type;
-          delete updatePayload.downpayment_percent;
-          await supabase.from('bookings').update(updatePayload).eq('id', bookingId);
+      // Update in-memory booking
+      if (b) {
+        b.status = 'active';
+        b.paid_amount = newTotalPaid;
+        b.balance_due = newBalance;
+        b.payment_type = newPaymentType;
+        b.downpayment_percent = selectedPct;
+      }
+
+      // If DB booking, save to Supabase
+      if (!isNaN(Number(bookingId))) {
+        try {
+          await supabase.from('payments').insert({
+            booking_id: Number(bookingId),
+            amount: payNow,
+            status: 'successful',
+            method: methodName,
+            paid_at: new Date().toISOString(),
+          });
+          await supabase.from('bookings').update({
+            status: 'active',
+            paid_amount: newTotalPaid,
+            balance_due: newBalance,
+            payment_type: newPaymentType,
+            downpayment_percent: selectedPct
+          }).eq('id', Number(bookingId));
+          if (b.vehicle_id) {
+            await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+          }
+        } catch (e) {
+          console.warn('DB payment update notice:', e);
         }
-
-        await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
-
-        const rcptNo = `RCPT-${bookingId}-${Date.now().toString().slice(-5)}`;
-        await supabase.from('receipts').insert({
-          booking_id: bookingId,
-          receipt_number: rcptNo,
-          total_amount: payNow,
-        }).then(() => { }).catch(() => { });
-      } catch (e) {
-        console.warn('DB payment update fallback:', e);
       }
 
       toast(selectedMethod === 'cash'
@@ -669,6 +690,11 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     });
   }
 }
+
+// Expose globally for inline onclick guarantees
+window.openPaymentModal = openPaymentModal;
+window.handlePayClick = openPaymentModal;
+
 
 export async function openPaidReceiptModal(bookingId, payMethod = 'Online Payment', refNo = '') {
   let b = null;
