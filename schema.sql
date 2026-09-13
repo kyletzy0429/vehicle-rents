@@ -244,9 +244,7 @@ create policy "receipts: customer reads own"
     )
   );
 
--- =====================================================================
--- SEED DATA (safe to skip/edit)
--- =====================================================================
+
 insert into public.categories (name, daily_rate, description) values
   ('Economy',    35.00, 'Compact, fuel-efficient cars for city driving'),
   ('SUV',        65.00, 'Spacious vehicles for families and road trips'),
@@ -255,56 +253,45 @@ insert into public.categories (name, daily_rate, description) values
 on conflict do nothing;
 
 insert into public.vehicles (name, category_id, plate_number, status, seats, transmission, image_url, description)
-select 'Toyota Corolla', id, 'ECO-1001', 'available', 5, 'Automatic',
-  'https://images.unsplash.com/photo-1623869675184-0dea77a51dae?w=600',
+select 'Toyota Vios 1.5 G CVT', id, 'NCO-2914', 'available', 5, 'Automatic',
+  'images/vios.jpg',
   'Reliable and economical, perfect for everyday city trips.'
 from public.categories where name = 'Economy'
 on conflict (plate_number) do nothing;
 
 insert into public.vehicles (name, category_id, plate_number, status, seats, transmission, image_url, description)
-select 'Honda Civic', id, 'ECO-1002', 'available', 5, 'Automatic',
-  'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=600',
+select 'Toyota Wigo 1.0 G CVT', id, 'NCL-1049', 'available', 5, 'Automatic',
+  'images/wigo.jpg',
   'A smooth, quiet ride with excellent mileage.'
 from public.categories where name = 'Economy'
 on conflict (plate_number) do nothing;
 
 insert into public.vehicles (name, category_id, plate_number, status, seats, transmission, image_url, description)
-select 'Toyota Fortuner', id, 'SUV-2001', 'available', 7, 'Automatic',
-  'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600',
+select 'Toyota Fortuner 2.8 V 4x2 AT', id, 'NBD-8842', 'available', 7, 'Automatic',
+  'images/fortuner.jpg',
   'A rugged, spacious SUV built for family adventures.'
 from public.categories where name = 'SUV'
 on conflict (plate_number) do nothing;
 
 insert into public.vehicles (name, category_id, plate_number, status, seats, transmission, image_url, description)
-select 'Ford Everest', id, 'SUV-2002', 'available', 7, 'Automatic',
-  'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600',
+select 'Ford Ranger Raptor 2.0L Bi-Turbo', id, 'CBL-9481', 'available', 5, 'Automatic',
+  'images/raptor.jpg',
   'Powerful and comfortable for long-distance travel.'
 from public.categories where name = 'SUV'
 on conflict (plate_number) do nothing;
 
 insert into public.vehicles (name, category_id, plate_number, status, seats, transmission, image_url, description)
-select 'Mercedes-Benz E-Class', id, 'LUX-3001', 'available', 5, 'Automatic',
-  'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=600',
+select 'Mitsubishi Montero Sport GT 4x2', id, 'NGF-7102', 'available', 7, 'Automatic',
+  'images/montero.jpg',
   'Executive-class comfort and style for special occasions.'
 from public.categories where name = 'Luxury'
 on conflict (plate_number) do nothing;
 
 insert into public.vehicles (name, category_id, plate_number, status, seats, transmission, image_url, description)
-select 'Toyota Hiace', id, 'VAN-4001', 'available', 12, 'Manual',
-  'https://images.unsplash.com/photo-1601929889531-6a67a4b2fd39?w=600',
-  'Ideal for group trips, events, and cargo hauling.'
+select 'Toyota HiAce Commuter Deluxe 2.8', id, 'VAA-8012', 'available', 14, 'Manual',
+  'images/hiace.jpg',
+  'Ideal for group tours, events, and cargo hauling.'
 from public.categories where name = 'Van'
 on conflict (plate_number) do nothing;
 
--- =====================================================================
--- NOTES
--- =====================================================================
--- * After running this file, create your first accounts through the app's
---   Sign Up screen. The demo sign-up form lets you pick a role (Customer,
---   Staff, or Admin) so you can test all three portals. In a real
---   production deployment you would remove the role selector from sign-up
---   and instead have an Admin promote users from the "Manage Users" panel
---   (RLS already restricts role changes to admins).
--- * Realtime is optional. If you want live updates (e.g. staff sees new
---   booking requests instantly), enable Realtime on the "bookings" table
---   in Database -> Replication.
+

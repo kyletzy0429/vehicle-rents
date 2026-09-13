@@ -1,0 +1,282 @@
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0) !important;
+    box-shadow: none !important;
+    position: fixed;
+    width: 270px;
+  }
+
+  .sidebar-overlay {
+    display: none !important;
+  }
+
+  .sidebar-close-btn {
+    display: none !important;
+  }
+
+  .main-wrapper {
+    margin-left: 270px;
+  }
+
+  .hamburger-btn {
+    display: none !important;
+  }
+}
+
+
+@media (max-width: 1023px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    box-shadow: none;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 30px rgba(15, 23, 42, 0.15);
+  }
+
+  .main-wrapper {
+    margin-left: 0;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 10px 14px;
+  }
+
+  .main-topbar,
+  .portal-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    gap: 8px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .portal-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .portal-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-left: auto !important;
+  }
+
+  header nav,
+  .portal-header nav {
+    display: none !important;
+  }
+
+  #brandHomeBtn div {
+    display: block;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #mainView,
+  .customer-main-view,
+  .admin-main-view {
+    padding: 16px 12px 60px 12px !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .grid-vehicles {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .vehicle-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .vehicle-img-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 180px;
+    box-sizing: border-box !important;
+  }
+
+  .vehicle-body {
+    padding: 16px 14px;
+    gap: 10px;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .vehicle-name {
+    font-size: 1.05rem;
+    word-break: break-word;
+  }
+
+  .vehicle-foot {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px;
+    padding-top: 10px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .rate {
+    font-size: 1.15rem;
+    white-space: nowrap;
+  }
+
+  .btn-sm {
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .grid-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-bar input,
+  .search-bar select {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .pill-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .pill-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pill {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .section-head h2 {
+    font-size: 1.25rem;
+  }
+
+  #topUserMenuBtn span,
+  #topUserMenuBtn .fa-chevron-down {
+    display: none;
+  }
+
+  #topUserMenuBtn {
+    padding: 0 !important;
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50% !important;
+    justify-content: center;
+  }
+
+  .sys-status-pill {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .demo-role-label {
+    display: none !important;
+  }
+  .demo-role-pill {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+  }
+  .demo-customer-select {
+    max-width: 135px;
+    font-size: 0.74rem !important;
+    padding: 0 6px !important;
+  }
+}
+
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .topbar,
+  .portal-nav,
+  .modal-close,
+  #logoutBtn,
+  .btn,
+  .no-print,
+  .toast-wrap,
+  .sidebar,
+  .main-topbar {
+    display: none !important;
+  }
+
+  .modal-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .modal {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 24px !important;
+    background: #ffffff !important;
+  }
+}

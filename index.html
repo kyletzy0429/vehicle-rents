@@ -1,24 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vehicle Rental Management System</title>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vehicle Rental Management System</title>
   <meta name="description" content="Streamlined customer, staff, and admin portal for renting vehicles." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z'/><circle cx='7.5' cy='14.5' r='1.5'/><circle cx='16.5' cy='14.5' r='1.5'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/style.css?v=1.4" />
 </head>
 <body>
-  <!-- Ambient background glow elements -->
-  <div class="ambient-glow">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="bg-grid"></div>
-  </div>
+
+  <script>
+    const loadTimeout = setTimeout(function() {
+      const spin = document.querySelector('#app .loading-spin');
+      if (spin) {
+        const wrap = document.querySelector('#app .auth-wrap');
+        if (wrap) {
+          wrap.innerHTML = `
+            <div class="glass auth-card" style="text-align:center;padding:32px 24px;max-width:440px;">
+              <div style="font-size:2.5rem;margin-bottom:12px;color:var(--accent,#2563eb);"><i class="fa-solid fa-hourglass-half"></i></div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin-bottom:8px;">Connection Taking Longer Than Usual</h3>
+              <p style="font-size:0.85rem;color:var(--text-mid);margin-bottom:20px;line-height:1.5;">
+                The system is waiting for database/CDN connection. If this persists, click Reload or Reset Session to proceed.
+              </p>
+              <div style="display:flex;gap:10px;justify-content:center;">
+                <button type="button" class="btn btn-primary" onclick="window.location.reload();">
+                  <i class="fa-solid fa-rotate-right"></i> Reload Page
+                </button>
+                <button type="button" class="btn btn-ghost" onclick="localStorage.clear();sessionStorage.clear();window.location.reload();">
+                  <i class="fa-solid fa-trash-can"></i> Reset Session
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }, 7000);
+
+    window.addEventListener('error', function(e) {
+      clearTimeout(loadTimeout);
+      console.error('System Error:', e.message, e.filename, e.lineno);
+      const app = document.getElementById('app');
+      if (app && document.querySelector('#app .loading-spin')) {
+        app.innerHTML = `
+          <div class="auth-wrap">
+            <div class="glass auth-card" style="padding:28px 24px;max-width:480px;">
+              <h3 style="color:#dc2626;display:flex;align-items:center;gap:8px;font-size:1.1rem;margin-bottom:12px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Script Error
+              </h3>
+              <p style="font-size:0.85rem;color:var(--text-mid);margin-bottom:16px;">
+                ${e.message || 'An unexpected error occurred while loading system modules.'}
+              </p>
+              <button type="button" class="btn btn-primary btn-block" onclick="window.location.reload();">
+                <i class="fa-solid fa-rotate-right"></i> Reload Application
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    });
+  </script>
 
   <div id="app">
     <div class="auth-wrap">
@@ -26,7 +71,7 @@
     </div>
   </div>
   <div class="toast-wrap" id="toastWrap"></div>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="js/app.js?v=1.4"></script>
 </body>
 </html>
 

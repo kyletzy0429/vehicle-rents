@@ -1,120 +1,60 @@
 # RentFlow — Vehicle Rental Management System
 
-A complete Customer / Staff / Admin vehicle rental system: plain HTML, CSS, and
-JavaScript on the front end, Supabase (Postgres + Auth + Row Level Security)
-on the back end. No build step, no framework — open it and it runs.
+A professional, full-featured vehicle rental management system featuring dedicated workflows for **Customers (Guests)**, **Operations Staff (Managers)**, and **System Administrators**.
 
-Follows the flow: browse → check availability → book → staff approves/rejects
-→ payment → vehicle released → customer uses vehicle → return & damage
-inspection → finalize payment → vehicle available again → receipt.
+Built with modern Vanilla JavaScript (ES Modules), custom responsive CSS, and powered by Supabase (PostgreSQL with Row Level Security).
 
-## Files
+---
 
-```
-index.html    the app shell
-style.css     glassmorphism design system
-app.js        all application logic (auth, data, all 3 portals)
-config.js     <-- put your Supabase URL + anon key here
-schema.sql    run this in Supabase to create tables, security rules, seed data
-```
+## Features
 
-## 1. Create a Supabase project
+### 1. Guest / Customer Portal
+- **Vehicle Catalog:** Browse vehicles filtered by categories (Sedans, SUVs, MPVs, Economy, Motorcycles, Vans).
+- **Search & Filter:** Instant search by model name, transmission, fuel type, and price range.
+- **Booking Workflow:** Multi-step reservation process with date picker, price calculation, and optional promo codes.
+- **My Bookings:** Track booking status (Pending, Approved, Active, Completed), payment receipts, and balance dues.
+- **Profile & Favorites:** Manage personal details and driver's license, and bookmark favorite vehicles.
 
-1. Go to https://supabase.com, sign in, and click **New Project**.
-2. Pick a name, database password, and region, then wait ~2 minutes for it to spin up.
+### 2. Operations / Staff Portal
+- **Operations Dashboard:** Live fleet overview, rental statistics, and pending actions.
+- **Booking Requests:** Review, approve, or reject incoming reservations with reason notes.
+- **Active Rentals & Handovers:** Record downpayments, release vehicles, and monitor ongoing trips.
+- **Vehicle Returns:** Inspect vehicle condition, log extra charges (damages/fuel), finalize returns, and issue receipts.
+- **Refunds & Claims:** Process deposit returns and vouchers.
 
-## 2. Run the database setup
+### 3. Administrator Portal
+- **Fleet Management:** Add, edit, decommission, and maintain vehicles with custom daily rates and photo uploads.
+- **Categories & Rates:** Configure vehicle classes and default rental pricing.
+- **Transactions & Analytics:** Comprehensive audit log of all bookings, revenues, payments, and fleet utilization.
+- **System Settings:** Customize company branding, contact info, rental terms, and tax policies.
 
-1. In your Supabase project, open **SQL Editor** → **New query**.
-2. Open `schema.sql` from this folder, copy the whole file, paste it in, and click **Run**.
-3. This creates all tables (`profiles`, `categories`, `vehicles`, `bookings`,
-   `payments`, `rental_returns`, `receipts`), sets up Row Level Security so
-   customers only see their own data while staff/admin see everything, adds a
-   trigger that auto-creates a `profiles` row whenever someone signs up, and
-   seeds a few sample categories and vehicles so the app isn't empty on first run.
+---
 
-## 3. Connect the app to your project
+## Tech Stack
+- **Frontend:** HTML5, Modern CSS3 (CSS Variables, Flexbox, Grid, Light & Dark Theme), Vanilla JavaScript (ES6+ Modules)
+- **Icons & Typography:** FontAwesome 6, Inter, Plus Jakarta Sans, Space Grotesk
+- **Backend & Database:** Supabase (PostgreSQL, Row Level Security, Storage)
 
-1. In Supabase, go to **Project Settings → API**.
-2. Copy the **Project URL** and the **anon / public** key.
-3. Open `config.js` and paste them in:
+---
 
-```js
-export const SUPABASE_URL = 'https://xxxxxxxx.supabase.co';
-export const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
-```
+## Getting Started
 
-The anon key is meant to be public — your Row Level Security policies (already
-set up by `schema.sql`) control what each user can actually read or write.
+### 1. Database Setup
+1. Create a project on [Supabase](https://supabase.com).
+2. Go to **SQL Editor** -> **New Query**.
+3. Copy and run the contents of [schema.sql](schema.sql).
 
-## 4. Turn off "Confirm email" for easy local testing (optional)
-
-By default Supabase requires email confirmation before login works. For quick
-testing: **Authentication → Providers → Email** → turn off **Confirm email**.
-(Leave it on if you want a production-realistic flow with real inboxes.)
-
-## 5. Run it
-
-Because the app uses ES module imports, open it through a local web server
-rather than double-clicking the file. Any of these work:
-
-**Option A — VS Code:** install the "Live Server" extension, right-click
-`index.html` → **Open with Live Server**.
-
-**Option B — Python (already on most Macs/Linux):**
-```bash
-cd vehicle-rental
-python3 -m http.server 8000
-```
-Then visit `http://localhost:8000`.
-
-**Option C — Node:**
-```bash
-cd vehicle-rental
-npx serve .
+### 2. Configure API Credentials
+Open `js/config.js` and input your Supabase project URL and anon key:
+```javascript
+export const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+export const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
 ```
 
-## 6. Try all three portals
+### 3. Running Locally
+Run with any local web server:
+- **VS Code:** Right-click `index.html` -> **Open with Live Server**.
+- **Node.js:** `npx serve .`
+- **Python:** `python -m http.server 5500`
 
-The sign-up form has a role picker (Customer / Staff / Admin) so you can
-create one test account for each and try the whole flow:
-
-1. **Sign up as Customer** → Browse Vehicles → open a vehicle → pick dates →
-   submit a booking request.
-2. **Sign up as Staff** (separate email) → Booking Requests → Approve it →
-   Active Rentals → Record Payment (marks it successful) → vehicle becomes
-   "rented."
-3. Back in the **Staff** account → Returns → Process Return on that booking →
-   say "No" to damage (or "Yes" and enter a charge) → Finalize. This generates
-   a receipt and frees the vehicle up again.
-4. Back in the **Customer** account → My Bookings → the completed booking now
-   has a **View Receipt** button.
-5. **Sign up as Admin** (separate email) → Dashboard for stats, Vehicles /
-   Categories & Rates to manage the fleet and pricing, Users to promote or
-   demote roles, Rentals & Transactions and Reports for the full picture.
-
-> **Production note:** the role picker on sign-up is a deliberate demo
-> shortcut so you can test every portal without manual database edits. Before
-> shipping this for real, remove the role selector from sign-up (default
-> everyone to `customer`) and instead promote trusted people to `staff` or
-> `admin` from the Admin → Users panel — the database policies already
-> restrict role changes to admins only, so the UI is the only thing to change.
-
-## How the workflow maps to the code
-
-| Flowchart step | Where it happens |
-|---|---|
-| Browse / Search / Check Availability | `renderBrowse()`, `openVehicleDetail()` in app.js — checks for overlapping bookings before allowing a request |
-| Submit Booking Request | inserts a `bookings` row with `status = 'pending'` |
-| Staff reviews / Approve / Reject | `renderStaffRequests()` — updates `bookings.status` and, on reject, stores a note the customer sees |
-| Record Payment / Payment Successful? | `openStaffPaymentModal()` and the customer-side `openPaymentModal()` — inserts into `payments`; on success sets booking to `active` and vehicle to `rented` |
-| During Rental Period | booking stays `active`; nothing to do until return |
-| Return Process / Inspect / Damage | `openReturnModal()` — inserts into `rental_returns`, optionally adds a payment for damage charges |
-| Finalize Payment / Update Vehicle / Generate Receipt | booking set to `completed`, vehicle set to `available`, a row inserted into `receipts` |
-| Admin panels | `renderAdminDashboard/Vehicles/Categories/Users/Rentals/Reports()` |
-
-## Customizing the look
-
-All design tokens (colors, radii, blur) live at the top of `style.css` under
-`:root`. Swap the `--accent`, `--bg-1/2/3` gradient stops, or fonts there to
-retheme the whole app without touching component styles.
+Visit `http://localhost:5500` in your web browser.
