@@ -34,9 +34,6 @@ export async function renderStaffDashboard(view) {
         <div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Operations Dashboard</h2>
-            <span class="badge" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-size:0.75rem;padding:3px 8px;">
-              <i class="fa-solid fa-circle" style="font-size:0.5rem;margin-right:4px;"></i> Live Operations
-            </span>
           </div>
           <p style="color:#64748b;font-size:0.85rem;margin:0;">
             Manager: <strong>${state.profile?.full_name || 'Sarah Manager'}</strong> · Real-time booking queue, dispatches, returns, and fleet status.

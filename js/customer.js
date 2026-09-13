@@ -326,7 +326,36 @@ export function customerBookingRow(b) {
 }
 
 export async function openPaymentModal(bookingId, isPayingBalance = false) {
-  const { data: b } = await supabase.from('bookings').select('*, vehicles(name)').eq('id', bookingId).single();
+  let b = null;
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*, vehicles(name)')
+      .eq('id', bookingId)
+      .single();
+    if (!error && data) {
+      b = data;
+    }
+  } catch (e) {
+    console.warn('Supabase booking query error:', e);
+  }
+
+  if (!b) {
+    const local = getLocalBookings().find(item => String(item.id) === String(bookingId));
+    if (local) {
+      b = { ...local };
+      if (!b.vehicles) {
+        const v = (state.vehicles || []).find(v => String(v.id) === String(b.vehicle_id));
+        b.vehicles = { name: v ? v.name : (b.vehicle_name || 'Vehicle') };
+      }
+    }
+  }
+
+  if (!b) {
+    toast('Booking details not found.', 'error');
+    return;
+  }
+
   let selectedMethod = 'gcash';
   let selectedPct = isPayingBalance ? 100 : (b.downpayment_percent || 100);
 
@@ -352,7 +381,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     <div class="modal-head">
       <div>
         <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">${isPayingBalance ? 'Pay Remaining Balance' : 'Pay / Reserve Booking'}</h3>
-        <span class="muted" style="font-size:0.78rem;">${b.vehicles.name} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
+        <span class="muted" style="font-size:0.78rem;">${b.vehicles?.name || 'Vehicle'} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
       </div>
       <div class="modal-close" id="mClose">✕</div>
     </div>
@@ -396,6 +425,9 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     </div>
 
     <div class="auth-tabs" style="margin-bottom:16px;">
+      <div class="auth-tab" data-pay-method="cash">
+        <i class="fa-solid fa-money-bill-wave" style="color:#16a34a;margin-right:4px;"></i> Cash
+      </div>
       <div class="auth-tab active" data-pay-method="gcash">
         <i class="fa-solid fa-qrcode" style="color:#2563eb;margin-right:4px;"></i> GCash QR
       </div>
@@ -431,7 +463,11 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         if (payEl) payEl.textContent = fmtMoney(payNow);
 
         const pBtn = $('#payBtn', modal);
-        if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
+        if (pBtn) {
+          pBtn.textContent = selectedMethod === 'cash'
+            ? `Confirm Cash Reservation (${fmtMoney(payNow)})`
+            : `Confirm Payment of ${fmtMoney(payNow)}`;
+        }
 
         renderPaymentMethodContent();
       });
@@ -440,7 +476,34 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
   function renderPaymentMethodContent() {
     const container = $('#payContent');
-    if (selectedMethod === 'gcash') {
+    const pBtn = $('#payBtn', modal);
+    if (selectedMethod === 'cash') {
+      container.innerHTML = `
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
+          <div style="width:48px;height:48px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px auto;">
+            <i class="fa-solid fa-money-bill-wave" style="color:#16a34a;font-size:1.4rem;"></i>
+          </div>
+          <div style="font-weight:700;font-size:0.95rem;color:#166534;margin-bottom:4px;">Cash on Pickup / Counter</div>
+          <p style="font-size:0.82rem;color:#15803d;margin:0 0 12px 0;line-height:1.4;">
+            Magbayad ng cash nang direkta sa counter bago i-release ang sasakyan.
+          </p>
+          <div style="background:#ffffff;border:1px dashed #86efac;border-radius:8px;padding:12px;text-align:left;font-size:0.78rem;color:#334155;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span style="color:#64748b;">Halaga na babayaran sa counter:</span>
+              <strong style="color:#166534;font-size:0.9rem;">${fmtMoney(payNow)}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span style="color:#64748b;">Pickup Counter:</span>
+              <strong style="color:#0f172a;">RentFlow Main Hub Counter</strong>
+            </div>
+            <div style="font-size:0.72rem;color:#64748b;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:6px;">
+              <i class="fa-solid fa-circle-check" style="color:#16a34a;margin-right:4px;"></i> I-confirm ang reservation para mai-hold agad ang unit para sa iyo.
+            </div>
+          </div>
+        </div>
+      `;
+      if (pBtn) pBtn.textContent = `Confirm Cash Reservation (${fmtMoney(payNow)})`;
+    } else if (selectedMethod === 'gcash') {
       container.innerHTML = `
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
           <div style="font-size:0.8rem;font-weight:700;color:#1e40af;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
@@ -461,6 +524,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <i class="fa-solid fa-circle-info" style="color:#2563eb;margin-right:4px;"></i> Open your GCash App &gt; QR &gt; Scan QR code. Enter the Reference Number after payment.
         </p>
       `;
+      if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
     } else if (selectedMethod === 'bank_qr') {
       container.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
@@ -492,6 +556,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <i class="fa-solid fa-shield-check" style="color:#059669;margin-right:4px;"></i> Scan with any QR Ph compliant PH Bank app (BDO, BPI, Maya, UnionBank).
         </p>
       `;
+      if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
     } else {
       container.innerHTML = `
         <div class="field"><label>Cardholder Name</label><input type="text" placeholder="Name on Card" /></div>
@@ -504,6 +569,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <i class="fa-solid fa-lock" style="color:#d97706;margin-right:4px;"></i> Encrypted 256-bit SSL Card Payment.
         </p>
       `;
+      if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
     }
   }
 
@@ -531,20 +597,25 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       }
 
       payBtn.disabled = true;
-      payBtn.textContent = 'Verifying Payment…';
+      payBtn.textContent = selectedMethod === 'cash' ? 'Confirming Cash Reservation…' : 'Verifying Payment…';
 
-      const methodName = selectedMethod === 'gcash' ? 'GCash QR' : selectedMethod === 'bank_qr' ? 'Bank QR Ph' : 'Card';
+      const methodName = selectedMethod === 'cash' ? 'Cash on Pickup' : selectedMethod === 'gcash' ? 'GCash QR' : selectedMethod === 'bank_qr' ? 'Bank QR Ph' : 'Card';
       const newTotalPaid = currentPaid + payNow;
       const newBalance = Math.max(0, totalAmount - newTotalPaid);
       const newPaymentType = newBalance === 0 ? 'full' : 'partial';
+      const finalRefNo = selectedMethod === 'cash' ? `CASH-${bookingId}-${Date.now().toString().slice(-4)}` : (refNo || `RCPT-${bookingId}`);
 
-      await supabase.from('payments').insert({
-        booking_id: bookingId,
-        amount: payNow,
-        status: 'successful',
-        method: methodName,
-        paid_at: new Date().toISOString(),
-      });
+      try {
+        await supabase.from('payments').insert({
+          booking_id: bookingId,
+          amount: payNow,
+          status: 'successful',
+          method: methodName,
+          paid_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn('Payment insert DB notice:', e);
+      }
 
       let updatePayload = {
         status: 'active',
@@ -583,14 +654,17 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         console.warn('DB payment update fallback:', e);
       }
 
-      toast(newBalance > 0
-        ? `Reservation secured with ${selectedPct}% Deposit (${fmtMoney(payNow)})!`
-        : `Payment verified via ${methodName}! Booking fully paid.`,
+      toast(selectedMethod === 'cash'
+        ? `Reservation confirmed for Cash Payment on Pickup (${fmtMoney(payNow)})!`
+        : (newBalance > 0
+          ? `Reservation secured with ${selectedPct}% Deposit (${fmtMoney(payNow)})!`
+          : `Payment verified via ${methodName}! Booking fully paid.`
+        ),
         'success'
       );
       closeModal();
       await loadVehicles();
-      await openPaidReceiptModal(bookingId, methodName, refNo || `RCPT-${bookingId}`);
+      await openPaidReceiptModal(bookingId, methodName, finalRefNo);
       if (window.renderTab) window.renderTab();
     });
   }
