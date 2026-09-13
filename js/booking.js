@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings, validatePromoCode, incrementPromoCodeUsage, saveLocalBooking } from './state.js';
+import { state, DEFAULT_SETTINGS, getSystemSettings, saveLocalBooking } from './state.js';
 import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, closeModal, showBookingAlertPopup } from './utils.js';
 import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage } from './vehicles.js';
 
@@ -45,7 +45,6 @@ export async function openVehicleDetail(id) {
 
   let currentStep = 1;
   let selectedDownpaymentPct = 100;
-  let appliedPromo = null;
 
   const modal = openModal(`
     <div class="modal-head">
@@ -171,30 +170,6 @@ export async function openVehicleDetail(id) {
 
     <div class="step-content hidden" id="stepSection3">
       <div id="transparentPricingContainer"></div>
-
-      <!-- Multi-Use Promo Code Card -->
-      <div class="promo-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <label style="font-size:0.85rem;font-weight:700;color:#0f172a;margin:0;display:flex;align-items:center;gap:6px;">
-            <i class="fa-solid fa-tags" style="color:#2563eb;"></i> Have a Promo / Discount Code?
-          </label>
-          <span style="font-size:0.72rem;color:#059669;font-weight:700;background:#ecfdf5;padding:2px 8px;border-radius:99px;border:1px solid #a7f3d0;">
-            <i class="fa-solid fa-infinity"></i> Multi-use (Reusable)
-          </span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="promoInput" placeholder="Enter code (e.g. SAVE500, RENTFLOW10)" style="text-transform:uppercase;font-weight:700;letter-spacing:0.05em;flex:1;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;background:#fff;" />
-          <button type="button" class="btn btn-primary btn-sm" id="btnApplyPromo" style="height:38px;padding:0 16px;white-space:nowrap;font-weight:700;">Apply Code</button>
-          <button type="button" class="btn btn-ghost btn-sm hidden" id="btnRemovePromo" style="height:38px;padding:0 12px;color:#dc2626;border:1px solid #fecaca;background:#fff;" title="Remove Promo Code"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="promoFeedbackMsg" style="margin-top:6px;font-size:0.8rem;"></div>
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;">
-          <span style="font-size:0.72rem;color:#64748b;font-weight:600;">Available Codes:</span>
-          <span class="promo-hint-chip" data-code="SAVE500" style="font-size:0.72rem;padding:3px 9px;border-radius:99px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-weight:700;cursor:pointer;"><i class="fa-solid fa-tag"></i> SAVE500 (-₱500)</span>
-          <span class="promo-hint-chip" data-code="RENTFLOW10" style="font-size:0.72rem;padding:3px 9px;border-radius:99px;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;font-weight:700;cursor:pointer;"><i class="fa-solid fa-tag"></i> RENTFLOW10 (-10%)</span>
-          <span class="promo-hint-chip" data-code="WEEKEND20" style="font-size:0.72rem;padding:3px 9px;border-radius:99px;background:#faf5ff;color:#7c3aed;border:1px solid #e9d5ff;font-weight:700;cursor:pointer;"><i class="fa-solid fa-tag"></i> WEEKEND20 (-20%)</span>
-        </div>
-      </div>
 
       <div class="guarantee-box">
         <i class="fa-solid fa-shield-halved" style="color:#059669;font-size:1.1rem;margin-top:2px;"></i>
@@ -503,61 +478,6 @@ export async function openVehicleDetail(id) {
     };
   }
 
-  function updatePromoUI() {
-    const pInput = $('#promoInput');
-    const pBtn = $('#btnApplyPromo');
-    const rBtn = $('#btnRemovePromo');
-    const msg = $('#promoFeedbackMsg');
-
-    if (!pInput || !pBtn || !rBtn || !msg) return;
-
-    if (appliedPromo) {
-      pInput.value = appliedPromo.code;
-      pInput.disabled = true;
-      pBtn.classList.add('hidden');
-      rBtn.classList.remove('hidden');
-      msg.innerHTML = `
-        <span style="color:#059669;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
-          <i class="fa-solid fa-circle-check"></i> Code <strong>${appliedPromo.code}</strong> applied (-${fmtMoney(appliedPromo.discount)}). Multi-use active.
-        </span>
-      `;
-    } else {
-      pInput.disabled = false;
-      pBtn.classList.remove('hidden');
-      rBtn.classList.add('hidden');
-      msg.innerHTML = '';
-    }
-  }
-
-  function handleApplyPromo(codeToApply) {
-    if (!calculatedBookingData) return;
-    const grossTotal = calculatedBookingData.vehicleCost + calculatedBookingData.driverFee;
-    const res = validatePromoCode(codeToApply, grossTotal);
-
-    const msg = $('#promoFeedbackMsg');
-    if (!res.valid) {
-      if (msg) msg.innerHTML = `<span style="color:#dc2626;font-weight:600;"><i class="fa-solid fa-circle-xmark"></i> ${res.message}</span>`;
-      toast(res.message, 'error');
-      return;
-    }
-
-    appliedPromo = {
-      code: res.promo.code,
-      discount: res.discount,
-      promo: res.promo,
-    };
-    toast(res.message, 'success');
-    renderStep3Pricing();
-  }
-
-  function handleRemovePromo() {
-    appliedPromo = null;
-    const pInput = $('#promoInput');
-    if (pInput) pInput.value = '';
-    toast('Promo code removed', 'info');
-    renderStep3Pricing();
-  }
-
   function renderStep3Pricing() {
     if (!calculatedBookingData) return;
     const data = calculatedBookingData;
@@ -566,23 +486,11 @@ export async function openVehicleDetail(id) {
     if (!pricingContainer) return;
 
     const grossTotal = data.vehicleCost + data.driverFee;
-    let discountAmount = 0;
-    let netTotal = grossTotal;
+    const netTotal = grossTotal;
 
-    if (appliedPromo) {
-      const res = validatePromoCode(appliedPromo.code, grossTotal);
-      if (res.valid) {
-        discountAmount = res.discount;
-        netTotal = res.finalTotal;
-        appliedPromo.discount = discountAmount;
-      } else {
-        appliedPromo = null;
-      }
-    }
-
-    calculatedBookingData.discountAmount = discountAmount;
+    calculatedBookingData.discountAmount = 0;
     calculatedBookingData.finalPayableTotal = netTotal;
-    calculatedBookingData.appliedPromoCode = appliedPromo ? appliedPromo.code : null;
+    calculatedBookingData.appliedPromoCode = null;
 
     pricingContainer.innerHTML = `
       <div class="price-breakdown-card">
@@ -634,16 +542,6 @@ export async function openVehicleDetail(id) {
           <span style="font-weight:700;color:#059669;">FREE</span>
         </div>
 
-        ${appliedPromo ? `
-          <div class="price-item" style="background:#ecfdf5;padding:8px 10px;border-radius:8px;margin:6px 0;border:1px solid #a7f3d0;">
-            <span style="color:#065f46;font-weight:700;display:flex;align-items:center;gap:6px;">
-              <i class="fa-solid fa-tags" style="color:#059669;"></i> Promo Discount (${appliedPromo.code})
-              <span style="font-size:0.7rem;background:#059669;color:#fff;padding:1px 6px;border-radius:99px;font-weight:600;">Multi-use</span>
-            </span>
-            <span style="font-weight:800;color:#059669;font-size:0.95rem;">- ${fmtMoney(discountAmount)}</span>
-          </div>
-        ` : ''}
-
         <div class="price-item">
           <span>
             Refundable Security Deposit
@@ -655,7 +553,7 @@ export async function openVehicleDetail(id) {
         <div class="price-item total-row">
           <span>
             Estimated Total Amount
-            <div style="font-size:0.74rem;font-weight:500;color:#64748b;">${appliedPromo ? `<span style="color:#059669;font-weight:700;">Promo discount applied!</span> · ` : ''}All taxes &amp; vehicle rental fees included</div>
+            <div style="font-size:0.74rem;font-weight:500;color:#64748b;">All taxes &amp; vehicle rental fees included</div>
           </span>
           <span class="total-val">${fmtMoney(netTotal)}</span>
         </div>
@@ -685,39 +583,6 @@ export async function openVehicleDetail(id) {
         optFull.classList.remove('active');
       };
     }
-
-    updatePromoUI();
-
-    const pBtn = $('#btnApplyPromo');
-    if (pBtn) {
-      pBtn.onclick = () => {
-        const val = $('#promoInput')?.value;
-        handleApplyPromo(val);
-      };
-    }
-
-    const rBtn = $('#btnRemovePromo');
-    if (rBtn) {
-      rBtn.onclick = handleRemovePromo;
-    }
-
-    const pInput = $('#promoInput');
-    if (pInput) {
-      pInput.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleApplyPromo(pInput.value);
-        }
-      };
-    }
-
-    $$('.promo-hint-chip').forEach(chip => {
-      chip.onclick = () => {
-        const c = chip.dataset.code;
-        if (pInput) pInput.value = c;
-        handleApplyPromo(c);
-      };
-    });
   }
 
   btnGoStep3.addEventListener('click', () => {
@@ -734,13 +599,8 @@ export async function openVehicleDetail(id) {
     const paidAmount = selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * 0.2);
     const balanceDue = finalAmount - paidAmount;
 
-    if (appliedPromo) {
-      incrementPromoCodeUsage(appliedPromo.code);
-    }
-
-    const promoNote = appliedPromo ? `Promo Applied: ${appliedPromo.code} (-${fmtMoney(appliedPromo.discount)})` : null;
     const contactNote = `Contact: ${state.profile?.full_name || 'Customer'} (${state.profile?.phone || 'No phone'})`;
-    const fullNotes = promoNote ? `${promoNote} | ${contactNote}` : contactNote;
+    const fullNotes = contactNote;
 
     const bookingPayload = {
       customer_id: state.user.id,
@@ -752,8 +612,8 @@ export async function openVehicleDetail(id) {
       downpayment_percent: selectedDownpaymentPct,
       paid_amount: 0,
       balance_due: finalAmount,
-      promo_code: appliedPromo ? appliedPromo.code : null,
-      discount_amount: appliedPromo ? appliedPromo.discount : 0,
+      promo_code: null,
+      discount_amount: 0,
       review_notes: fullNotes,
     };
 

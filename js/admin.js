@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getPromoCodes, savePromoCodes, getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS } from './state.js';
+import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS } from './state.js';
 import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, closeModal, emptyState, getRoleDisplayName, applyTheme } from './utils.js';
 import { getExactVehicleImage, getVehicleDailyRate, setVehicleCustomRate, getVehicleCategoryName, loadVehicles, loadCategories, PH_CATEGORIES } from './vehicles.js';
 import { openRefundVoucherModal } from './customer.js';
@@ -2172,9 +2172,6 @@ export async function renderAdminSettings(view) {
         <div class="pill ${activeSettingsSubTab === 'appearance' ? 'active' : ''}" data-cfg-tab="appearance">
           <i class="fa-solid fa-palette" style="margin-right:4px;"></i> Appearance &amp; Theme
         </div>
-        <div class="pill ${activeSettingsSubTab === 'promos' ? 'active' : ''}" data-cfg-tab="promos">
-          <i class="fa-solid fa-tags" style="margin-right:4px;"></i> Promo Codes &amp; Discounts
-        </div>
       </div>
 
       <div id="settingsTabContent">
@@ -2392,72 +2389,6 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
         </button>
       </div>
     `;
-  } else if (tab === 'promos') {
-    const promos = getPromoCodes();
-    return `
-      <div class="setting-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-          <div>
-            <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
-              <i class="fa-solid fa-tags" style="color:#2563eb;"></i> Multi-Use Promo Codes &amp; Discounts
-            </h3>
-            <p style="font-size:0.82rem;color:#64748b;margin:0;">
-              Manage promotional discount vouchers. All active codes are <strong>multi-use</strong> and can be used by multiple customers across multiple bookings.
-            </p>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" id="btnOpenNewPromoModal">
-            <i class="fa-solid fa-plus"></i> Add New Promo Code
-          </button>
-        </div>
-
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-          <i class="fa-solid fa-infinity" style="color:#059669;font-size:1.1rem;"></i>
-          <div style="font-size:0.8rem;color:#166534;">
-            <strong>Multi-Use Policy Active:</strong> Promo codes remain available for all customers and do not lock out after a single use. Usage counts are tracked in real-time.
-          </div>
-        </div>
-
-        <div style="overflow-x:auto;">
-          <table class="data-table" style="width:100%;font-size:0.85rem;">
-            <thead>
-              <tr style="text-align:left;border-bottom:2px solid #e2e8f0;">
-                <th style="padding:10px 12px;">Promo Code</th>
-                <th style="padding:10px 12px;">Discount Type</th>
-                <th style="padding:10px 12px;">Discount Value</th>
-                <th style="padding:10px 12px;">Description</th>
-                <th style="padding:10px 12px;">Min. Booking</th>
-                <th style="padding:10px 12px;">Usage Count</th>
-                <th style="padding:10px 12px;">Status</th>
-                <th style="padding:10px 12px;text-align:right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${promos.map((p, idx) => `
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                  <td style="padding:10px 12px;font-weight:800;color:#2563eb;font-family:monospace;font-size:0.95rem;">${p.code}</td>
-                  <td style="padding:10px 12px;"><span class="badge ${p.type === 'percent' ? 'badge-info' : 'badge-available'}" style="font-size:0.75rem;">${p.type === 'percent' ? '% Percentage' : '₱ Fixed Amount'}</span></td>
-                  <td style="padding:10px 12px;font-weight:700;color:#059669;">${p.type === 'percent' ? `${p.value}% OFF` : fmtMoney(p.value) + ' OFF'}</td>
-                  <td style="padding:10px 12px;color:#475569;">${p.description || '—'}</td>
-                  <td style="padding:10px 12px;color:#64748b;">${p.minAmount ? fmtMoney(p.minAmount) : 'None'}</td>
-                  <td style="padding:10px 12px;"><span style="font-weight:700;color:#0f172a;"><i class="fa-solid fa-users" style="color:#64748b;margin-right:4px;"></i> ${p.usageCount || 0} used</span></td>
-                  <td style="padding:10px 12px;">
-                    <span class="badge ${p.isActive ? 'badge-available' : 'badge-maintenance'}" style="font-size:0.72rem;">${p.isActive ? 'Active (Multi-use)' : 'Inactive'}</span>
-                  </td>
-                  <td style="padding:10px 12px;text-align:right;">
-                    <button type="button" class="btn btn-ghost btn-sm" data-toggle-promo="${idx}" style="padding:4px 8px;font-size:0.75rem;margin-right:4px;">
-                      ${p.isActive ? '<i class="fa-solid fa-pause" style="color:#d97706;"></i> Disable' : '<i class="fa-solid fa-play" style="color:#059669;"></i> Activate'}
-                    </button>
-                    <button type="button" class="btn btn-ghost btn-sm" data-delete-promo="${idx}" style="padding:4px 8px;font-size:0.75rem;color:#dc2626;" title="Delete">
-                      <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
   }
 }
 
@@ -2546,131 +2477,4 @@ export function attachSettingsFormListeners(view, currentSettings) {
       if (window.renderShell) window.renderShell();
     });
   }
-
-  const btnOpenNewPromo = $('#btnOpenNewPromoModal', view);
-  if (btnOpenNewPromo) {
-    btnOpenNewPromo.addEventListener('click', () => openNewPromoModal(view));
-  }
-
-  $$('[data-toggle-promo]', view).forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = Number(btn.dataset.togglePromo);
-      const codes = getPromoCodes();
-      if (codes[idx]) {
-        codes[idx].isActive = !codes[idx].isActive;
-        savePromoCodes(codes);
-        toast(`Promo code "${codes[idx].code}" is now ${codes[idx].isActive ? 'Active' : 'Disabled'}.`, 'info');
-        renderAdminSettings(view);
-      }
-    });
-  });
-
-  $$('[data-delete-promo]', view).forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = Number(btn.dataset.deletePromo);
-      const codes = getPromoCodes();
-      if (codes[idx]) {
-        const name = codes[idx].code;
-        if (confirm(`Are you sure you want to delete promo code "${name}"?`)) {
-          codes.splice(idx, 1);
-          savePromoCodes(codes);
-          toast(`Promo code "${name}" deleted.`, 'info');
-          renderAdminSettings(view);
-        }
-      }
-    });
-  });
-}
-
-export function openNewPromoModal(view) {
-  openModal(`
-    <div class="modal-head">
-      <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;margin:0;">
-          <i class="fa-solid fa-tags" style="color:#2563eb;margin-right:6px;"></i> Create Multi-Use Promo Code
-        </h3>
-        <span class="muted" style="font-size:0.75rem;">Reusable discount voucher for all rental customers</span>
-      </div>
-      <div class="modal-close" id="mClose">✕</div>
-    </div>
-
-    <form id="newPromoForm" style="padding-top:10px;">
-      <div class="field">
-        <label>Promo Code Text (Uppercase)</label>
-        <input type="text" id="npCode" placeholder="e.g. FLASH500" required style="text-transform:uppercase;font-weight:800;letter-spacing:0.05em;" />
-      </div>
-
-      <div class="detail-grid">
-        <div class="field">
-          <label>Discount Type</label>
-          <select id="npType">
-            <option value="fixed">Fixed Amount (₱ Off)</option>
-            <option value="percent">Percentage (% Off)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Discount Value</label>
-          <input type="number" id="npValue" placeholder="e.g. 500 or 15" min="1" required />
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Description / Headline</label>
-        <input type="text" id="npDesc" placeholder="e.g. ₱500 Off Any Weekend Booking" required />
-      </div>
-
-      <div class="field">
-        <label>Minimum Booking Amount (₱) <span style="font-weight:normal;color:#64748b;">(0 for none)</span></label>
-        <input type="number" id="npMin" placeholder="0" min="0" value="0" />
-      </div>
-
-      <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-infinity" style="color:#059669;font-size:1.1rem;"></i>
-        <span style="font-size:0.78rem;color:#065f46;font-weight:600;">
-          Multi-Use Enabled: Multiple customers can use this promo code repeatedly across multiple bookings.
-        </span>
-      </div>
-
-      <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-ghost" id="npCancel" style="flex:1;">Cancel</button>
-        <button type="submit" class="btn btn-primary" style="flex:2;">
-          <i class="fa-solid fa-plus"></i> Save Promo Code
-        </button>
-      </div>
-    </form>
-  `);
-
-  $('#mClose').onclick = closeModal;
-  $('#npCancel').onclick = closeModal;
-
-  $('#newPromoForm').onsubmit = (e) => {
-    e.preventDefault();
-    const code = $('#npCode').value.trim().toUpperCase();
-    const type = $('#npType').value;
-    const value = Number($('#npValue').value || 0);
-    const desc = $('#npDesc').value.trim();
-    const minAmt = Number($('#npMin').value || 0);
-
-    const codes = getPromoCodes();
-    if (codes.some(c => c.code.toUpperCase() === code)) {
-      toast(`Promo code "${code}" already exists.`, 'error');
-      return;
-    }
-
-    codes.push({
-      code,
-      type,
-      value,
-      description: desc,
-      minAmount: minAmt,
-      isActive: true,
-      isSingleUse: false,
-      usageCount: 0,
-    });
-
-    savePromoCodes(codes);
-    toast(`Promo code "${code}" created successfully!`, 'success');
-    closeModal();
-    if (view) renderAdminSettings(view);
-  };
 }

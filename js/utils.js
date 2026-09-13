@@ -396,7 +396,6 @@ export function showBookingAlertPopup(b) {
   const custName = b.customer_name || b.profiles?.full_name || 'Guest Customer';
   const custPhone = b.customer_phone || b.profiles?.phone || '';
   const totalAmt = Number(b.total_amount || 0);
-  const promoCode = b.promo_code;
 
   const popup = document.createElement('div');
   popup.className = 'manager-booking-popup';
@@ -427,13 +426,6 @@ export function showBookingAlertPopup(b) {
           <span><i class="fa-solid fa-calendar-days" style="color:#64748b;"></i> ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
           <span class="popup-total">${fmtMoney(totalAmt)}</span>
         </div>
-        ${promoCode ? `
-          <div style="margin-top:3px;">
-            <span class="badge" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-size:0.7rem;padding:2px 6px;">
-              <i class="fa-solid fa-tags"></i> Promo: ${promoCode} (-${fmtMoney(b.discount_amount || 0)})
-            </span>
-          </div>
-        ` : ''}
       </div>
     </div>
 

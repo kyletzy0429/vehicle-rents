@@ -319,9 +319,10 @@ export function customerBookingRow(b) {
     ? `<span class="badge badge-reserved"><i class="fa-solid fa-bookmark"></i> Reserved (${b.downpayment_percent || 20}% Paid)</span>`
     : `<span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>`;
 
-  const promoMatch = (b.review_notes || '').match(/Multi-Use Promo(?:\sApplied)?:\s*([A-Z0-9]+)\s*\(-?([^)]+)\)/i);
-  const promoCode = b.promo_code || (promoMatch ? promoMatch[1] : null);
-  const promoDiscount = b.discount_amount || (promoMatch ? promoMatch[2] : null);
+  const cleanNotes = (b.review_notes || '')
+    .replace(/Promo Applied:[^|]+\|\s*/gi, '')
+    .replace(/Multi-Use Promo[^|]+\|\s*/gi, '')
+    .trim();
 
   return `
     <div class="glass item-row">
@@ -335,14 +336,7 @@ export function customerBookingRow(b) {
       : `Total: ${fmtMoney(b.total_amount)}`
     }
         </div>
-        ${promoCode ? `
-          <div class="item-sub" style="margin-top:4px;">
-            <span style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;padding:2px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
-              <i class="fa-solid fa-tags"></i> Promo Code: ${promoCode} ${promoDiscount ? `(${String(promoDiscount).startsWith('₱') ? String(promoDiscount) : '-' + fmtMoney(promoDiscount)})` : ''}
-            </span>
-          </div>
-        ` : ''}
-        ${b.review_notes && !b.review_notes.includes('Multi-Use Promo') ? `<div class="item-sub" style="color:var(--coral);margin-top:2px;">${b.review_notes}</div>` : ''}
+        ${cleanNotes ? `<div class="item-sub" style="color:var(--coral);margin-top:2px;">${cleanNotes}</div>` : ''}
       </div>
       ${badgeHTML}
       <div class="item-actions">${actions}</div>
@@ -744,9 +738,6 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
   const v = b.vehicles || {};
   const fuelType = v.fuel_type ?? 'Gasoline';
   const hasAC = v.has_ac !== undefined ? v.has_ac : true;
-  const promoMatch = (b.review_notes || '').match(/Multi-Use Promo(?:\sApplied)?:\s*([A-Z0-9]+)\s*\(-?([^)]+)\)/i);
-  const promoCode = b.promo_code || (promoMatch ? promoMatch[1] : null);
-  const promoDiscount = b.discount_amount || (promoMatch ? promoMatch[2] : null);
   const days = daysBetween(b.start_date, b.end_date);
   const refCode = refNo || `REF-${Date.now().toString().slice(-6)}`;
   const sysSettings = getSystemSettings();
@@ -782,12 +773,6 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
     <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-receipt" style="color:#059669;"></i> Payment &amp; Receipt Summary</h4>
     <div class="receipt" style="margin-bottom:16px;">
       <div class="receipt-row"><span>Payment Method</span><span style="font-weight:700;color:#059669;">${payMethod}</span></div>
-      ${promoCode ? `
-        <div class="receipt-row" style="color:#059669;font-weight:700;">
-          <span><i class="fa-solid fa-tags"></i> Promo Discount (${promoCode})</span>
-          <span>${String(promoDiscount).startsWith('₱') ? '-' + String(promoDiscount) : '-' + fmtMoney(promoDiscount)}</span>
-        </div>
-      ` : ''}
       <div class="receipt-row"><span>Total Rental Cost</span><span style="font-weight:700;color:#0f172a;">${fmtMoney(b.total_amount)}</span></div>
       <div class="receipt-row"><span>Amount Paid Now</span><span style="font-weight:700;color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)}</span></div>
       ${b.balance_due && Number(b.balance_due) > 0 ? `

@@ -155,117 +155,20 @@ export const DEFAULT_SETTINGS = {
     accentColor: '#2563eb',
     fontFamily: 'Plus Jakarta Sans',
   },
-  promoCodes: [
-    {
-      code: 'SAVE500',
-      type: 'fixed',
-      value: 500,
-      description: '₱500 Flat Discount on Vehicle Rental',
-      minAmount: 1000,
-      isActive: true,
-      isSingleUse: false,
-      usageCount: 14
-    },
-    {
-      code: 'RENTFLOW10',
-      type: 'percent',
-      value: 10,
-      description: '10% Discount on Base Vehicle Rental',
-      minAmount: 0,
-      isActive: true,
-      isSingleUse: false,
-      usageCount: 28
-    },
-    {
-      code: 'WEEKEND20',
-      type: 'percent',
-      value: 20,
-      description: '20% Weekend Promo Discount',
-      minAmount: 2000,
-      isActive: true,
-      isSingleUse: false,
-      usageCount: 9
-    },
-    {
-      code: 'VIP1000',
-      type: 'fixed',
-      value: 1000,
-      description: '₱1,000 Flat Discount on VIP & SUV Bookings',
-      minAmount: 3000,
-      isActive: true,
-      isSingleUse: false,
-      usageCount: 5
-    },
-    {
-      code: 'SUMMER2026',
-      type: 'percent',
-      value: 15,
-      description: '15% Seasonal Summer Promo',
-      minAmount: 1500,
-      isActive: true,
-      isSingleUse: false,
-      usageCount: 18
-    }
-  ]
+  promoCodes: []
 };
 
 export function getPromoCodes() {
-  const settings = getSystemSettings();
-  if (Array.isArray(settings.promoCodes) && settings.promoCodes.length > 0) {
-    return settings.promoCodes;
-  }
-  return DEFAULT_SETTINGS.promoCodes;
+  return [];
 }
 
-export function savePromoCodes(codes) {
-  const current = getSystemSettings();
-  current.promoCodes = codes;
-  saveSystemSettings(current);
+export function savePromoCodes() {}
+
+export function validatePromoCode() {
+  return { valid: false, message: 'Promo codes are disabled.' };
 }
 
-export function validatePromoCode(codeStr, subtotal) {
-  if (!codeStr) return { valid: false, message: 'Please enter a promo code.' };
-  const cleaned = codeStr.trim().toUpperCase();
-  const codes = getPromoCodes();
-  const found = codes.find(c => c.code.toUpperCase() === cleaned);
-
-  if (!found) {
-    return { valid: false, message: `Promo code "${cleaned}" not found.` };
-  }
-  if (!found.isActive) {
-    return { valid: false, message: `Promo code "${cleaned}" is currently inactive.` };
-  }
-  const minAmt = Number(found.minAmount || 0);
-  if (subtotal < minAmt) {
-    return { valid: false, message: `Minimum booking of ₱${minAmt.toLocaleString()} required for this code.` };
-  }
-
-  let discount = 0;
-  if (found.type === 'fixed') {
-    discount = Math.min(subtotal, Number(found.value));
-  } else {
-    discount = Math.round((subtotal * Number(found.value)) / 100);
-  }
-
-  return {
-    valid: true,
-    promo: found,
-    discount,
-    finalTotal: Math.max(0, subtotal - discount),
-    message: `Promo code ${found.code} applied! Multi-use active.`
-  };
-}
-
-export function incrementPromoCodeUsage(codeStr) {
-  if (!codeStr) return;
-  const cleaned = codeStr.trim().toUpperCase();
-  const codes = getPromoCodes();
-  const found = codes.find(c => c.code.toUpperCase() === cleaned);
-  if (found) {
-    found.usageCount = (found.usageCount || 0) + 1;
-    savePromoCodes(codes);
-  }
-}
+export function incrementPromoCodeUsage() {}
 
 export function getSystemSettings() {
   try {
