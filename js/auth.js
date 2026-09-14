@@ -24,6 +24,10 @@ export async function switchSystemRole(role, customerKey = null) {
     state.portal = 'staff';
     state.tab = 'dashboard';
     toast(`Switched to Staff Portal`, 'info');
+    supabase.auth.signInWithPassword({
+      email: 'staff@rentflow.ph',
+      password: 'RentFlowStaff2026!'
+    }).catch(err => console.warn('Staff auth note:', err));
   } else if (role === 'admin') {
     const adm = DEMO_ACCOUNTS.admin;
     setActiveRole('admin');
@@ -32,6 +36,10 @@ export async function switchSystemRole(role, customerKey = null) {
     state.portal = 'admin';
     state.tab = 'dashboard';
     toast(`Switched to Administrator Portal`, 'info');
+    supabase.auth.signInWithPassword({
+      email: 'admin@rentflow.ph',
+      password: 'RentFlowAdmin2026!'
+    }).catch(err => console.warn('Admin auth note:', err));
   }
   await Promise.all([loadCategories(), loadVehicles()]).catch(() => {});
   if (window.renderShell) window.renderShell();

@@ -1,7 +1,9 @@
 import { supabase } from './config.js';
-import { state } from './state.js';
+import { state, getVehicleOverrides, saveVehicleOverride } from './state.js';
 import { $, $$, fmtMoney, maskPlate, toast, emptyState } from './utils.js';
 import { openVehicleDetail } from './booking.js';
+
+export { getVehicleOverrides, saveVehicleOverride };
 
 export const PH_POPULAR_VEHICLES = [
   {
@@ -292,6 +294,11 @@ export async function loadVehicles() {
       }
 
       seenModelKeys.add(modelKey);
+      const overrides = getVehicleOverrides();
+      const ovr = overrides[v.id] || (v.plate_number ? overrides[v.plate_number] : null);
+      if (ovr) {
+        Object.assign(v, ovr);
+      }
       const correctImg = getExactVehicleImage(v);
       if (v.image_url !== correctImg && (!v.image_url || v.image_url.includes('unsplash.com'))) {
         v.image_url = correctImg;

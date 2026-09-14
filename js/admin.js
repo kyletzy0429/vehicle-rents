@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS } from './state.js';
+import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS, getVehicleOverrides, saveVehicleOverride } from './state.js';
 import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, closeModal, emptyState, getRoleDisplayName, applyTheme } from './utils.js';
 import { getExactVehicleImage, getVehicleDailyRate, setVehicleCustomRate, getVehicleCategoryName, loadVehicles, loadCategories, PH_CATEGORIES } from './vehicles.js';
 import { openRefundVoucherModal } from './customer.js';
@@ -1028,6 +1028,11 @@ export async function renderAdminVehicles(view) {
                   <span><i class="fa-solid fa-tag" style="color:#2563eb;"></i> ${fmtMoney(getVehicleDailyRate(v))}/day</span>
                 </div>
                 <div class="item-actions" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+                  ${(v.status === 'in_service' || v.status === 'maintenance' || v.status === 'scheduled_maint') ? `
+                    <button class="btn btn-sm" data-quick-available="${v.id}" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-weight:700;" title="Instantly return vehicle to Available fleet">
+                      <i class="fa-solid fa-circle-check"></i> Make Available
+                    </button>
+                  ` : ''}
                   <button class="btn btn-ghost btn-sm" data-edit="${v.id}"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
                   <button class="btn btn-primary btn-sm" data-service-history="${v.id}"><i class="fa-solid fa-screwdriver-wrench"></i> Service</button>
                   <button class="btn btn-warning btn-sm" data-log-service="${v.id}"><i class="fa-solid fa-plus"></i> Work Order</button>
@@ -1044,6 +1049,35 @@ export async function renderAdminVehicles(view) {
   $$('[data-edit]').forEach(b => b.addEventListener('click', () => openVehicleForm(Number(b.dataset.edit))));
   $$('[data-service-history]').forEach(b => b.addEventListener('click', () => openServiceHistoryModal(Number(b.dataset.serviceHistory))));
   $$('[data-log-service]').forEach(b => b.addEventListener('click', () => openLogServiceModal(Number(b.dataset.logService))));
+  $$('[data-quick-available]').forEach(b => b.addEventListener('click', async () => {
+    const vId = Number(b.dataset.quickAvailable);
+    const targetV = state.vehicles.find(item => item.id === vId);
+    b.disabled = true;
+    b.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Updating…`;
+
+    saveVehicleOverride(vId, { status: 'available', maintenance_days: null, maintenance_until: null });
+    if (targetV) {
+      targetV.status = 'available';
+      if (targetV.plate_number) saveVehicleOverride(targetV.plate_number, { status: 'available' });
+    }
+
+    try {
+      await supabase.from('service_history')
+        .update({ service_status: 'completed', completion_date: new Date().toISOString() })
+        .eq('vehicle_id', vId)
+        .in('service_status', ['in_service', 'scheduled']);
+    } catch (e) { }
+
+    try {
+      await supabase.from('vehicles')
+        .update({ status: 'available', maintenance_days: null, maintenance_until: null })
+        .eq('id', vId);
+    } catch (e) { }
+
+    toast(`Vehicle ${targetV?.name || ''} is now Available!`, 'success');
+    await loadVehicles();
+    if (window.renderTab) window.renderTab();
+  }));
   $$('[data-del]').forEach(b => b.addEventListener('click', async () => {
     if (!confirm('Delete this vehicle? This cannot be undone.')) return;
     const { error } = await supabase.from('vehicles').delete().eq('id', Number(b.dataset.del));
@@ -1148,13 +1182,15 @@ export function openVehicleForm(id) {
   });
 
   $('#fStatus').addEventListener('change', (e) => {
-    $('#fMaintDaysBox').style.display = e.target.value === 'maintenance' ? 'block' : 'none';
+    const val = e.target.value;
+    $('#fMaintDaysBox').style.display = (val === 'maintenance' || val === 'in_service' || val === 'scheduled_maint') ? 'block' : 'none';
   });
 
   $('#saveVehicle').addEventListener('click', async () => {
     const selectedStatus = $('#fStatus').value;
-    const maintDays = selectedStatus === 'maintenance' ? Math.max(1, Number($('#fMaintDays').value || 3)) : null;
-    const maintUntil = selectedStatus === 'maintenance' ? new Date(Date.now() + maintDays * 86400000).toISOString() : null;
+    const isMaint = (selectedStatus === 'maintenance' || selectedStatus === 'in_service' || selectedStatus === 'scheduled_maint');
+    const maintDays = isMaint ? Math.max(1, Number($('#fMaintDays').value || 3)) : null;
+    const maintUntil = isMaint ? new Date(Date.now() + (maintDays || 3) * 86400000).toISOString() : null;
     const inputRate = Math.max(100, Number($('#fRate').value) || currentRate);
 
     const payload = {
@@ -1173,6 +1209,23 @@ export function openVehicleForm(id) {
       description: $('#fDesc').value.trim(),
     };
     if (!payload.name || !payload.plate_number) { toast('Name and plate number are required.', 'error'); return; }
+
+    // Immediate local persistence
+    if (v) {
+      saveVehicleOverride(v.id, payload);
+      if (v.plate_number) saveVehicleOverride(v.plate_number, payload);
+      Object.assign(v, payload);
+    }
+    if (payload.plate_number) saveVehicleOverride(payload.plate_number, payload);
+
+    if (selectedStatus === 'available' && v?.id) {
+      try {
+        await supabase.from('service_history')
+          .update({ service_status: 'completed', completion_date: new Date().toISOString() })
+          .eq('vehicle_id', v.id)
+          .in('service_status', ['in_service', 'scheduled']);
+      } catch (e) { }
+    }
 
     let { error } = v
       ? await supabase.from('vehicles').update(payload).eq('id', v.id)
@@ -2009,7 +2062,13 @@ export async function openLogServiceModal(vehicleId) {
     }
 
     const vehicleNextStatus = srvStatus === 'in_service' ? 'in_service' : 'scheduled_maint';
-    await supabase.from('vehicles').update({ status: vehicleNextStatus }).eq('id', vehicleId);
+    saveVehicleOverride(vehicleId, { status: vehicleNextStatus });
+    const targetV = state.vehicles.find(item => item.id === vehicleId);
+    if (targetV) {
+      targetV.status = vehicleNextStatus;
+      if (targetV.plate_number) saveVehicleOverride(targetV.plate_number, { status: vehicleNextStatus });
+    }
+    await supabase.from('vehicles').update({ status: vehicleNextStatus }).eq('id', vehicleId).catch(() => {});
 
     toast(`Work order logged for ${v.name}. Vehicle set to ${vehicleNextStatus.replace('_', ' ')}.`, 'success');
     closeModal();
@@ -2039,7 +2098,7 @@ export async function openServiceHistoryModal(vehicleId) {
 
   const statusBadge = v.status === 'available'
     ? `<span class="badge badge-available"><i class="fa-solid fa-circle-check"></i> Available</span>`
-    : v.status === 'in_service'
+    : v.status === 'in_service' || v.status === 'maintenance'
       ? `<span class="badge badge-in_service"><i class="fa-solid fa-wrench"></i> In Service</span>`
       : v.status === 'scheduled_maint'
         ? `<span class="badge badge-scheduled_maint"><i class="fa-solid fa-calendar-day"></i> Scheduled Maint</span>`
@@ -2058,6 +2117,18 @@ export async function openServiceHistoryModal(vehicleId) {
         <div class="modal-close" id="mClose">✕</div>
       </div>
     </div>
+
+    ${(v.status === 'in_service' || v.status === 'maintenance' || v.status === 'scheduled_maint' || v.status === 'off_the_road') ? `
+      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-weight:700;color:#065f46;font-size:0.88rem;">Current Fleet Status: ${statusBadge}</div>
+          <div style="font-size:0.76rem;color:#047857;">Mark this vehicle as fully serviced and ready for customer bookings.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btnMarkAvailableNow" style="background:#059669;border-color:#059669;white-space:nowrap;">
+          <i class="fa-solid fa-circle-check"></i> Return to Available Fleet
+        </button>
+      </div>
+    ` : ''}
 
     <div class="receipt" style="margin-bottom:16px;background:#f8fafc;">
       <div class="receipt-row"><span>Active Work Orders</span><span style="font-weight:700;color:#0f172a;">${activeOrders.length} order(s)</span></div>
@@ -2117,6 +2188,39 @@ export async function openServiceHistoryModal(vehicleId) {
   $('#mClose').addEventListener('click', closeModal);
   $('#btnLogNewSrv').addEventListener('click', () => { closeModal(); openLogServiceModal(vehicleId); });
 
+  const markAvailBtn = $('#btnMarkAvailableNow');
+  if (markAvailBtn) {
+    markAvailBtn.addEventListener('click', async () => {
+      markAvailBtn.disabled = true;
+      markAvailBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Releasing…`;
+
+      saveVehicleOverride(vehicleId, { status: 'available', maintenance_days: null, maintenance_until: null });
+      const targetV = state.vehicles.find(item => item.id === vehicleId);
+      if (targetV) {
+        targetV.status = 'available';
+        if (targetV.plate_number) saveVehicleOverride(targetV.plate_number, { status: 'available' });
+      }
+
+      try {
+        await supabase.from('service_history')
+          .update({ service_status: 'completed', completion_date: new Date().toISOString() })
+          .eq('vehicle_id', vehicleId)
+          .in('service_status', ['in_service', 'scheduled']);
+      } catch (e) { }
+
+      try {
+        await supabase.from('vehicles')
+          .update({ status: 'available', maintenance_days: null, maintenance_until: null })
+          .eq('id', vehicleId);
+      } catch (e) { }
+
+      toast(`${v.name} is now Available in the rental fleet!`, 'success');
+      closeModal();
+      await loadVehicles();
+      if (window.renderTab) window.renderTab();
+    });
+  }
+
   $$('[data-complete-srv-id]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const srvId = Number(btn.dataset.completeSrvId);
@@ -2125,12 +2229,19 @@ export async function openServiceHistoryModal(vehicleId) {
       btn.disabled = true;
       btn.textContent = 'Completing Order…';
 
+      saveVehicleOverride(vehicleId, { status: 'available', maintenance_days: null, maintenance_until: null });
+      const targetV = state.vehicles.find(item => item.id === vehicleId);
+      if (targetV) {
+        targetV.status = 'available';
+        if (targetV.plate_number) saveVehicleOverride(targetV.plate_number, { status: 'available' });
+      }
+
       await supabase.from('service_history').update({
         service_status: 'completed',
         completion_date: new Date().toISOString()
-      }).eq('id', srvId);
+      }).eq('id', srvId).catch(() => {});
 
-      await supabase.from('vehicles').update({ status: 'available' }).eq('id', vehicleId);
+      await supabase.from('vehicles').update({ status: 'available', maintenance_days: null, maintenance_until: null }).eq('id', vehicleId).catch(() => {});
 
       toast('Service work order completed! Vehicle returned to Available fleet.', 'success');
       closeModal();

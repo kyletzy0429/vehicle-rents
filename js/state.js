@@ -30,16 +30,16 @@ export const DEMO_ACCOUNTS = {
     license_number: 'N02-19-482019'
   },
   staff: {
-    id: 'e4bb1200-56ef-4890-bcde-123456789abc',
-    email: 'sarah.villanueva@rentflow.ph',
+    id: 'ee609b2f-be1e-4551-99e3-d61977ccb578',
+    email: 'staff@rentflow.ph',
     full_name: 'Sarah Jane Villanueva',
     displayName: 'Sarah Villanueva (Staff)',
     role: 'staff',
     phone: '0917 882 1450'
   },
   admin: {
-    id: 'd5fd5851-931a-4afe-8acf-6cc02c23ff90',
-    email: 'roland.bautista@rentflow.ph',
+    id: '10f2d761-ab31-4490-944d-456af33759ba',
+    email: 'admin@rentflow.ph',
     full_name: 'Roland S. Bautista',
     displayName: 'Roland Bautista (Admin)',
     role: 'admin',
@@ -61,6 +61,28 @@ export function getActiveCustomerKey() {
 
 export function setActiveCustomerKey(key) {
   localStorage.setItem('rentflow_active_customer_key', key);
+}
+
+// Vehicle persistent overrides (status, rates, etc.)
+export function getVehicleOverrides() {
+  try {
+    const raw = localStorage.getItem('rentflow_vehicle_overrides');
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+export function saveVehicleOverride(idOrPlate, patch) {
+  if (!idOrPlate) return;
+  try {
+    const overrides = getVehicleOverrides();
+    const key = String(idOrPlate);
+    overrides[key] = { ...(overrides[key] || {}), ...patch };
+    localStorage.setItem('rentflow_vehicle_overrides', JSON.stringify(overrides));
+  } catch (e) {
+    console.warn('saveVehicleOverride error:', e);
+  }
 }
 
 // Local multi-user bookings storage helpers
