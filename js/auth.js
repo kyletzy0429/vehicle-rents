@@ -513,10 +513,16 @@ export function renderAuth() {
   if (googleBtn) {
     googleBtn.addEventListener('click', async () => {
       try {
-        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+        const redirectUrl = window.location.origin + window.location.pathname;
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: redirectUrl
+          }
+        });
         if (error) toast(error.message, 'error');
       } catch (err) {
-        toast('Google Sign-In is not configured yet.', 'info');
+        toast('Google Sign-In is not configured in Supabase yet.', 'info');
       }
     });
   }
