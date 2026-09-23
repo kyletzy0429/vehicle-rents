@@ -19,18 +19,22 @@ export async function renderCustomerFavorites(view) {
     <div class="view">
       <div class="section-head">
         <div>
-          <h2><i class="fa-solid fa-heart" style="color:#e11d48;margin-right:6px;"></i> My Saved Favorites</h2>
+          <h2>My Saved Favorites</h2>
           <p>Your bookmarked cars and motorcycles for fast reservation.</p>
         </div>
       </div>
       <div class="grid grid-vehicles" id="favGrid">
-        ${favVehicles.length ? favVehicles.map(vehicleCardHTML).join('') : emptyState('fa-regular fa-heart', 'No favorite vehicles saved yet. Click the heart icon on any vehicle to save it here!')}
+        ${favVehicles.length ? favVehicles.map(vehicleCardHTML).join('') : emptyState('', 'No favorite vehicles saved yet. Click the heart icon on any vehicle to save it here!')}
       </div>
     </div>
   `;
 
   $$('#favGrid .vehicle-card').forEach(card => card.addEventListener('click', () => openVehicleDetail(Number(card.dataset.id))));
-  $$('#favGrid .fav-heart-btn').forEach(btn => btn.addEventListener('click', (e) => {
+  $$('#favGrid .vehicle-book-pill-btn').forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openVehicleDetail(Number(btn.dataset.bookBtn));
+  }));
+  $$('#favGrid .vehicle-fav-btn, #favGrid .fav-heart-btn').forEach(btn => btn.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleFavorite(Number(btn.dataset.favid));
   }));
@@ -51,22 +55,22 @@ export async function renderCustomerProfile(view) {
 
       <div class="glass card" style="margin-bottom:20px;padding:24px;">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid #e2e8f0;">
-          <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;box-shadow:0 4px 12px var(--accent-glow);">
             ${initials}
           </div>
           <div>
             <h3 style="font-size:1.25rem;font-weight:800;color:#0f172a;margin-bottom:2px;">${p.full_name || 'Customer Account'}</h3>
             <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#64748b;">
-              <span><i class="fa-solid fa-envelope" style="color:#2563eb;"></i> ${state.user?.email || '—'}</span>
+              <span>${state.user?.email || '—'}</span>
               <span>·</span>
-              <span class="badge badge-completed"><i class="fa-solid fa-id-card"></i> Physical License Verified Upon Meetup</span>
+              <span class="badge badge-completed">Physical License Verified Upon Meetup</span>
             </div>
           </div>
         </div>
 
         <form id="profileForm">
           <h4 style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <i class="fa-solid fa-user-gear" style="color:#2563eb;"></i> Personal Information
+            Personal Information
           </h4>
           <div class="detail-grid" style="margin-bottom:18px;">
             <div class="field">
@@ -80,7 +84,7 @@ export async function renderCustomerProfile(view) {
           </div>
 
           <h4 style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <i class="fa-solid fa-id-card" style="color:#059669;"></i> Driver's License Information
+            Driver's License Information
           </h4>
           <div class="detail-grid" style="margin-bottom:18px;">
             <div class="field">
@@ -94,18 +98,17 @@ export async function renderCustomerProfile(view) {
           </div>
 
           <h4 style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <i class="fa-solid fa-id-card-clip" style="color:#2563eb;"></i> Driver's License Photo <span style="font-weight:normal;color:#64748b;font-size:0.75rem;">(Optional)</span>
+            Driver's License Photo <span style="font-weight:normal;color:#64748b;font-size:0.75rem;">(Optional)</span>
           </h4>
           <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
             <div id="licensePreviewBox" style="margin-bottom:12px;">
               ${p.license_id_url ? `
                 <div style="position:relative;display:inline-block;">
-                  <img src="${p.license_id_url}" id="licenseImgPreview" style="max-width:100%;max-height:190px;border-radius:10px;border:2px solid #2563eb;box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
-                  <div style="position:absolute;top:6px;right:6px;background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:99px;"><i class="fa-solid fa-shield-check"></i> ID Photo Uploaded</div>
+                  <img src="${p.license_id_url}" id="licenseImgPreview" style="max-width:100%;max-height:190px;border-radius:10px;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+                  <div style="position:absolute;top:6px;right:6px;background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">ID Photo Uploaded</div>
                 </div>
               ` : `
                 <div style="padding:16px 10px;">
-                  <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.5rem;color:#94a3b8;margin-bottom:8px;"></i>
                   <div style="font-size:0.88rem;font-weight:700;color:#334155;">Upload Driver's License Card Photo</div>
                   <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Select clear photo of your Driver's License ID (JPG, PNG, WEBP)</div>
                 </div>
@@ -114,7 +117,7 @@ export async function renderCustomerProfile(view) {
             <input type="file" id="licenseFileInput" accept="image/*" style="display:none;" />
             <input type="hidden" id="licenseIdUrl" value="${p.license_id_url ?? ''}" />
             <button type="button" class="btn btn-ghost btn-sm" id="uploadLicenseBtn" style="border:1px solid #cbd5e1;background:#ffffff;">
-              <i class="fa-solid fa-arrow-up-from-bracket"></i> ${p.license_id_url ? 'Change License Photo' : 'Choose License Photo'}
+              ${p.license_id_url ? 'Change License Photo' : 'Choose License Photo'}
             </button>
           </div>
 
@@ -124,7 +127,7 @@ export async function renderCustomerProfile(view) {
           </div>
 
           <button type="submit" class="btn btn-primary btn-block" id="saveProfBtn" style="padding:14px;">
-            <i class="fa-solid fa-floppy-disk"></i> Save Profile Details
+            Save Profile Details
           </button>
         </form>
       </div>
@@ -144,8 +147,8 @@ export async function renderCustomerProfile(view) {
         $('#licenseIdUrl').value = dataUrl;
         $('#licensePreviewBox').innerHTML = `
           <div style="position:relative;display:inline-block;">
-            <img src="${dataUrl}" id="licenseImgPreview" style="max-width:100%;max-height:190px;border-radius:10px;border:2px solid #2563eb;box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
-            <div style="position:absolute;top:6px;right:6px;background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:99px;"><i class="fa-solid fa-shield-check"></i> Photo Ready</div>
+            <img src="${dataUrl}" id="licenseImgPreview" style="max-width:100%;max-height:190px;border-radius:10px;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+            <div style="position:absolute;top:6px;right:6px;background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">Photo Ready</div>
           </div>
         `;
         toast('Driver License photo selected! Click Save Profile Details to submit.', 'info');
@@ -177,7 +180,7 @@ export async function renderCustomerProfile(view) {
       if (fbErr) {
         toast(fbErr.message, 'error');
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Profile Details';
+        saveBtn.textContent = 'Save Profile Details';
         return;
       }
     }
@@ -224,10 +227,10 @@ export async function renderMyBookings(view) {
   view.innerHTML = `
     <div class="view">
       <div class="section-head">
-        <div><h2><i class="fa-solid fa-calendar-check" style="color:#059669;margin-right:8px;"></i> My Bookings &amp; Rentals</h2><p>Track your requests, active rentals, receipts, and rental history.</p></div>
+        <div><h2>My Bookings &amp; Rentals</h2><p>Track your requests, active rentals, receipts, and rental history.</p></div>
       </div>
       <div class="row-list" id="bookingList">
-        ${bookings.length ? bookings.map(b => customerBookingRow(b)).join('') : emptyState('fa-regular fa-file-lines', 'No bookings yet — browse vehicles to get started.')}
+        ${bookings.length ? bookings.map(b => customerBookingRow(b)).join('') : emptyState('', 'No bookings yet — browse vehicles to get started.')}
       </div>
     </div>
   `;
@@ -293,30 +296,30 @@ export function customerBookingRow(b) {
   const isPartial = b.balance_due && Number(b.balance_due) > 0 && Number(b.paid_amount || 0) > 0;
   let actions = '';
   if (b.status === 'pending') {
-    actions = `<button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel Request</button>`;
+    actions = `<button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')">Cancel Request</button>`;
   } else if (b.status === 'approved') {
     actions = `
-      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay / Reserve</button>
-      <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')">Pay / Reserve</button>
+      <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')">Cancel</button>
     `;
   } else if (b.status === 'active' || b.status === 'completed') {
     actions = `
-      ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)" style="background:#2563eb;border-color:#2563eb;"><i class="fa-solid fa-wallet"></i> Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
-      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')"><i class="fa-solid fa-print"></i> Receipt</button>
-      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
+      ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)">Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')">Receipt</button>
+      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;">Request Refund</button>
     `;
   } else if (b.status === 'cancelled' || b.status === 'rejected') {
     actions = `
-      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;"><i class="fa-solid fa-hand-holding-dollar"></i> Request Refund</button>
+      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;">Request Refund</button>
     `;
   } else if (b.status === 'refund_requested') {
-    actions = `<span class="muted" style="font-size:0.78rem;color:#b45309;font-weight:600;"><i class="fa-solid fa-clock"></i> Refund Pending</span>`;
+    actions = `<span class="muted" style="font-size:0.78rem;color:#b45309;font-weight:600;">Refund Pending</span>`;
   } else if (b.status === 'refunded') {
-    actions = `<button type="button" class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}" onclick="window.openRefundVoucherModal && window.openRefundVoucherModal('${b.id}')"><i class="fa-solid fa-receipt"></i> Refund Voucher</button>`;
+    actions = `<button type="button" class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}" onclick="window.openRefundVoucherModal && window.openRefundVoucherModal('${b.id}')">Refund Voucher</button>`;
   }
 
   const badgeHTML = isPartial
-    ? `<span class="badge badge-reserved"><i class="fa-solid fa-bookmark"></i> Reserved (${b.downpayment_percent || 20}% Paid)</span>`
+    ? `<span class="badge badge-reserved">Reserved (${b.downpayment_percent || 20}% Paid)</span>`
     : `<span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>`;
 
   const cleanNotes = (b.review_notes || '')
@@ -332,7 +335,7 @@ export function customerBookingRow(b) {
         <div class="item-sub">
           ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · 
           ${isPartial
-      ? `<span style="font-weight:700;color:#0f172a;">Total: ${fmtMoney(b.total_amount)}</span> (<span style="color:#059669;font-weight:600;">Paid: ${fmtMoney(b.paid_amount)}</span> | <span style="color:#2563eb;font-weight:700;">Balance Due at Pickup: ${fmtMoney(b.balance_due)}</span>)`
+      ? `<span style="font-weight:700;color:#0f172a;">Total: ${fmtMoney(b.total_amount)}</span> (<span style="color:#059669;font-weight:600;">Paid: ${fmtMoney(b.paid_amount)}</span> | <span style="color:var(--accent);font-weight:700;">Balance Due at Pickup: ${fmtMoney(b.balance_due)}</span>)`
       : `Total: ${fmtMoney(b.total_amount)}`
     }
         </div>
@@ -413,7 +416,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">${isPayingBalance ? 'Pay Remaining Balance' : 'Pay / Reserve Booking'}</h3>
         <span class="muted" style="font-size:0.78rem;">${vehicleName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
       </div>
-      <div class="modal-close" id="mClose">✕</div>
+      <div class="modal-close" id="mClose">Close</div>
     </div>
 
     ${!isPayingBalance ? `
@@ -446,26 +449,26 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       <div class="receipt-row"><span>Total Rental Cost</span><span>${fmtMoney(totalAmount)}</span></div>
       ${isPayingBalance ? `
         <div class="receipt-row"><span>Already Paid (Deposit)</span><span style="color:#059669;font-weight:700;">${fmtMoney(currentPaid)}</span></div>
-        <div class="receipt-row receipt-total"><span>Remaining Balance Due Now</span><span style="color:#2563eb;">${fmtMoney(currentBalance)}</span></div>
+        <div class="receipt-row receipt-total"><span>Remaining Balance Due Now</span><span style="color:var(--accent);">${fmtMoney(currentBalance)}</span></div>
       ` : `
         <div class="receipt-row"><span>Reservation Option</span><span id="summaryTierLabel" style="font-weight:700;">${selectedPct === 100 ? 'Full Payment (100%)' : `${selectedPct}% Partial Downpayment`}</span></div>
         <div class="receipt-row"><span>Balance Due at Pickup</span><span id="summaryBalance" style="color:#64748b;">${fmtMoney(balanceDue)}</span></div>
-        <div class="receipt-row receipt-total"><span>Amount Payable Now</span><span id="summaryPayNow" style="color:#2563eb;">${fmtMoney(payNow)}</span></div>
+        <div class="receipt-row receipt-total"><span>Amount Payable Now</span><span id="summaryPayNow" style="color:var(--accent);">${fmtMoney(payNow)}</span></div>
       `}
     </div>
 
     <div class="auth-tabs" style="margin-bottom:16px;">
       <div class="auth-tab" data-pay-method="cash">
-        <i class="fa-solid fa-money-bill-wave" style="color:#16a34a;margin-right:4px;"></i> Cash on Pickup
+        Cash on Pickup
       </div>
       <div class="auth-tab active" data-pay-method="gcash">
-        <i class="fa-solid fa-qrcode" style="color:#2563eb;margin-right:4px;"></i> GCash QR
+        GCash QR
       </div>
       <div class="auth-tab" data-pay-method="bank_qr">
-        <i class="fa-solid fa-building-columns" style="color:#059669;margin-right:4px;"></i> Bank QR
+        Bank QR
       </div>
       <div class="auth-tab" data-pay-method="card">
-        <i class="fa-solid fa-credit-card" style="color:#d97706;margin-right:4px;"></i> Card
+        Card
       </div>
     </div>
 
@@ -513,9 +516,6 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     if (selectedMethod === 'cash') {
       container.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
-          <div style="width:48px;height:48px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px auto;">
-            <i class="fa-solid fa-money-bill-wave" style="color:#16a34a;font-size:1.4rem;"></i>
-          </div>
           <div style="font-weight:700;font-size:0.95rem;color:#166534;margin-bottom:4px;">Cash on Pickup / Counter</div>
           <p style="font-size:0.82rem;color:#15803d;margin:0 0 12px 0;line-height:1.4;">
             Magbayad ng cash nang direkta sa branch counter bago kunin ang susi ng sasakyan.
@@ -530,7 +530,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
               <strong style="color:#0f172a;">RentFlow Main Hub Counter</strong>
             </div>
             <div style="font-size:0.72rem;color:#64748b;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:6px;">
-              <i class="fa-solid fa-circle-check" style="color:#16a34a;margin-right:4px;"></i> I-confirm ang reservation para mai-reserve agad ang sasakyan para sa iyo.
+              I-confirm ang reservation para mai-reserve agad ang sasakyan para sa iyo.
             </div>
           </div>
         </div>
@@ -540,13 +540,13 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       container.innerHTML = `
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
           <div style="font-size:0.8rem;font-weight:700;color:#1e40af;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-            <i class="fa-solid fa-mobile-screen" style="margin-right:4px;"></i> Scan to Pay via GCash
+            Scan to Pay via GCash
           </div>
-          <div style="width:170px;height:170px;background:#ffffff;border:3px solid #2563eb;border-radius:12px;margin:0 auto 12px auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,0.15);position:relative;">
+          <div style="width:170px;height:170px;background:#ffffff;border:3px solid var(--accent);border-radius:12px;margin:0 auto 12px auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--accent-glow);position:relative;">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${b.id}-${payNow}" alt="GCash QR Code" style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div style="font-weight:700;font-size:0.9rem;color:#0f172a;margin-bottom:2px;">RentFlow Vehicles Inc.</div>
-          <div style="font-size:0.78rem;color:#475569;font-weight:600;"><i class="fa-solid fa-shield-halved" style="color:#2563eb;margin-right:4px;"></i> Account No: <span style="font-family:monospace;">0917 •••• 4567</span></div>
+          <div style="font-size:0.78rem;color:#475569;font-weight:600;">Account No: <span style="font-family:monospace;">0917 •••• 4567</span></div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Official GCash Express Merchant (Privacy Protected)</div>
         </div>
         <div class="field">
@@ -554,7 +554,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <input type="text" id="payRefNo" placeholder="e.g. 1002 9482 1102" required />
         </div>
         <p class="muted" style="font-size:0.76rem;color:#64748b;line-height:1.4;">
-          <i class="fa-solid fa-circle-info" style="color:#2563eb;margin-right:4px;"></i> Open your GCash App &gt; QR &gt; Scan QR code. Enter the Reference Number after payment.
+          Open your GCash App &gt; QR &gt; Scan QR code. Enter the Reference Number after payment.
         </p>
       `;
       if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
@@ -562,7 +562,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       container.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
           <div style="font-size:0.8rem;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-            <i class="fa-solid fa-qrcode" style="margin-right:4px;"></i> InstaPay / QR Ph Payment
+            InstaPay / QR Ph Payment
           </div>
           <div style="margin-bottom:10px;">
             <label style="font-size:0.7rem;color:#166534;">Select your bank app</label>
@@ -578,7 +578,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INSTAPAY-RENTAL-${b.id}-${payNow}" alt="Bank QR Code" style="width:100%;height:100%;object-fit:contain;" />
           </div>
           <div style="font-weight:700;font-size:0.9rem;color:#0f172a;margin-bottom:2px;">RentFlow Corporate Fleet</div>
-          <div style="font-size:0.78rem;color:#475569;font-weight:600;"><i class="fa-solid fa-lock" style="color:#059669;margin-right:4px;"></i> Account: <span style="font-family:monospace;">0012 •••• 8899</span></div>
+          <div style="font-size:0.78rem;color:#475569;font-weight:600;">Account: <span style="font-family:monospace;">0012 •••• 8899</span></div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Secured by QR Ph & InstaPay Philippines</div>
         </div>
         <div class="field">
@@ -586,7 +586,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <input type="text" id="payRefNo" placeholder="e.g. TXN-99482019" required />
         </div>
         <p class="muted" style="font-size:0.76rem;color:#64748b;line-height:1.4;">
-          <i class="fa-solid fa-shield-check" style="color:#059669;margin-right:4px;"></i> Scan with any QR Ph compliant PH Bank app (BDO, BPI, Maya, UnionBank).
+          Scan with any QR Ph compliant PH Bank app (BDO, BPI, Maya, UnionBank).
         </p>
       `;
       if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
@@ -599,7 +599,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <div class="field"><label>CVC / CVV</label><input type="password" placeholder="•••" maxlength="4" /></div>
         </div>
         <p class="muted" style="font-size:0.76rem;color:#64748b;">
-          <i class="fa-solid fa-lock" style="color:#d97706;margin-right:4px;"></i> Encrypted 256-bit SSL Card Payment.
+          Encrypted 256-bit SSL Card Payment.
         </p>
       `;
       if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
@@ -746,18 +746,15 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
   const modal = openModal(`
     <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
       <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Payment Receipt</div>
-      <div class="modal-close" id="mClose" onclick="window.closeModal()">✕</div>
+      <div class="modal-close" id="mClose" onclick="window.closeModal()">Close</div>
     </div>
     <div style="text-align:center;margin-bottom:18px;">
-      <div style="width:58px;height:58px;border-radius:50%;background:#ecfdf5;border:2px solid #a7f3d0;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
-        <i class="fa-solid fa-check" style="font-size:28px;color:#059669;"></i>
-      </div>
       <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Payment Successful!</h2>
-      <span class="badge badge-completed" style="font-size:0.75rem;"><i class="fa-solid fa-shield-check"></i> Paid via ${payMethod}</span>
+      <span class="badge badge-completed" style="font-size:0.75rem;">Paid via ${payMethod}</span>
       <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Ref / Transaction No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-file-invoice" style="color:#2563eb;"></i> Reservation &amp; Vehicle Summary</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Reservation &amp; Vehicle Summary</h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
       <div class="receipt-row"><span style="color:#64748b;">Customer</span><span style="font-weight:700;color:#0f172a;">${state.profile?.full_name ?? 'Customer'}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Driver's License</span><span style="font-weight:700;color:#0f172a;">${state.profile?.license_number ? state.profile.license_number : 'Physical card verified upon meetup'}</span></div>
@@ -770,7 +767,7 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
       <div class="receipt-row"><span style="color:#64748b;">Fuel / AC</span><span style="color:#0f172a;">${fuelType} · ${hasAC ? 'With AC' : 'Non-AC'}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-receipt" style="color:#059669;"></i> Payment &amp; Receipt Summary</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Payment &amp; Receipt Summary</h4>
     <div class="receipt" style="margin-bottom:16px;">
       <div class="receipt-row"><span>Payment Method</span><span style="font-weight:700;color:#059669;">${payMethod}</span></div>
       <div class="receipt-row"><span>Total Rental Cost</span><span style="font-weight:700;color:#0f172a;">${fmtMoney(b.total_amount)}</span></div>
@@ -785,7 +782,7 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
       <div class="receipt-row receipt-total"><span>Payment Status</span><span class="badge ${b.balance_due && Number(b.balance_due) > 0 ? 'badge-reserved' : 'badge-completed'}">${b.balance_due && Number(b.balance_due) > 0 ? 'RESERVED (PARTIAL)' : 'FULL PAYMENT'}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-clipboard-list" style="color:#0284c7;"></i> Rental Details</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Rental Details</h4>
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;margin-bottom:14px;">
       <div class="receipt-row"><span style="color:#0369a1;">Pickup Location</span><span style="color:#0f172a;font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
       <div class="receipt-row"><span style="color:#0369a1;">Return Location</span><span style="color:#0f172a;font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
@@ -793,22 +790,22 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
       <div class="receipt-row"><span style="color:#0369a1;">Insurance</span><span style="color:#0f172a;">Basic coverage included</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-headset" style="color:#059669;"></i> Support Contact</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Support Contact</h4>
     <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <div class="receipt-row"><span style="color:#065f46;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Hotline</span><span style="font-weight:700;color:#0f172a;">${comp.phone || '+63 67676767'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;"><i class="fa-solid fa-mobile-screen" style="margin-right:5px;"></i> Mobile</span><span style="font-weight:700;color:#0f172a;">${comp.mobile || '+63 917 123 4567'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Email</span><span style="font-weight:600;color:#0f172a;">${comp.email || 'vehicleretal.ph'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i> Address</span><span style="color:#0f172a;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Hotline</span><span style="font-weight:700;color:#0f172a;">${comp.phone || '+63 67676767'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Mobile</span><span style="font-weight:700;color:#0f172a;">${comp.mobile || '+63 917 123 4567'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Email</span><span style="font-weight:600;color:#0f172a;">${comp.email || 'vehicleretal.ph'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Address</span><span style="color:#0f172a;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
     </div>
 
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <h4 style="margin:0 0 8px 0;display:flex;align-items:center;gap:6px;color:#92400e;font-size:0.88rem;"><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> Important Information</h4>
+      <h4 style="margin:0 0 8px 0;display:flex;align-items:center;gap:6px;color:#92400e;font-size:0.88rem;">Important Information</h4>
       <p style="font-size:0.82rem;color:#78350f;line-height:1.6;margin:0;">Please arrive at least <strong>15 minutes before</strong> your scheduled pickup time. Don't forget to bring your <strong>driving license</strong> and a <strong>valid ID</strong> for verification.</p>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button type="button" class="btn btn-ghost btn-block" id="printPaidReceiptBtn" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Official Receipt</button>
-      <button type="button" class="btn btn-primary btn-block" id="closePaidReceiptBtn" onclick="window.closeModal()"><i class="fa-solid fa-check"></i> Done</button>
+      <button type="button" class="btn btn-ghost btn-block" id="printPaidReceiptBtn" onclick="window.print()">Print Official Receipt</button>
+      <button type="button" class="btn btn-primary btn-block" id="closePaidReceiptBtn" onclick="window.closeModal()">Done</button>
     </div>
   `);
 
@@ -861,12 +858,12 @@ export async function openRefundRequestModal(bookingId) {
         <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">Request Refund</h3>
         <span class="muted" style="font-size:0.78rem;">Booking #${b.id} · ${v.name ?? 'Vehicle'}</span>
       </div>
-      <div class="modal-close" id="mClose" onclick="window.closeModal()">✕</div>
+      <div class="modal-close" id="mClose" onclick="window.closeModal()">Close</div>
     </div>
 
     <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
-      <div style="font-size:0.82rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:6px;">
-        <i class="fa-solid fa-shield-halved"></i> Refund Policy &amp; Guarantee
+      <div style="font-size:0.82rem;color:#b45309;font-weight:700;">
+        Refund Policy &amp; Guarantee
       </div>
       <div style="font-size:0.78rem;color:#78350f;margin-top:4px;line-height:1.5;">
         Submit your GCash, Maya, or Bank details. Approved refunds are transferred within 24 hours.
@@ -906,7 +903,7 @@ export async function openRefundRequestModal(bookingId) {
       </div>
 
       <button type="submit" class="btn btn-primary btn-block" id="subRefBtn" style="padding:13px;">
-        <i class="fa-solid fa-paper-plane"></i> Submit Refund Request
+        Submit Refund Request
       </button>
     </form>
   `);
@@ -987,18 +984,15 @@ export async function openRefundVoucherModal(bookingId) {
   openModal(`
     <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
       <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Refund &amp; Disbursement Voucher</div>
-      <div class="modal-close" onclick="window.closeModal()">✕</div>
+      <div class="modal-close" onclick="window.closeModal()">Close</div>
     </div>
     <div style="text-align:center;margin-bottom:18px;">
-      <div style="width:58px;height:58px;border-radius:50%;background:#ecfdf5;border:2px solid #a7f3d0;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
-        <i class="fa-solid fa-hand-holding-dollar" style="font-size:28px;color:#059669;"></i>
-      </div>
       <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Refund Disbursed Successfully</h2>
-      <span class="badge badge-refunded" style="font-size:0.75rem;"><i class="fa-solid fa-circle-check"></i> Transfer Completed</span>
+      <span class="badge badge-refunded" style="font-size:0.75rem;">Transfer Completed</span>
       <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Voucher / Claim No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-user" style="color:#2563eb;"></i> Beneficiary Details</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Beneficiary Details</h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
       <div class="receipt-row"><span style="color:#64748b;">Customer Name</span><span style="font-weight:700;color:#0f172a;">${cName}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Phone Number</span><span style="color:#0f172a;">${cPhone}</span></div>
@@ -1007,14 +1001,14 @@ export async function openRefundVoucherModal(bookingId) {
       ${b.review_notes ? `<div class="receipt-row" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:4px;"><span style="color:#64748b;">Refund Transfer Notes</span><span style="color:#b45309;font-weight:600;">${b.review_notes}</span></div>` : ''}
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-receipt" style="color:#059669;"></i> Financial Summary</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Financial Summary</h4>
     <div class="receipt" style="margin-bottom:16px;">
       <div class="receipt-row"><span>Total Booking Amount</span><span>${fmtMoney(b.total_amount)}</span></div>
       <div class="receipt-row"><span>Refund Status</span><span class="badge badge-refunded">COMPLETED</span></div>
       <div class="divider"></div>
       <div class="receipt-row receipt-total"><span>Total Refund Disbursed</span><span style="color:#059669;">${fmtMoney(b.total_amount)}</span></div>
     </div>
-    <button class="btn btn-primary btn-block" onclick="window.print()" style="margin-top:8px;background:#059669;border-color:#059669;"><i class="fa-solid fa-print"></i> Print Refund Voucher</button>
+    <button class="btn btn-primary btn-block" onclick="window.print()" style="margin-top:8px;background:#059669;border-color:#059669;">Print Refund Voucher</button>
   `);
 }
 

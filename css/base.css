@@ -66,8 +66,8 @@ a:hover {
 }
 
 ::selection {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #ede9fe;
+  color: #5b21b6;
 }
 
 
@@ -77,16 +77,16 @@ a:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #fbf9fe;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #ddd6fe;
   border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #a78bfa;
 }
 
 
@@ -115,13 +115,13 @@ a:hover {
   gap: 14px;
   padding-bottom: 18px;
   margin-bottom: 22px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .section-head h2 {
   font-size: 1.45rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-hi);
 }
 
 .section-head p {
@@ -132,7 +132,7 @@ a:hover {
 
 .divider {
   height: 1px;
-  background: #e2e8f0;
+  background: var(--glass-border);
   margin: 18px 0;
 }
 

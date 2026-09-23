@@ -20,9 +20,7 @@ export const maskPlate = (p) => {
 };
 
 export function emptyState(icon, text) {
-  const isHtml = typeof icon === 'string' && (icon.includes('<') || icon.startsWith('fa-'));
-  const iconHtml = isHtml ? (icon.includes('<') ? icon : `<i class="${icon}"></i>`) : icon;
-  return `<div class="empty-box"><div class="empty-icon">${iconHtml}</div><p>${text}</p></div>`;
+  return `<div class="empty-box"><p>${text}</p></div>`;
 }
 
 export function toast(msg, type = 'info') {
@@ -143,20 +141,20 @@ export function buildCustomerNotif(b) {
   const vName = b.vehicles?.name || 'Vehicle';
   const shortId = `BK-${String(b.id).slice(-8).toUpperCase()}`;
   const statusMap = {
-    'approved': { icon: '<i class="fa-solid fa-circle-check" style="color:#059669;"></i>', title: 'Booking Approved', desc: `Your reservation for ${vName} (${shortId}) has been approved by staff. Please prepare for pickup.` },
-    'pending': { icon: '<i class="fa-solid fa-clock" style="color:#d97706;"></i>', title: 'Booking Request Submitted', desc: `Your reservation for ${vName} (${shortId}) is pending staff review.` },
-    'active': { icon: '<i class="fa-solid fa-car" style="color:#2563eb;"></i>', title: 'Rental Active & In-Progress', desc: `Your ${vName} (${shortId}) rental is currently active. Have a safe journey!` },
-    'completed': { icon: '<i class="fa-solid fa-circle-check" style="color:#059669;"></i>', title: 'Rental Completed & Returned', desc: `Your ${vName} rental (${shortId}) has been successfully completed. Thank you for renting with us!` },
-    'rejected': { icon: '<i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i>', title: 'Booking Rejected', desc: `Your reservation for ${vName} (${shortId}) was not approved. Please contact support.` },
-    'cancelled': { icon: '<i class="fa-solid fa-ban" style="color:#64748b;"></i>', title: 'Booking Cancelled', desc: `Your reservation for ${vName} (${shortId}) was cancelled.` },
-    'refund_requested': { icon: '<i class="fa-solid fa-hand-holding-dollar" style="color:#7c3aed;"></i>', title: 'Refund Request Received', desc: `Your refund request for ${vName} (${shortId}) is being reviewed by our billing staff.` },
-    'refunded': { icon: '<i class="fa-solid fa-credit-card" style="color:#059669;"></i>', title: 'Refund Issued', desc: `Your refund for ${vName} (${shortId}) has been processed successfully.` },
+    'approved': { title: 'Booking Approved', desc: `Your reservation for ${vName} (${shortId}) has been approved by staff. Please prepare for pickup.` },
+    'pending': { title: 'Booking Request Submitted', desc: `Your reservation for ${vName} (${shortId}) is pending staff review.` },
+    'active': { title: 'Rental Active & In-Progress', desc: `Your ${vName} (${shortId}) rental is currently active. Have a safe journey!` },
+    'completed': { title: 'Rental Completed & Returned', desc: `Your ${vName} rental (${shortId}) has been successfully completed. Thank you for renting with us!` },
+    'rejected': { title: 'Booking Rejected', desc: `Your reservation for ${vName} (${shortId}) was not approved. Please contact support.` },
+    'cancelled': { title: 'Booking Cancelled', desc: `Your reservation for ${vName} (${shortId}) was cancelled.` },
+    'refund_requested': { title: 'Refund Request Received', desc: `Your refund request for ${vName} (${shortId}) is being reviewed by our billing staff.` },
+    'refunded': { title: 'Refund Issued', desc: `Your refund for ${vName} (${shortId}) has been processed successfully.` },
   };
 
-  const info = statusMap[b.status] || { icon: '<i class="fa-solid fa-file-lines" style="color:#64748b;"></i>', title: `Booking Update`, desc: `Your ${vName} booking (${shortId}) status changed to: ${b.status}` };
+  const info = statusMap[b.status] || { title: `Booking Update`, desc: `Your ${vName} booking (${shortId}) status changed to: ${b.status}` };
   return {
     id: `booking-${b.id}`,
-    title: `${info.icon} ${info.title}`,
+    title: info.title,
     time: getRelativeTime(b.updated_at || b.created_at),
     desc: info.desc,
     read: ['completed', 'cancelled', 'refunded'].includes(b.status)
@@ -168,17 +166,17 @@ export function buildStaffNotif(b) {
   const custName = b.profiles?.full_name || 'Customer';
   const shortId = `BK-${String(b.id).slice(-8).toUpperCase()}`;
   const statusMap = {
-    'pending': { icon: '<i class="fa-solid fa-clock" style="color:#d97706;"></i>', title: 'New Booking Request', desc: `${custName} submitted a new request for ${vName} (${shortId}). Action required.` },
-    'approved': { icon: '<i class="fa-solid fa-circle-check" style="color:#059669;"></i>', title: 'Booking Approved', desc: `${vName} (${shortId}) for ${custName} is approved and awaiting pickup/payment.` },
-    'active': { icon: '<i class="fa-solid fa-car" style="color:#2563eb;"></i>', title: 'Rental Ongoing', desc: `${custName} picked up ${vName} (${shortId}). Vehicle is currently on the road.` },
-    'completed': { icon: '<i class="fa-solid fa-circle-check" style="color:#059669;"></i>', title: 'Vehicle Returned', desc: `${custName} returned ${vName} (${shortId}). Inspection & return logged.` },
-    'refund_requested': { icon: '<i class="fa-solid fa-hand-holding-dollar" style="color:#7c3aed;"></i>', title: 'Refund Claim Pending', desc: `${custName} submitted a refund request for ${vName} (${shortId}). Please verify.` },
+    'pending': { title: 'New Booking Request', desc: `${custName} submitted a new request for ${vName} (${shortId}). Action required.` },
+    'approved': { title: 'Booking Approved', desc: `${vName} (${shortId}) for ${custName} is approved and awaiting pickup/payment.` },
+    'active': { title: 'Rental Ongoing', desc: `${custName} picked up ${vName} (${shortId}). Vehicle is currently on the road.` },
+    'completed': { title: 'Vehicle Returned', desc: `${custName} returned ${vName} (${shortId}). Inspection & return logged.` },
+    'refund_requested': { title: 'Refund Claim Pending', desc: `${custName} submitted a refund request for ${vName} (${shortId}). Please verify.` },
   };
 
-  const info = statusMap[b.status] || { icon: '<i class="fa-solid fa-file-lines" style="color:#64748b;"></i>', title: 'Booking Record Update', desc: `${vName} (${shortId}) — Current status: ${b.status}` };
+  const info = statusMap[b.status] || { title: 'Booking Record Update', desc: `${vName} (${shortId}) — Current status: ${b.status}` };
   return {
     id: `booking-${b.id}`,
-    title: `${info.icon} ${info.title}`,
+    title: info.title,
     time: getRelativeTime(b.updated_at || b.created_at),
     desc: info.desc,
     read: ['completed', 'cancelled', 'refunded'].includes(b.status)
@@ -251,16 +249,11 @@ export async function updateNotificationBadge() {
 export async function openNotificationsModal() {
   openModal(`
     <div class="modal-head">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:38px;height:38px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:1.1rem;">
-          <i class="fa-solid fa-bell"></i>
-        </div>
-        <div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">Notifications &amp; Alerts</h3>
-          <span style="font-size:0.75rem;color:var(--text-mid);">Live system updates &amp; rental alerts</span>
-        </div>
+      <div>
+        <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">Notifications &amp; Alerts</h3>
+        <span style="font-size:0.75rem;color:var(--text-mid);">Live system updates &amp; rental alerts</span>
       </div>
-      <div class="modal-close" id="mClose">✕</div>
+      <div class="modal-close" id="mClose">Close</div>
     </div>
     <div style="padding:28px 0;text-align:center;"><div class="loading-spin"></div><p style="margin-top:12px;color:var(--text-mid);font-size:0.85rem;">Checking for live updates...</p></div>
   `);
@@ -284,7 +277,6 @@ export async function openNotificationsModal() {
     </div>
   `).join('') : `
     <div style="text-align:center;padding:30px 10px;">
-      <div style="font-size:2.2rem;margin-bottom:10px;color:#94a3b8;"><i class="fa-regular fa-bell"></i></div>
       <p style="font-size:0.9rem;font-weight:600;color:var(--text-hi);margin:0;">No notifications yet</p>
       <p style="font-size:0.8rem;color:var(--text-mid);margin-top:6px;">When you make a reservation or your booking is updated, alerts will show here.</p>
     </div>
@@ -294,16 +286,11 @@ export async function openNotificationsModal() {
 
   openModal(`
     <div class="modal-head">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:38px;height:38px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:1.1rem;">
-          <i class="fa-solid fa-bell"></i>
-        </div>
-        <div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">Notifications &amp; Alerts</h3>
-          <span style="font-size:0.75rem;color:var(--text-mid);">${unreadCount > 0 ? `${unreadCount} new update${unreadCount > 1 ? 's' : ''}` : 'All caught up!'} · ${notifs.length} total</span>
-        </div>
+      <div>
+        <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">Notifications &amp; Alerts</h3>
+        <span style="font-size:0.75rem;color:var(--text-mid);">${unreadCount > 0 ? `${unreadCount} new update${unreadCount > 1 ? 's' : ''}` : 'All caught up!'} · ${notifs.length} total</span>
       </div>
-      <div class="modal-close" id="mClose">✕</div>
+      <div class="modal-close" id="mClose">Close</div>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:420px;overflow-y:auto;">
@@ -311,8 +298,8 @@ export async function openNotificationsModal() {
     </div>
 
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-ghost btn-sm btn-block" id="markAllReadBtn" style="border:1px solid var(--glass-border);"><i class="fa-solid fa-check-double"></i> Mark All as Read</button>
-      <button class="btn btn-primary btn-sm btn-block" id="refreshNotifsBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      <button class="btn btn-ghost btn-sm btn-block" id="markAllReadBtn" style="border:1px solid var(--glass-border);">Mark All as Read</button>
+      <button class="btn btn-primary btn-sm btn-block" id="refreshNotifsBtn">Refresh</button>
     </div>
   `);
 
@@ -382,6 +369,8 @@ export function playNotificationChime() {
 // Floating real-time notification pop-up for new guest booking
 export function showBookingAlertPopup(b) {
   if (!b) return;
+  // ONLY show quick approve popup to staff or admin portal
+  if (state.portal !== 'staff' && state.portal !== 'admin') return;
 
   // Play audio chime
   playNotificationChime();
@@ -405,12 +394,11 @@ export function showBookingAlertPopup(b) {
     <div class="popup-head">
       <div class="popup-tag">
         <span class="popup-pulse-dot"></span>
-        <i class="fa-solid fa-bell" style="color:#f59e0b;"></i>
         <span>New Booking Received!</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
         <span class="popup-badge-time">Just Now</span>
-        <button type="button" class="popup-close-btn" id="popupCloseBtn" title="Close Notification">✕</button>
+        <button type="button" class="popup-close-btn" id="popupCloseBtn" title="Close Notification">Close</button>
       </div>
     </div>
 
@@ -419,11 +407,10 @@ export function showBookingAlertPopup(b) {
       <div class="popup-details">
         <div class="popup-vehicle-title">${vName}</div>
         <div class="popup-customer-line">
-          <i class="fa-solid fa-user" style="color:#2563eb;font-size:0.75rem;"></i>
           <strong>${custName}</strong> ${custPhone ? `<span class="muted">(${custPhone})</span>` : ''}
         </div>
         <div class="popup-meta-line">
-          <span><i class="fa-solid fa-calendar-days" style="color:#64748b;"></i> ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
+          <span>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
           <span class="popup-total">${fmtMoney(totalAmt)}</span>
         </div>
       </div>
@@ -431,10 +418,10 @@ export function showBookingAlertPopup(b) {
 
     <div class="popup-actions">
       <button type="button" class="btn btn-primary btn-sm" id="popupViewBtn" style="font-size:0.78rem;padding:6px 12px;">
-        <i class="fa-solid fa-chart-pie"></i> View in Manager
+        View in Manager
       </button>
       <button type="button" class="btn btn-sm" id="popupApproveBtn" style="background:#059669;color:#fff;border:none;font-size:0.78rem;padding:6px 12px;">
-        <i class="fa-solid fa-check"></i> Quick Approve
+        Quick Approve
       </button>
       <button type="button" class="btn btn-ghost btn-sm" id="popupDismissBtn" style="font-size:0.78rem;padding:6px 10px;color:#64748b;">
         Dismiss

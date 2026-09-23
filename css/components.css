@@ -30,26 +30,26 @@
   background: var(--primary-gradient);
   color: #ffffff;
   border: 1px solid transparent;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-gradient-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px -2px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 6px 20px -2px rgba(124, 58, 237, 0.4);
 }
 
 .btn-ghost {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  border: 1px solid var(--accent-border);
+  color: var(--text-hi);
   box-shadow: var(--shadow-xs);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -97,7 +97,7 @@
 label {
   display: block;
   font-size: 0.76rem;
-  color: #475569;
+  color: var(--text-mid);
   margin-bottom: 7px;
   font-weight: 700;
   text-transform: uppercase;
@@ -110,7 +110,7 @@ textarea {
   font-family: inherit;
   font-size: 0.9rem;
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--glass-border);
   color: var(--text-hi);
   border-radius: var(--radius-sm);
   padding: 11px 14px;
@@ -189,9 +189,9 @@ select option {
 
 .badge-reserved,
 .badge-partially_paid {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
 }
 
 .badge-in_service {
@@ -275,19 +275,25 @@ select option {
   border: 1px solid #cbd5e1;
   width: 32px;
   height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #475569;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  padding: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .modal-close:hover {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #dc2626;
+  transform: scale(1.05);
 }
 
 
@@ -316,6 +322,7 @@ select option {
 .cal-nav-btn {
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   background: #f8fafc;
@@ -325,13 +332,15 @@ select option {
   cursor: pointer;
   color: #475569;
   font-size: 0.8rem;
+  font-weight: 700;
   transition: all 0.2s ease;
+  padding: 0;
 }
 
 .cal-nav-btn:hover {
-  background: #2563eb;
+  background: var(--accent);
   color: #ffffff;
-  border-color: #2563eb;
+  border-color: var(--accent);
 }
 
 .cal-weekdays {
@@ -382,12 +391,13 @@ select option {
 }
 
 .cal-day-booked {
-  background: #fef2f2;
-  color: #ef4444;
-  border: 1px solid #fecdd3;
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
   cursor: not-allowed !important;
   text-decoration: line-through;
-  opacity: 0.75;
+  opacity: 0.85;
+  pointer-events: none !important;
 }
 
 .cal-day-past {
@@ -398,18 +408,61 @@ select option {
 }
 
 .cal-day-selected {
-  background: #2563eb !important;
+  background: var(--accent) !important;
   color: #ffffff !important;
   font-weight: 800 !important;
-  border-color: #1d4ed8 !important;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  border-color: var(--accent-hover) !important;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
 }
 
 .cal-day-in-range {
-  background: #eff6ff !important;
-  color: #1d4ed8 !important;
+  background: #f5f3ff !important;
+  color: var(--accent) !important;
   font-weight: 700;
-  border-color: #bfdbfe !important;
+  border-color: #ddd6fe !important;
+}
+
+[data-theme="dark"] .custom-calendar {
+  background: #131d31;
+  border-color: #1e293b;
+}
+
+[data-theme="dark"] .cal-month-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .cal-nav-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .cal-day-available {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .cal-day-available:hover {
+  background: #10b981;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .cal-day-booked {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+}
+
+[data-theme="dark"] .cal-day-past {
+  background: #0f172a;
+  color: #475569;
+}
+
+[data-theme="dark"] .cal-day-in-range {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #60a5fa !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
 }
 
 .cal-legend {
@@ -479,7 +532,7 @@ select option {
 }
 
 .toast-info {
-  background: #2563eb;
+  background: var(--accent);
   color: #ffffff;
 }
 

@@ -46,7 +46,6 @@ export async function renderStaffDashboard(view) {
         <div class="glass stat-card" style="border-left:4px solid #f59e0b;cursor:pointer;" id="cardPendingReqs" title="Click to view pending requests">
           <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Pending Approvals</span>
-            <i class="fa-solid fa-clipboard-question" style="color:#f59e0b;"></i>
           </div>
           <div class="stat-value" style="color:#d97706;display:flex;align-items:baseline;gap:8px;">
             ${pendingBookings.length}
@@ -55,19 +54,17 @@ export async function renderStaffDashboard(view) {
           <div class="stat-sub">Incoming reservation requests</div>
         </div>
 
-        <div class="glass stat-card" style="border-left:4px solid #2563eb;cursor:pointer;" id="cardActiveRentals" title="Click to view active rentals">
+        <div class="glass stat-card" style="border-left:4px solid var(--accent);cursor:pointer;" id="cardActiveRentals" title="Click to view active rentals">
           <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Active Rentals</span>
-            <i class="fa-solid fa-key" style="color:#2563eb;"></i>
           </div>
-          <div class="stat-value" style="color:#2563eb;">${activeBookings.length}</div>
+          <div class="stat-value" style="color:var(--accent);">${activeBookings.length}</div>
           <div class="stat-sub">Vehicles currently on the road</div>
         </div>
 
         <div class="glass stat-card" style="border-left:4px solid #059669;cursor:pointer;" id="cardReturnsDue" title="Click to process returns">
           <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Returns Due</span>
-            <i class="fa-solid fa-rotate-left" style="color:#059669;"></i>
           </div>
           <div class="stat-value" style="color:#059669;">${todayReturns.length || activeBookings.length}</div>
           <div class="stat-sub">Scheduled check-ins</div>
@@ -76,7 +73,6 @@ export async function renderStaffDashboard(view) {
         <div class="glass stat-card" style="border-left:4px solid #7c3aed;">
           <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Fleet Availability</span>
-            <i class="fa-solid fa-car" style="color:#7c3aed;"></i>
           </div>
           <div class="stat-value" style="color:#7c3aed;">${availableVehicles} <span style="font-size:0.85rem;color:#64748b;font-weight:500;">/ ${totalVehicles}</span></div>
           <div class="stat-sub">${rentedVehicles} Rented · ${maintenanceVehicles} Service</div>
@@ -86,9 +82,6 @@ export async function renderStaffDashboard(view) {
       <!-- Quick Action Shortcuts -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-bottom:24px;">
         <button type="button" class="btn btn-ghost" id="quickNavRequests" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;margin-right:10px;">
-            <i class="fa-solid fa-clipboard-check" style="color:#d97706;font-size:1.1rem;"></i>
-          </div>
           <div style="text-align:left;">
             <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Review Requests</div>
             <div style="font-size:0.75rem;color:#64748b;">${pendingBookings.length} pending review</div>
@@ -96,9 +89,6 @@ export async function renderStaffDashboard(view) {
         </button>
 
         <button type="button" class="btn btn-ghost" id="quickNavActive" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#dbeafe;display:flex;align-items:center;justify-content:center;margin-right:10px;">
-            <i class="fa-solid fa-wallet" style="color:#2563eb;font-size:1.1rem;"></i>
-          </div>
           <div style="text-align:left;">
             <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Collect Balance</div>
             <div style="font-size:0.75rem;color:#64748b;">Pickup balance collection</div>
@@ -106,9 +96,6 @@ export async function renderStaffDashboard(view) {
         </button>
 
         <button type="button" class="btn btn-ghost" id="quickNavReturns" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin-right:10px;">
-            <i class="fa-solid fa-rotate-left" style="color:#059669;font-size:1.1rem;"></i>
-          </div>
           <div style="text-align:left;">
             <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Process Return</div>
             <div style="font-size:0.75rem;color:#64748b;">Inspect &amp; release deposits</div>
@@ -116,9 +103,6 @@ export async function renderStaffDashboard(view) {
         </button>
 
         <button type="button" class="btn btn-ghost" id="quickNavRefunds" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;margin-right:10px;">
-            <i class="fa-solid fa-hand-holding-dollar" style="color:#7c3aed;font-size:1.1rem;"></i>
-          </div>
           <div style="text-align:left;">
             <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Refund Claims</div>
             <div style="font-size:0.75rem;color:#64748b;">${refundClaims.length} pending transfer</div>
@@ -131,8 +115,8 @@ export async function renderStaffDashboard(view) {
         <!-- Priority Booking Approval Queue -->
         <div class="glass card" style="padding:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:8px;">
-              <i class="fa-solid fa-bell" style="color:#f59e0b;"></i> Incoming Priority Requests
+            <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0;">
+              Incoming Priority Requests
             </h3>
             <span class="badge ${pendingBookings.length > 0 ? 'badge-pending' : 'badge-available'}">
               ${pendingBookings.length} waiting
@@ -150,16 +134,16 @@ export async function renderStaffDashboard(view) {
                     <div style="font-weight:800;font-size:0.92rem;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                       ${v.name || 'Vehicle'} <span class="muted" style="font-size:0.75rem;">(${v.plate_number || 'N/A'})</span>
                     </div>
-                    <div style="font-size:0.8rem;color:#2563eb;font-weight:700;margin-top:2px;">
-                      <i class="fa-solid fa-user" style="font-size:0.72rem;margin-right:3px;"></i> ${cName} ${cPhone ? `<span style="color:#64748b;font-weight:400;">(${cPhone})</span>` : ''}
+                    <div style="font-size:0.8rem;color:var(--accent);font-weight:700;margin-top:2px;">
+                      ${cName} ${cPhone ? `<span style="color:#64748b;font-weight:400;">(${cPhone})</span>` : ''}
                     </div>
                     <div style="font-size:0.76rem;color:#64748b;margin-top:2px;">
-                      <i class="fa-solid fa-calendar" style="margin-right:3px;"></i> ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong>
+                      ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong>
                     </div>
                   </div>
                   <div style="display:flex;gap:6px;flex-shrink:0;">
                     <button type="button" class="btn btn-primary btn-sm" data-dash-approve="${b.id}" style="padding:6px 12px;font-size:0.78rem;">
-                      <i class="fa-solid fa-check"></i> Approve
+                      Approve
                     </button>
                     <button type="button" class="btn btn-danger btn-sm" data-dash-reject="${b.id}" style="padding:6px 10px;font-size:0.78rem;">
                       Reject
@@ -169,7 +153,6 @@ export async function renderStaffDashboard(view) {
               `;
             }).join('') : `
               <div class="empty-box" style="padding:28px 14px;">
-                <div class="empty-icon"><i class="fa-solid fa-clipboard-check" style="font-size:2rem;color:#059669;"></i></div>
                 <div style="font-weight:700;color:#0f172a;margin-top:6px;">All Booking Requests Processed</div>
                 <p style="font-size:0.8rem;color:#64748b;margin:4px 0 0 0;">New customer booking requests will appear here in real-time.</p>
               </div>
@@ -179,14 +162,14 @@ export async function renderStaffDashboard(view) {
 
         <!-- Fleet Status Breakdown & Live Operations -->
         <div class="glass card" style="padding:20px;">
-          <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 14px 0;display:flex;align-items:center;gap:8px;">
-            <i class="fa-solid fa-car-side" style="color:#2563eb;"></i> Fleet Operations Status
+          <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 14px 0;">
+            Fleet Operations Status
           </h3>
 
           <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
             <div>
               <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:4px;">
-                <span style="color:#059669;"><i class="fa-solid fa-circle-check"></i> Ready &amp; Available</span>
+                <span style="color:#059669;font-weight:700;">Ready &amp; Available</span>
                 <span style="color:#0f172a;">${availableVehicles} of ${totalVehicles} units</span>
               </div>
               <div style="width:100%;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
@@ -196,17 +179,17 @@ export async function renderStaffDashboard(view) {
 
             <div>
               <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:4px;">
-                <span style="color:#2563eb;"><i class="fa-solid fa-road"></i> Rented On Road</span>
+                <span style="color:var(--accent);font-weight:700;">Rented On Road</span>
                 <span style="color:#0f172a;">${rentedVehicles} units</span>
               </div>
               <div style="width:100%;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
-                <div style="width:${totalVehicles > 0 ? (rentedVehicles / totalVehicles) * 100 : 0}%;height:100%;background:#2563eb;border-radius:99px;"></div>
+                <div style="width:${totalVehicles > 0 ? (rentedVehicles / totalVehicles) * 100 : 0}%;height:100%;background:var(--accent);border-radius:99px;"></div>
               </div>
             </div>
 
             <div>
               <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:4px;">
-                <span style="color:#d97706;"><i class="fa-solid fa-wrench"></i> Periodic Maintenance</span>
+                <span style="color:#d97706;font-weight:700;">Periodic Maintenance</span>
                 <span style="color:#0f172a;">${maintenanceVehicles} units</span>
               </div>
               <div style="width:100%;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
@@ -220,9 +203,9 @@ export async function renderStaffDashboard(view) {
               Shift Manager Checklist
             </div>
             <div style="font-size:0.8rem;color:#334155;display:flex;flex-direction:column;gap:6px;">
-              <div><i class="fa-solid fa-check" style="color:#059669;margin-right:6px;"></i> Inspect incoming vehicles before refunding deposit.</div>
-              <div><i class="fa-solid fa-check" style="color:#059669;margin-right:6px;"></i> Validate customer license ID at meetup release.</div>
-              <div><i class="fa-solid fa-check" style="color:#059669;margin-right:6px;"></i> Collect remaining balance prior to vehicle handover.</div>
+              <div>Inspect incoming vehicles before refunding deposit.</div>
+              <div>Validate customer license ID at meetup release.</div>
+              <div>Collect remaining balance prior to vehicle handover.</div>
             </div>
           </div>
         </div>
@@ -231,7 +214,7 @@ export async function renderStaffDashboard(view) {
       <!-- Recent Rental Operations Feed -->
       <div class="glass card" style="padding:20px;">
         <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 14px 0;">
-          <i class="fa-solid fa-clock-rotate-left" style="color:#64748b;"></i> Recent Rental Operations Feed
+          Recent Rental Operations Feed
         </h3>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${bookings.slice(0, 6).map(b => {
@@ -249,7 +232,7 @@ export async function renderStaffDashboard(view) {
                 <span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>
               </div>
             `;
-          }).join('') || emptyState('fa-regular fa-file-lines', 'No recent operations activity.')}
+          }).join('') || emptyState('', 'No recent operations activity.')}
         </div>
       </div>
     </div>
@@ -457,18 +440,18 @@ export async function renderStaffRefunds(view) {
               <div class="item-title">${b.vehicles?.name ?? 'Vehicle'} <span class="muted">(${maskPlate(b.vehicles?.plate_number ?? '')})</span></div>
               <div class="item-sub">Customer: <strong>${getBookingCustomerName(b)}</strong> ${getBookingCustomerPhone(b) ? '· ' + getBookingCustomerPhone(b) : ''}</div>
               <div class="item-sub">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong></div>
-              ${b.review_notes ? `<div class="item-sub" style="color:#b45309;margin-top:4px;font-size:0.8rem;"><i class="fa-solid fa-comment-dots"></i> ${b.review_notes}</div>` : ''}
+              ${b.review_notes ? `<div class="item-sub" style="color:#b45309;margin-top:4px;font-size:0.8rem;">Note: ${b.review_notes}</div>` : ''}
             </div>
             <span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>
             <div class="item-actions">
               ${b.status === 'refund_requested' ? `
-                <button class="btn btn-primary btn-sm" data-disburse-id="${b.id}"><i class="fa-solid fa-hand-holding-dollar"></i> Disburse Refund</button>
+                <button class="btn btn-primary btn-sm" data-disburse-id="${b.id}">Disburse Refund</button>
               ` : `
-                <button class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}"><i class="fa-solid fa-receipt"></i> Voucher</button>
+                <button class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}">Voucher</button>
               `}
             </div>
           </div>
-        `).join('') : emptyState('fa-solid fa-hand-holding-dollar', 'No active refund requests.')}
+        `).join('') : emptyState('', 'No active refund requests.')}
       </div>
     </div>
   `;
@@ -535,8 +518,8 @@ export async function renderStaffRequests(view) {
               <div class="item-title">${b.vehicles?.name || 'Vehicle'} <span class="muted">(${b.vehicles?.plate_number || 'N/A'})</span></div>
               <div class="item-sub">Requested by <strong>${cName}</strong> ${cPhone ? '· ' + cPhone : ''}</div>
               <div class="item-sub">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong></div>
-              ${b.vehicles && b.vehicles.status !== 'available' ? `<div class="item-sub" style="color:var(--coral);"><i class="fa-solid fa-triangle-exclamation"></i> Vehicle currently ${b.vehicles.status}</div>` : ''}
-              ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.78rem;margin-top:4px;"><i class="fa-solid fa-circle-info"></i> ${b.review_notes}</div>` : ''}
+              ${b.vehicles && b.vehicles.status !== 'available' ? `<div class="item-sub" style="color:var(--coral);">Vehicle currently ${b.vehicles.status}</div>` : ''}
+              ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.78rem;margin-top:4px;">${b.review_notes}</div>` : ''}
             </div>
             <span class="badge badge-pending">pending</span>
             <div class="item-actions">
@@ -545,7 +528,7 @@ export async function renderStaffRequests(view) {
             </div>
           </div>
         `;
-  }).join('') : emptyState('fa-regular fa-envelope-open', 'No pending requests right now.')}
+  }).join('') : emptyState('', 'No pending requests right now.')}
       </div>
     </div>
   `;
@@ -599,16 +582,16 @@ export async function renderStaffActive(view) {
     const cName = getBookingCustomerName(b);
     const isPartial = b.balance_due && Number(b.balance_due) > 0 && Number(b.paid_amount || 0) > 0;
     const badgeHTML = isPartial
-      ? `<span class="badge badge-reserved"><i class="fa-solid fa-bookmark"></i> Reserved (${fmtMoney(b.paid_amount)} Paid)</span>`
+      ? `<span class="badge badge-reserved">Reserved (${fmtMoney(b.paid_amount)} Paid)</span>`
       : `<span class="badge badge-${b.status}">${b.status}</span>`;
 
     let actionBtn = '';
     if (b.status === 'approved') {
       actionBtn = `<button class="btn btn-amber btn-sm" data-record-payment="${b.id}">Record Payment (${fmtMoney(b.total_amount)})</button>`;
     } else if (isPartial) {
-      actionBtn = `<button class="btn btn-amber btn-sm" data-record-payment="${b.id}"><i class="fa-solid fa-hand-holding-dollar"></i> Collect Balance (${fmtMoney(b.balance_due)})</button>`;
+      actionBtn = `<button class="btn btn-amber btn-sm" data-record-payment="${b.id}">Collect Balance (${fmtMoney(b.balance_due)})</button>`;
     } else {
-      actionBtn = `<span class="muted"><i class="fa-solid fa-circle-check" style="color:#059669;"></i> Fully Paid &amp; Active</span>`;
+      actionBtn = `<span class="muted" style="color:#059669;font-weight:700;">Fully Paid &amp; Active</span>`;
     }
 
     return `
@@ -617,14 +600,14 @@ export async function renderStaffActive(view) {
                 <div class="item-title">${b.vehicles?.name || 'Vehicle'} <span class="muted">(${b.vehicles?.plate_number || 'N/A'})</span></div>
                 <div class="item-sub">
                   ${cName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · Total: ${fmtMoney(b.total_amount)}
-                  ${isPartial ? ` · <span style="color:#2563eb;font-weight:700;">Balance Due at Pickup: ${fmtMoney(b.balance_due)}</span>` : ''}
+                  ${isPartial ? ` · <span style="color:var(--accent);font-weight:700;">Balance Due at Pickup: ${fmtMoney(b.balance_due)}</span>` : ''}
                 </div>
               </div>
               ${badgeHTML}
               <div class="item-actions">${actionBtn}</div>
             </div>
           `;
-  }).join('') : emptyState('fa-solid fa-key', 'No approved or active rentals.')}
+  }).join('') : emptyState('', 'No approved or active rentals.')}
       </div>
     </div>
   `;
@@ -646,9 +629,9 @@ export async function openStaffPaymentModal(bookingId) {
   const amountDue = isPartial ? Number(b.balance_due) : Number(b.total_amount);
 
   openModal(`
-    <div class="modal-head"><h3>${isPartial ? 'Collect Remaining Balance' : 'Record Payment'}</h3><div class="modal-close" id="mClose">✕</div></div>
+    <div class="modal-head"><h3>${isPartial ? 'Collect Remaining Balance' : 'Record Payment'}</h3><div class="modal-close" id="mClose">Close</div></div>
     <p class="muted" style="margin-bottom:14px;">
-      ${b.vehicles?.name || 'Vehicle'} · ${isPartial ? `Remaining balance due: <strong style="color:#2563eb;">${fmtMoney(amountDue)}</strong>` : `Total amount due: <strong>${fmtMoney(amountDue)}</strong>`}
+      ${b.vehicles?.name || 'Vehicle'} · ${isPartial ? `Remaining balance due: <strong style="color:var(--accent);">${fmtMoney(amountDue)}</strong>` : `Total amount due: <strong>${fmtMoney(amountDue)}</strong>`}
     </p>
     <div class="field"><label>Method</label>
       <select id="payMethod"><option value="cash">Cash</option><option value="card">Card Terminal / POS</option><option value="bank_transfer">Bank Transfer / QR</option></select>
@@ -728,7 +711,7 @@ export async function renderStaffReturns(view) {
             </div>
             <div class="item-actions"><button class="btn btn-primary btn-sm" data-return="${b.id}">Process Return</button></div>
           </div>
-        `).join('') : emptyState('fa-solid fa-road', 'No vehicles currently out for rental.')}
+        `).join('') : emptyState('', 'No vehicles currently out for rental.')}
       </div>
     </div>
   `;
@@ -746,7 +729,7 @@ export async function openReturnModal(bookingId) {
   }
 
   openModal(`
-    <div class="modal-head"><h3>Inspect Vehicle Condition</h3><div class="modal-close" id="mClose">✕</div></div>
+    <div class="modal-head"><h3>Inspect Vehicle Condition</h3><div class="modal-close" id="mClose">Close</div></div>
     <p class="muted" style="margin-bottom:14px;">${b.vehicles?.name || 'Vehicle'}</p>
     <div class="field"><label>Condition notes</label><textarea id="condNotes" rows="3" placeholder="General condition, mileage, fuel level…"></textarea></div>
     <div class="field">
@@ -925,7 +908,7 @@ export async function renderAdminDashboard(view) {
         </div>
         <div class="glass stat-card">
           <div class="stat-label">Available Rentals</div>
-          <div class="stat-value" style="color:#2563eb;">${availableRentalsCount}</div>
+          <div class="stat-value" style="color:var(--accent);">${availableRentalsCount}</div>
           <div class="stat-sub">Ready for booking</div>
         </div>
         <div class="glass stat-card">
@@ -983,7 +966,7 @@ export async function renderAdminDashboard(view) {
                   <span class="badge badge-${b.status}" style="font-size:0.7rem;">${b.status}</span>
                 </div>
               `;
-  }).join('') : emptyState('fa-regular fa-clock', 'No recent activity.')}
+  }).join('') : emptyState('', 'No recent activity.')}
           </div>
         </div>
       </div>
@@ -1001,13 +984,13 @@ export async function renderAdminVehicles(view) {
       <div class="grid grid-vehicles" id="adminVehicleGrid">
         ${state.vehicles.map(v => {
     const statusBadge = v.status === 'available'
-      ? `<span class="badge badge-available"><i class="fa-solid fa-circle-check"></i> Available</span>`
+      ? `<span class="badge badge-available">Available</span>`
       : v.status === 'in_service' || v.status === 'maintenance'
-        ? `<span class="badge badge-in_service"><i class="fa-solid fa-wrench"></i> In Service</span>`
+        ? `<span class="badge badge-in_service">In Service</span>`
         : v.status === 'scheduled_maint'
-          ? `<span class="badge badge-scheduled_maint"><i class="fa-solid fa-calendar-day"></i> Scheduled Maint</span>`
+          ? `<span class="badge badge-scheduled_maint">Scheduled Maint</span>`
           : v.status === 'off_the_road'
-            ? `<span class="badge badge-off_the_road"><i class="fa-solid fa-ban"></i> Off the Road</span>`
+            ? `<span class="badge badge-off_the_road">Off the Road</span>`
             : `<span class="badge badge-${v.status}">${v.status}</span>`;
 
     return `
@@ -1024,19 +1007,19 @@ export async function renderAdminVehicles(view) {
                   <span class="vehicle-cat-tag">${getVehicleCategoryName(v)}</span>
                 </div>
                 <div class="vehicle-meta">
-                  <span><i class="fa-solid fa-id-card"></i> ${maskPlate(v.plate_number)}</span>
-                  <span><i class="fa-solid fa-tag" style="color:#2563eb;"></i> ${fmtMoney(getVehicleDailyRate(v))}/day</span>
+                  <span>Plate: ${maskPlate(v.plate_number)}</span>
+                  <span style="color:#2563eb;font-weight:700;">${fmtMoney(getVehicleDailyRate(v))}/day</span>
                 </div>
                 <div class="item-actions" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
                   ${(v.status === 'in_service' || v.status === 'maintenance' || v.status === 'scheduled_maint') ? `
                     <button class="btn btn-sm" data-quick-available="${v.id}" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-weight:700;" title="Instantly return vehicle to Available fleet">
-                      <i class="fa-solid fa-circle-check"></i> Make Available
+                      Make Available
                     </button>
                   ` : ''}
-                  <button class="btn btn-ghost btn-sm" data-edit="${v.id}"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                  <button class="btn btn-primary btn-sm" data-service-history="${v.id}"><i class="fa-solid fa-screwdriver-wrench"></i> Service</button>
-                  <button class="btn btn-warning btn-sm" data-log-service="${v.id}"><i class="fa-solid fa-plus"></i> Work Order</button>
-                  <button class="btn btn-danger btn-sm" data-del="${v.id}"><i class="fa-solid fa-trash"></i> Delete</button>
+                  <button class="btn btn-ghost btn-sm" data-edit="${v.id}">Edit</button>
+                  <button class="btn btn-primary btn-sm" data-service-history="${v.id}">Service</button>
+                  <button class="btn btn-warning btn-sm" data-log-service="${v.id}">Work Order</button>
+                  <button class="btn btn-danger btn-sm" data-del="${v.id}">Delete</button>
                 </div>
               </div>
             </div>
@@ -1053,7 +1036,7 @@ export async function renderAdminVehicles(view) {
     const vId = Number(b.dataset.quickAvailable);
     const targetV = state.vehicles.find(item => item.id === vId);
     b.disabled = true;
-    b.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Updating…`;
+    b.textContent = 'Updating…';
 
     saveVehicleOverride(vId, { status: 'available', maintenance_days: null, maintenance_until: null });
     if (targetV) {
@@ -1094,7 +1077,7 @@ export function openVehicleForm(id) {
   const currentRate = v ? getVehicleDailyRate(v) : (state.categories?.[0]?.daily_rate || 2000);
 
   openModal(`
-    <div class="modal-head"><h3>${v ? 'Edit' : 'Add'} Vehicle</h3><div class="modal-close" id="mClose">✕</div></div>
+    <div class="modal-head"><h3>${v ? 'Edit' : 'Add'} Vehicle</h3><div class="modal-close" id="mClose">Close</div></div>
     <div class="field"><label>Name</label><input id="fName" value="${v?.name ?? ''}" placeholder="Toyota Corolla" /></div>
     <div class="detail-grid">
       <div class="field"><label>Plate number</label><input id="fPlate" value="${v?.plate_number ?? ''}" placeholder="ABC-1234" /></div>
@@ -1130,14 +1113,13 @@ export function openVehicleForm(id) {
       </div>
     </div>
     <div class="field">
-      <label style="font-weight:700;color:#0f172a;"><i class="fa-solid fa-image" style="color:#2563eb;margin-right:4px;"></i> Vehicle Photo</label>
+      <label style="font-weight:700;color:#0f172a;">Vehicle Photo</label>
       <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:16px;text-align:center;margin-top:4px;">
         <div id="vImgPreviewBox" style="margin-bottom:10px;">
           ${(v?.image_url || getExactVehicleImage(v || {})) ? `
             <img src="${v?.image_url || getExactVehicleImage(v || {})}" id="vImgPreview" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid #cbd5e1;object-fit:cover;" />
           ` : `
             <div style="padding:12px 6px;">
-              <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:#94a3b8;margin-bottom:6px;"></i>
               <div style="font-size:0.85rem;font-weight:700;color:#334155;">Upload Vehicle Photo</div>
               <div style="font-size:0.75rem;color:#64748b;">Select image file from your computer (JPG, PNG, WEBP)</div>
             </div>
@@ -1146,7 +1128,7 @@ export function openVehicleForm(id) {
         <input type="file" id="vFileInput" accept="image/*" style="display:none;" />
         <input type="hidden" id="fImg" value="${v?.image_url ?? ''}" />
         <button type="button" class="btn btn-ghost btn-sm" id="uploadVImgBtn" style="border:1px solid #cbd5e1;background:#ffffff;">
-          <i class="fa-solid fa-file-image" style="margin-right:5px;color:#2563eb;"></i> Choose Image File
+          Choose Image File
         </button>
       </div>
     </div>
@@ -1424,7 +1406,7 @@ export async function renderAdminCustomers(view) {
         </div>
         <div class="glass stat-card">
           <div class="stat-label">Active Renters</div>
-          <div class="stat-value" style="color:#2563eb;">${activeRentersCount}</div>
+          <div class="stat-value" style="color:var(--accent);">${activeRentersCount}</div>
         </div>
       </div>
 
@@ -1438,10 +1420,10 @@ export async function renderAdminCustomers(view) {
       <div class="pill-row" id="custFilterPills" style="margin-bottom:18px;">
         <div class="pill ${customerStatusFilter === 'all' ? 'active' : ''}" data-cfilter="all">All (${customerList.length})</div>
         <div class="pill ${customerStatusFilter === 'with_license' ? 'active' : ''}" data-cfilter="with_license" style="${customerStatusFilter === 'with_license' ? 'background:#059669;color:#fff;border-color:#059669;' : 'border-color:#a7f3d0;color:#047857;background:#ecfdf5;'}">
-          <i class="fa-solid fa-id-card"></i> With License (${verifiedLicenseCount})
+          With License (${verifiedLicenseCount})
         </div>
         <div class="pill ${customerStatusFilter === 'no_license' ? 'active' : ''}" data-cfilter="no_license" style="${customerStatusFilter === 'no_license' ? 'background:#dc2626;color:#fff;border-color:#dc2626;' : 'border-color:#fecdd3;color:#e11d48;background:#fff1f2;'}">
-          <i class="fa-solid fa-triangle-exclamation"></i> No License (${noLicenseCount})
+          No License (${noLicenseCount})
         </div>
         <div class="pill ${customerStatusFilter === 'active_renter' ? 'active' : ''}" data-cfilter="active_renter">Active Renters (${activeRentersCount})</div>
         <div class="pill ${customerStatusFilter === 'pending' ? 'active' : ''}" data-cfilter="pending">Pending Requests (${pendingCount})</div>
@@ -1450,19 +1432,19 @@ export async function renderAdminCustomers(view) {
       <div class="row-list">
         ${filteredCustomers.length ? filteredCustomers.map(c => {
     let badgeHTML = '<span class="badge badge-available">Idle</span>';
-    if (c.liveStatus === 'active_renter') badgeHTML = '<span class="badge badge-completed"><i class="fa-solid fa-car-side"></i> Active Renter</span>';
+    if (c.liveStatus === 'active_renter') badgeHTML = '<span class="badge badge-completed">Active Renter</span>';
     else if (c.liveStatus === 'approved') badgeHTML = '<span class="badge badge-approved">Approved</span>';
     else if (c.liveStatus === 'pending') badgeHTML = '<span class="badge badge-pending">Pending Request</span>';
 
     const licenseBadge = c.hasLicense
-      ? `<span class="badge badge-completed" style="font-size:0.75rem;"><i class="fa-solid fa-id-card"></i> ${c.license_number ? c.license_number : 'ID Photo Provided'}</span>`
-      : `<span class="badge badge-rejected" style="font-size:0.75rem;"><i class="fa-solid fa-circle-exclamation"></i> No License Provided</span>`;
+      ? `<span class="badge badge-completed" style="font-size:0.75rem;">${c.license_number ? c.license_number : 'ID Photo Provided'}</span>`
+      : `<span class="badge badge-rejected" style="font-size:0.75rem;">No License Provided</span>`;
 
     const initials = (c.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
     return `
             <div class="glass item-row" style="padding:16px 20px;cursor:pointer;" data-cust-click-id="${c.id}">
-              <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0;">
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--primary-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0;">
                 ${initials}
               </div>
               <div class="item-main">
@@ -1472,9 +1454,9 @@ export async function renderAdminCustomers(view) {
                   ${licenseBadge}
                 </div>
                 <div class="item-sub" style="margin-top:2px;">
-                  <span><i class="fa-solid fa-phone" style="color:#059669;margin-right:4px;"></i> ${c.phone ?? 'No phone'}</span>
+                  <span>Phone: ${c.phone ?? 'No phone'}</span>
                   <span style="margin:0 6px;">·</span>
-                  <span><i class="fa-solid fa-location-dot" style="color:#64748b;margin-right:4px;"></i> ${c.address ?? 'No address'}</span>
+                  <span>Address: ${c.address ?? 'No address'}</span>
                 </div>
                 <div class="item-sub" style="margin-top:2px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
                   <span>Total Bookings: <strong>${c.totalBookings}</strong></span>
@@ -1483,18 +1465,18 @@ export async function renderAdminCustomers(view) {
                 </div>
                 ${c.activeRental ? `
                   <div style="margin-top:4px;font-size:0.78rem;color:#047857;font-weight:600;">
-                    <i class="fa-solid fa-key" style="margin-right:4px;"></i> Current Vehicle: <strong>${c.activeRental.vehicles?.name ?? 'Vehicle'}</strong> (${maskPlate(c.activeRental.vehicles?.plate_number ?? '')}) · ${fmtDate(c.activeRental.start_date)} → ${fmtDate(c.activeRental.end_date)}
+                    Current Vehicle: <strong>${c.activeRental.vehicles?.name ?? 'Vehicle'}</strong> (${maskPlate(c.activeRental.vehicles?.plate_number ?? '')}) · ${fmtDate(c.activeRental.start_date)} → ${fmtDate(c.activeRental.end_date)}
                   </div>
                 ` : ''}
               </div>
               <div class="item-actions">
-                <button class="btn btn-ghost btn-sm" data-cust-manage-id="${c.id}" style="color:#2563eb;border:1px solid #cbd5e1;">
-                  <i class="fa-solid fa-user-pen"></i> Manage &amp; View
+                <button class="btn btn-ghost btn-sm" data-cust-manage-id="${c.id}" style="color:var(--accent);border:1px solid #cbd5e1;">
+                  Manage &amp; View
                 </button>
               </div>
             </div>
           `;
-  }).join('') : emptyState('fa-solid fa-users', 'No customers match the filter.')}
+  }).join('') : emptyState('', 'No customers match the filter.')}
       </div>
     </div>
   `;
@@ -1516,7 +1498,7 @@ export async function renderAdminCustomers(view) {
     openModal(`
       <div class="modal-head">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">
             ${(c.full_name || '?').slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -1531,7 +1513,7 @@ export async function renderAdminCustomers(view) {
         <div style="display:flex;align-items:center;justify-content:space-between;background:${c.hasLicense ? 'var(--green-soft)' : 'var(--coral-soft)'};border:1px solid ${c.hasLicense ? 'var(--green-border)' : 'var(--coral-border)'};border-radius:10px;padding:12px 14px;margin-bottom:16px;">
           <div>
             <div style="font-weight:700;font-size:0.9rem;color:${c.hasLicense ? '#047857' : '#e11d48'};">
-              <i class="fa-solid fa-${c.hasLicense ? 'circle-check' : 'circle-exclamation'}"></i> ${c.hasLicense ? 'Driver License Provided' : 'No Driver License On File'}
+              ${c.hasLicense ? 'Driver License Provided' : 'No Driver License On File'}
             </div>
             <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">
               ${c.hasLicense ? 'Customer has submitted license details.' : 'Customer has not submitted a valid license yet.'}
@@ -1575,13 +1557,13 @@ export async function renderAdminCustomers(view) {
                   <img src="${c.license_id_url}" style="max-width:100%;max-height:220px;border-radius:8px;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.15);" />
                 </div>
               ` : `
-                <div style="font-size:0.8rem;color:var(--text-mid);padding:10px 0;"><i class="fa-solid fa-id-card" style="font-size:2rem;display:block;margin-bottom:6px;opacity:0.6;"></i>No license ID card photo uploaded.</div>
+                <div style="font-size:0.8rem;color:var(--text-mid);padding:10px 0;">No license ID card photo uploaded.</div>
               `}
             </div>
             <input type="file" id="admFileLicense" accept="image/*" style="display:none;" />
             <input type="hidden" id="admHiddenLicenseUrl" value="${c.license_id_url ?? ''}" />
             <button type="button" class="btn btn-ghost btn-sm" id="admUploadLicenseBtn" style="border:1px solid var(--glass-border);">
-              <i class="fa-solid fa-camera"></i> ${c.license_id_url ? 'Replace License Photo' : 'Upload License Photo'}
+              ${c.license_id_url ? 'Replace License Photo' : 'Upload License Photo'}
             </button>
           </div>
         </div>
@@ -1594,7 +1576,7 @@ export async function renderAdminCustomers(view) {
         <div style="display:flex;gap:10px;">
           <button type="button" class="btn btn-ghost" onclick="window.closeModal()" style="flex:1;">Cancel</button>
           <button type="submit" class="btn btn-primary" id="saveCustAdminBtn" style="flex:2;">
-            <i class="fa-solid fa-floppy-disk"></i> Save Customer Details
+            Save Customer Details
           </button>
         </div>
       </form>
@@ -1721,14 +1703,14 @@ export async function renderAdminUsers(view) {
                 <td>
                   <div style="font-weight:700;color:#0f172a;">${u.full_name}${u.id === state.user.id ? ' <span class="muted">(you)</span>' : ''}</div>
                 </td>
-                <td>${u.phone ? `<span style="font-weight:600;"><i class="fa-solid fa-phone" style="color:#059669;font-size:0.75rem;margin-right:4px;"></i> ${u.phone}</span>` : '<span class="muted">—</span>'}</td>
+                <td>${u.phone ? `<span style="font-weight:600;">${u.phone}</span>` : '<span class="muted">—</span>'}</td>
                 <td>
                   ${u.license_number ? `
                     <div style="display:flex;align-items:center;gap:6px;">
-                      <span class="badge badge-completed" style="font-size:0.74rem;font-family:monospace;"><i class="fa-solid fa-id-card"></i> ${u.license_number}</span>
+                      <span class="badge badge-completed" style="font-size:0.74rem;font-family:monospace;">${u.license_number}</span>
                       ${u.license_id_url ? `
-                        <button class="btn btn-ghost btn-sm" data-view-id="${u.id}" style="padding:2px 8px;font-size:0.72rem;color:#2563eb;">
-                          <i class="fa-solid fa-eye"></i> View ID
+                        <button class="btn btn-ghost btn-sm" data-view-id="${u.id}" style="padding:2px 8px;font-size:0.72rem;color:var(--accent);">
+                          View ID
                         </button>
                       ` : ''}
                     </div>
@@ -1745,7 +1727,7 @@ export async function renderAdminUsers(view) {
                   </select>
                 </td>
               </tr>
-            `).join('') : `<tr><td colspan="7">${emptyState('fa-solid fa-users', 'No users found matching your search.')}</td></tr>`}
+            `).join('') : `<tr><td colspan="7">${emptyState('', 'No users found matching your search.')}</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -1785,12 +1767,12 @@ export async function renderAdminUsers(view) {
         <div class="modal-close" onclick="window.closeModal()">✕</div>
       </div>
       <div style="text-align:center;padding:10px 0;">
-        <img src="${u.license_id_url}" style="max-width:100%;max-height:360px;border-radius:12px;border:2px solid #2563eb;box-shadow:0 8px 24px rgba(0,0,0,0.15);" />
+        <img src="${u.license_id_url}" style="max-width:100%;max-height:360px;border-radius:12px;border:2px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,0.15);" />
       </div>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:12px;" class="detail-grid">
         <div><label>Customer Name</label><div style="font-weight:700;color:#0f172a;">${u.full_name}</div></div>
         <div><label>Contact Phone</label><div style="font-weight:600;color:#0f172a;">${u.phone ?? '—'}</div></div>
-        <div><label>License No.</label><div style="font-weight:700;font-family:monospace;color:#2563eb;">${u.license_number ?? '—'}</div></div>
+        <div><label>License No.</label><div style="font-weight:700;font-family:monospace;color:var(--accent);">${u.license_number ?? '—'}</div></div>
         <div><label>Expiry Date</label><div style="font-weight:600;color:#0f172a;">${u.license_expiry ? fmtDate(u.license_expiry) : '—'}</div></div>
         <div style="grid-column:1/-1;"><label>Address</label><div style="font-weight:600;color:#0f172a;">${u.address ?? '—'}</div></div>
       </div>
@@ -1879,7 +1861,7 @@ export async function renderAdminReports(view) {
       <div class="grid grid-stats" style="margin-bottom:22px;">
         <div class="glass stat-card">
           <div class="stat-label">Fleet Utilization Rate</div>
-          <div class="stat-value" style="color:#2563eb;">${utilizationPercent}%</div>
+          <div class="stat-value" style="color:var(--accent);">${utilizationPercent}%</div>
           <div class="stat-sub">${rentedCount} of ${totalFleet} vehicles currently out</div>
         </div>
         <div class="glass stat-card">
@@ -1905,10 +1887,10 @@ export async function renderAdminReports(view) {
           <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:6px;">
               <span style="font-weight:600;color:#0f172a;">Active Rental Utilization</span>
-              <span style="font-weight:700;color:#2563eb;">${utilizationPercent}%</span>
+              <span style="font-weight:700;color:var(--accent);">${utilizationPercent}%</span>
             </div>
             <div style="background:#e2e8f0;border-radius:6px;height:12px;overflow:hidden;">
-              <div style="width:${utilizationPercent}%;height:100%;background:linear-gradient(90deg, #2563eb, #1d4ed8);border-radius:6px;"></div>
+              <div style="width:${utilizationPercent}%;height:100%;background:var(--primary-gradient);border-radius:6px;"></div>
             </div>
           </div>
 
@@ -1934,7 +1916,7 @@ export async function renderAdminReports(view) {
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
               <span class="badge badge-${s.status}" style="width:90px;justify-content:center;font-size:0.7rem;">${s.status}</span>
               <div style="flex:1;background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
-                <div style="width:${Math.min(100, s.count * 15)}%;height:100%;background:#2563eb;border-radius:6px;"></div>
+                <div style="width:${Math.min(100, s.count * 15)}%;height:100%;background:var(--accent);border-radius:6px;"></div>
               </div>
               <span style="width:24px;text-align:right;font-weight:700;font-size:0.85rem;color:#0f172a;">${s.count}</span>
             </div>
@@ -1981,7 +1963,7 @@ export async function openLogServiceModal(vehicleId) {
   openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;"><i class="fa-solid fa-wrench" style="color:#0284c7;margin-right:6px;"></i> Log Maintenance Work Order</h3>
+        <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;">Log Maintenance Work Order</h3>
         <span class="muted" style="font-size:0.78rem;">${v.name} · Plate: ${v.plate_number || '—'}</span>
       </div>
       <div class="modal-close" id="mClose">✕</div>
@@ -2029,7 +2011,7 @@ export async function openLogServiceModal(vehicleId) {
     </div>
 
     <button class="btn btn-primary btn-block" id="saveSrvBtn" style="background:#0284c7;border-color:#0284c7;margin-top:8px;">
-      <i class="fa-solid fa-floppy-disk"></i> Log Work Order &amp; Update Status
+      Log Work Order &amp; Update Status
     </button>
   `);
 
@@ -2097,19 +2079,19 @@ export async function openServiceHistoryModal(vehicleId) {
   const totalCostSpent = historyLogs.reduce((sum, h) => sum + Number(h.cost || 0), 0);
 
   const statusBadge = v.status === 'available'
-    ? `<span class="badge badge-available"><i class="fa-solid fa-circle-check"></i> Available</span>`
+    ? `<span class="badge badge-available">Available</span>`
     : v.status === 'in_service' || v.status === 'maintenance'
-      ? `<span class="badge badge-in_service"><i class="fa-solid fa-wrench"></i> In Service</span>`
+      ? `<span class="badge badge-in_service">In Service</span>`
       : v.status === 'scheduled_maint'
-        ? `<span class="badge badge-scheduled_maint"><i class="fa-solid fa-calendar-day"></i> Scheduled Maint</span>`
+        ? `<span class="badge badge-scheduled_maint">Scheduled Maint</span>`
         : v.status === 'off_the_road'
-          ? `<span class="badge badge-off_the_road"><i class="fa-solid fa-ban"></i> Off the Road</span>`
+          ? `<span class="badge badge-off_the_road">Off the Road</span>`
           : `<span class="badge badge-${v.status}">${v.status}</span>`;
 
   const modal = openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;"><i class="fa-solid fa-screwdriver-wrench" style="color:#2563eb;margin-right:6px;"></i> Maintenance &amp; Complete Works</h3>
+        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">Maintenance &amp; Complete Works</h3>
         <span class="muted" style="font-size:0.78rem;">${v.name} · Plate: ${v.plate_number || '—'}</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
@@ -2125,7 +2107,7 @@ export async function openServiceHistoryModal(vehicleId) {
           <div style="font-size:0.76rem;color:#047857;">Mark this vehicle as fully serviced and ready for customer bookings.</div>
         </div>
         <button class="btn btn-primary btn-sm" id="btnMarkAvailableNow" style="background:#059669;border-color:#059669;white-space:nowrap;">
-          <i class="fa-solid fa-circle-check"></i> Return to Available Fleet
+          Return to Available Fleet
         </button>
       </div>
     ` : ''}
@@ -2133,12 +2115,12 @@ export async function openServiceHistoryModal(vehicleId) {
     <div class="receipt" style="margin-bottom:16px;background:#f8fafc;">
       <div class="receipt-row"><span>Active Work Orders</span><span style="font-weight:700;color:#0f172a;">${activeOrders.length} order(s)</span></div>
       <div class="receipt-row"><span>Completed Work Orders</span><span style="font-weight:700;color:#059669;">${completedOrders.length} finished job(s)</span></div>
-      <div class="receipt-row receipt-total"><span>Total Maintenance Invested</span><span style="color:#2563eb;">${fmtMoney(totalCostSpent)}</span></div>
+      <div class="receipt-row receipt-total"><span>Total Maintenance Invested</span><span style="color:var(--accent);">${fmtMoney(totalCostSpent)}</span></div>
     </div>
 
     <h4 style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;color:#0f172a;font-size:0.92rem;">
-      <span><i class="fa-solid fa-wrench" style="color:#c2410c;margin-right:4px;"></i> Active Maintenance Work Orders</span>
-      <button class="btn btn-primary btn-sm" id="btnLogNewSrv" style="background:#0284c7;border-color:#0284c7;font-size:0.75rem;"><i class="fa-solid fa-plus"></i> Log Work Order</button>
+      <span>Active Maintenance Work Orders</span>
+      <button class="btn btn-primary btn-sm" id="btnLogNewSrv" style="background:#0284c7;border-color:#0284c7;font-size:0.75rem;">Log Work Order</button>
     </h4>
 
     <div style="margin-bottom:18px;">
@@ -2153,18 +2135,18 @@ export async function openServiceHistoryModal(vehicleId) {
           </div>
           ${h.description ? `<p style="font-size:0.78rem;color:#64748b;margin:0 0 10px 0;line-height:1.4;">${h.description}</p>` : ''}
           <button class="btn btn-primary btn-sm" data-complete-srv-id="${h.id}" style="background:#059669;border-color:#059669;color:#fff;">
-            <i class="fa-solid fa-circle-check"></i> Complete Work Order &amp; Release Vehicle
+            Complete Work Order &amp; Release Vehicle
           </button>
         </div>
       `).join('') : `
         <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:14px;text-align:center;color:#64748b;font-size:0.82rem;">
-          <i class="fa-solid fa-circle-check" style="color:#059669;margin-right:4px;"></i> No active repairs or maintenance needed for this vehicle.
+          No active repairs or maintenance needed for this vehicle.
         </div>
       `}
     </div>
 
     <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.92rem;">
-      <i class="fa-solid fa-clock-rotate-left" style="color:#059669;"></i> Complete Works &amp; Service History
+      Complete Works &amp; Service History
     </h4>
 
     <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
@@ -2192,7 +2174,7 @@ export async function openServiceHistoryModal(vehicleId) {
   if (markAvailBtn) {
     markAvailBtn.addEventListener('click', async () => {
       markAvailBtn.disabled = true;
-      markAvailBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Releasing…`;
+      markAvailBtn.textContent = 'Releasing…';
 
       saveVehicleOverride(vehicleId, { status: 'available', maintenance_days: null, maintenance_until: null });
       const targetV = state.vehicles.find(item => item.id === vehicleId);
@@ -2259,29 +2241,28 @@ export async function renderAdminSettings(view) {
   const comp = currentSettings.company || DEFAULT_SETTINGS.company;
   const pol = currentSettings.policy || DEFAULT_SETTINGS.policy;
   const notif = currentSettings.notifications || DEFAULT_SETTINGS.notifications;
-  const appr = currentSettings.appearance || DEFAULT_SETTINGS.appearance;
 
   view.innerHTML = `
     <div class="view">
       <div class="section-head">
         <div>
-          <h2><i class="fa-solid fa-gear" style="color:#2563eb;margin-right:8px;"></i> System Settings &amp; Configuration</h2>
+          <h2>System Settings &amp; Configuration</h2>
           <p>Customize company profile, rental policies, notification preferences, and system appearance.</p>
         </div>
       </div>
 
       <div class="pill-row" style="margin-bottom:20px;">
         <div class="pill ${activeSettingsSubTab === 'company' ? 'active' : ''}" data-cfg-tab="company">
-          <i class="fa-solid fa-building" style="margin-right:4px;"></i> Company Profile
+          Company Profile
         </div>
         <div class="pill ${activeSettingsSubTab === 'policy' ? 'active' : ''}" data-cfg-tab="policy">
-          <i class="fa-solid fa-file-contract" style="margin-right:4px;"></i> Rental Policy &amp; Terms
+          Rental Policy &amp; Terms
         </div>
         <div class="pill ${activeSettingsSubTab === 'notifs' ? 'active' : ''}" data-cfg-tab="notifs">
-          <i class="fa-solid fa-bell" style="margin-right:4px;"></i> Notification Preferences
+          Notification Preferences
         </div>
         <div class="pill ${activeSettingsSubTab === 'appearance' ? 'active' : ''}" data-cfg-tab="appearance">
-          <i class="fa-solid fa-palette" style="margin-right:4px;"></i> Appearance &amp; Theme
+          Appearance &amp; Theme
         </div>
       </div>
 
@@ -2305,8 +2286,8 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
   if (tab === 'company') {
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          <i class="fa-solid fa-building" style="color:#2563eb;"></i> Company Profile &amp; Contact Details
+        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+          Company Profile &amp; Contact Details
         </h3>
         
         <div class="field">
@@ -2344,15 +2325,15 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
         </div>
 
         <button class="btn btn-primary" id="btnSaveCompany" style="margin-top:10px;">
-          <i class="fa-solid fa-floppy-disk"></i> Save Company Profile
+          Save Company Profile
         </button>
       </div>
     `;
   } else if (tab === 'policy') {
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          <i class="fa-solid fa-file-contract" style="color:#059669;"></i> Rental Policies &amp; Penalty Terms
+        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+          Rental Policies &amp; Penalty Terms
         </h3>
 
         <div class="detail-grid">
@@ -2398,15 +2379,15 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
         </div>
 
         <button class="btn btn-primary" id="btnSavePolicy" style="margin-top:14px;background:#059669;border-color:#059669;">
-          <i class="fa-solid fa-floppy-disk"></i> Save Rental Policies
+          Save Rental Policies
         </button>
       </div>
     `;
   } else if (tab === 'notifs') {
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          <i class="fa-solid fa-bell" style="color:#d97706;"></i> System Notification Preferences
+        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+          System Notification Preferences
         </h3>
 
         <div class="setting-row">
@@ -2454,16 +2435,16 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
         </div>
 
         <button class="btn btn-primary" id="btnSaveNotifs" style="margin-top:14px;background:#d97706;border-color:#d97706;">
-          <i class="fa-solid fa-floppy-disk"></i> Save Notification Preferences
+          Save Notification Preferences
         </button>
       </div>
     `;
   } else if (tab === 'appearance') {
-    const currentAccent = appr.accentColor || '#2563eb';
+    const currentAccent = appr.accentColor || '#7c3aed';
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          <i class="fa-solid fa-palette" style="color:#4f46e5;"></i> Appearance &amp; System Theme
+        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+          Appearance &amp; System Theme
         </h3>
 
         <div class="field">
@@ -2477,11 +2458,11 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
         <div class="field">
           <label>Brand Accent Color Palette</label>
           <div class="color-swatch-grid">
-            <div class="color-swatch ${currentAccent === '#2563eb' ? 'active' : ''}" data-color="#2563eb" style="background:#2563eb;" title="Friendly Blue">&#10003;</div>
-            <div class="color-swatch ${currentAccent === '#059669' ? 'active' : ''}" data-color="#059669" style="background:#059669;" title="Emerald Green">&#10003;</div>
-            <div class="color-swatch ${currentAccent === '#4f46e5' ? 'active' : ''}" data-color="#4f46e5" style="background:#4f46e5;" title="Royal Indigo">&#10003;</div>
-            <div class="color-swatch ${currentAccent === '#d97706' ? 'active' : ''}" data-color="#d97706" style="background:#d97706;" title="Amber Bronze">&#10003;</div>
-            <div class="color-swatch ${currentAccent === '#e11d48' ? 'active' : ''}" data-color="#e11d48" style="background:#e11d48;" title="Deep Coral">&#10003;</div>
+            <div class="color-swatch ${currentAccent === '#7c3aed' ? 'active' : ''}" data-color="#7c3aed" style="background:#7c3aed;" title="Vibrant Purple"></div>
+            <div class="color-swatch ${currentAccent === '#2563eb' ? 'active' : ''}" data-color="#2563eb" style="background:#2563eb;" title="Friendly Blue"></div>
+            <div class="color-swatch ${currentAccent === '#059669' ? 'active' : ''}" data-color="#059669" style="background:#059669;" title="Emerald Green"></div>
+            <div class="color-swatch ${currentAccent === '#4f46e5' ? 'active' : ''}" data-color="#4f46e5" style="background:#4f46e5;" title="Royal Indigo"></div>
+            <div class="color-swatch ${currentAccent === '#e11d48' ? 'active' : ''}" data-color="#e11d48" style="background:#e11d48;" title="Deep Coral"></div>
           </div>
           <input type="hidden" id="cfgAccentColor" value="${currentAccent}" />
         </div>
@@ -2495,8 +2476,8 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
           </select>
         </div>
 
-        <button class="btn btn-primary" id="btnSaveAppr" style="margin-top:14px;background:#4f46e5;border-color:#4f46e5;">
-          <i class="fa-solid fa-palette"></i> Apply Theme &amp; Appearance
+        <button class="btn btn-primary" id="btnSaveAppr" style="margin-top:14px;background:#7c3aed;border-color:#7c3aed;">
+          Apply Theme &amp; Appearance
         </button>
       </div>
     `;

@@ -5,7 +5,7 @@ import {
   getTheme, toggleTheme, applyTheme,
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
-import { renderAuth, logout, bootstrapSession, switchSystemRole } from './auth.js';
+import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole } from './auth.js';
 import { renderCustomer } from './customer.js?v=2.6';
 import { renderStaff, renderAdmin } from './admin.js?v=2.6';
 
@@ -21,7 +21,7 @@ export function renderRoleSwitcherHTML(currentRole) {
     <div class="role-dropdown-container" id="roleDropdownContainer">
       <button type="button" class="role-dropdown-trigger" id="roleDropdownToggle" aria-haspopup="true" aria-expanded="false" title="Switch Role">
         <strong class="role-dropdown-val">${currentLabel}</strong>
-        <i class="fa-solid fa-chevron-down role-dropdown-arrow"></i>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;color:#64748b;margin-left:4px;"></i>
       </button>
 
       <div class="role-dropdown-menu" id="roleDropdownMenu" style="display:none;">
@@ -29,17 +29,17 @@ export function renderRoleSwitcherHTML(currentRole) {
         
         <div class="role-menu-item ${currentRole === 'customer' ? 'active' : ''}" data-role-choice="customer">
           <span class="role-item-title">Guest</span>
-          ${currentRole === 'customer' ? '<i class="fa-solid fa-check role-item-check"></i>' : ''}
+          ${currentRole === 'customer' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
         </div>
 
         <div class="role-menu-item ${currentRole === 'staff' ? 'active' : ''}" data-role-choice="staff">
           <span class="role-item-title">Staff</span>
-          ${currentRole === 'staff' ? '<i class="fa-solid fa-check role-item-check"></i>' : ''}
+          ${currentRole === 'staff' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
         </div>
 
         <div class="role-menu-item ${currentRole === 'admin' ? 'active' : ''}" data-role-choice="admin">
           <span class="role-item-title">Admin</span>
-          ${currentRole === 'admin' ? '<i class="fa-solid fa-check role-item-check"></i>' : ''}
+          ${currentRole === 'admin' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
         </div>
       </div>
     </div>
@@ -94,27 +94,26 @@ export function openUserMenuModal() {
     modalContent = `
       <div class="modal-head">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,99,235,0.25);">${initials}</div>
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--primary-gradient);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px var(--accent-glow);">${initials}</div>
           <div>
             <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Roland S. Bautista'}</h3>
-            <span style="font-size:0.78rem;color:#2563eb;font-weight:700;"><i class="fa-solid fa-shield-halved" style="margin-right:3px;"></i> System Administrator</span>
+            <span style="font-size:0.78rem;color:var(--accent);font-weight:700;">System Administrator</span>
           </div>
         </div>
-        <div class="modal-close" id="mClose">✕</div>
+        <div class="modal-close" id="mClose">Close</div>
       </div>
 
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Admin Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'roland.bautista@rentflow.ph'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Contact Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 992 3341'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-user-shield" style="margin-right:5px;"></i> Access Level</span><span style="font-weight:700;color:#2563eb;">Full System &amp; Financial Control</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-building" style="margin-right:5px;"></i> Department</span><span style="font-weight:600;color:#0f172a;">Executive Fleet Management</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Admin Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'roland.bautista@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Contact Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 992 3341'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Access Level</span><span style="font-weight:700;color:var(--accent);">Full System &amp; Financial Control</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Department</span><span style="font-weight:600;color:#0f172a;">Executive Fleet Management</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-screwdriver-wrench" style="color:#2563eb;margin-right:6px;"></i> Administrator Controls &amp; Shortcuts</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Administrator Controls &amp; Shortcuts</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
         <button class="btn btn-ghost" id="adminGoSettings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-gear" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Settings &amp; Policies</div>
             <div style="font-size:0.75rem;color:#64748b;">Configure company profile, rental policies, and pricing rules</div>
@@ -122,7 +121,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="adminGoVehicles" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-car-side" style="color:#059669;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Fleet &amp; Vehicle Inventory</div>
             <div style="font-size:0.75rem;color:#64748b;">Manage vehicle fleet, daily rental rates, and categories</div>
@@ -130,7 +128,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="adminGoReports" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-file-invoice-dollar" style="color:#d97706;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Reports &amp; Financial Analytics</div>
             <div style="font-size:0.75rem;color:#64748b;">View revenue summaries, payment breakdown, and accounting audit logs</div>
@@ -138,7 +135,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="adminGoCustomers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-users" style="color:#7c3aed;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Customer Directory &amp; Licenses</div>
             <div style="font-size:0.75rem;color:#64748b;">Inspect verified customer records and driver licenses</div>
@@ -146,7 +142,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="adminGoUsers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-user-gear" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Roles &amp; Permissions</div>
             <div style="font-size:0.75rem;color:#64748b;">Manage Administrator, Operations Manager, and Guest access</div>
@@ -155,7 +150,7 @@ export function openUserMenuModal() {
       </div>
 
       <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
-        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out of Admin</button>
+        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;">Log Out of Admin</button>
       </div>
     `;
   } else if (currentRole === 'staff') {
@@ -165,24 +160,23 @@ export function openUserMenuModal() {
           <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(5,150,105,0.25);">${initials}</div>
           <div>
             <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Sarah Jane Villanueva'}</h3>
-            <span style="font-size:0.78rem;color:#059669;font-weight:700;"><i class="fa-solid fa-user-tie" style="margin-right:3px;"></i> Operations Staff / Manager</span>
+            <span style="font-size:0.78rem;color:#059669;font-weight:700;">Operations Staff / Manager</span>
           </div>
         </div>
-        <div class="modal-close" id="mClose">✕</div>
+        <div class="modal-close" id="mClose">Close</div>
       </div>
 
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'sarah.villanueva@rentflow.ph'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 882 1450'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-list-check" style="margin-right:5px;"></i> Operations Role</span><span style="font-weight:700;color:#059669;">Fleet Dispatch &amp; Booking Approvals</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-building" style="margin-right:5px;"></i> Station</span><span style="font-weight:600;color:#0f172a;">RentFlow Main Hub Operations</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'sarah.villanueva@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 882 1450'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Operations Role</span><span style="font-weight:700;color:#059669;">Fleet Dispatch &amp; Booking Approvals</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Station</span><span style="font-weight:600;color:#0f172a;">RentFlow Main Hub Operations</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-list-check" style="color:#059669;margin-right:6px;"></i> Operations Shortcuts</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Operations Shortcuts</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
         <button class="btn btn-ghost" id="staffGoDashboard" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-chart-pie" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Operations Dashboard</div>
             <div style="font-size:0.75rem;color:#64748b;">Overview of booking queue and fleet status</div>
@@ -190,7 +184,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="staffGoRequests" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-clipboard-question" style="color:#f59e0b;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Booking Requests &amp; Approvals</div>
             <div style="font-size:0.75rem;color:#64748b;">Review and approve incoming reservations</div>
@@ -198,7 +191,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="staffGoActive" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-key" style="color:#059669;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Active Rentals &amp; Dispatches</div>
             <div style="font-size:0.75rem;color:#64748b;">Manage vehicles currently on road and key release</div>
@@ -206,7 +198,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="staffGoReturns" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-rotate-left" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Vehicle Returns &amp; Inspections</div>
             <div style="font-size:0.75rem;color:#64748b;">Check-in returned vehicles and verify fuel level</div>
@@ -215,7 +206,7 @@ export function openUserMenuModal() {
       </div>
 
       <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
-        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out</button>
+        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;">Log Out</button>
       </div>
     `;
   } else {
@@ -223,26 +214,25 @@ export function openUserMenuModal() {
     modalContent = `
       <div class="modal-head">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,99,235,0.25);">${initials}</div>
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--primary-gradient);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px var(--accent-glow);">${initials}</div>
           <div>
             <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Mark Lester Ramos'}</h3>
-            <span style="font-size:0.78rem;color:#2563eb;font-weight:700;"><i class="fa-solid fa-user-check" style="margin-right:3px;"></i> Verified Customer</span>
+            <span style="font-size:0.78rem;color:var(--accent);font-weight:700;">Verified Customer</span>
           </div>
         </div>
-        <div class="modal-close" id="mClose">✕</div>
+        <div class="modal-close" id="mClose">Close</div>
       </div>
 
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'mark.ramos@gmail.com'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-phone" style="margin-right:5px;"></i> Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 582 9140'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;"><i class="fa-solid fa-id-card" style="margin-right:5px;"></i> Driver License</span><span style="font-weight:600;color:#0f172a;">${p.license_number || 'N02-19-482019'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'mark.ramos@gmail.com'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 582 9140'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Driver License</span><span style="font-weight:600;color:#0f172a;">${p.license_number || 'N02-19-482019'}</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;"><i class="fa-solid fa-bars-staggered" style="color:#2563eb;margin-right:6px;"></i> Customer Menu</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Customer Menu</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
         <button class="btn btn-ghost" id="umProfile" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-user-gear" style="color:#2563eb;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Profile &amp; Contact Details</div>
             <div style="font-size:0.75rem;color:#64748b;">View &amp; update personal info, phone, and address</div>
@@ -250,7 +240,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="umBookings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-calendar-check" style="color:#059669;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Reservations &amp; Rentals</div>
             <div style="font-size:0.75rem;color:#64748b;">View active reservations, receipts, and refund requests</div>
@@ -258,7 +247,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="umFavorites" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-heart" style="color:#e11d48;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Favorites</div>
             <div style="font-size:0.75rem;color:#64748b;">View your saved cars &amp; motorcycles</div>
@@ -266,7 +254,6 @@ export function openUserMenuModal() {
         </button>
 
         <button class="btn btn-ghost" id="umSupport" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <i class="fa-solid fa-headset" style="color:#0284c7;font-size:1.1rem;margin-right:10px;width:20px;"></i>
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Support Contact</div>
             <div style="font-size:0.75rem;color:#64748b;">Hotline: ${comp.phone || '+63 67676767'} | Email: ${comp.email || 'vehicleretal.ph'}</div>
@@ -275,7 +262,7 @@ export function openUserMenuModal() {
       </div>
 
       <div style="padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;">
-        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px;"></i> Log Out of Account</button>
+        <button class="btn btn-danger btn-block" id="umLogout" style="padding:10px;">Log Out of Account</button>
       </div>
     `;
   }
@@ -321,6 +308,40 @@ export function openUserMenuModal() {
   });
 }
 
+export function openPricingModal() {
+  const comp = getSystemSettings().company || DEFAULT_SETTINGS.company;
+  const pol = getSystemSettings().policy || DEFAULT_SETTINGS.policy;
+  openModal(`
+    <div class="modal-head">
+      <div>
+        <h3 style="font-size:1.2rem;font-weight:800;color:var(--text-hi);">Rental Pricing &amp; Policies</h3>
+        <span class="muted" style="font-size:0.75rem;">100% Transparent · No Hidden Fees</span>
+      </div>
+      <div class="modal-close" id="pClose">Close</div>
+    </div>
+    <div style="line-height:1.6;color:var(--text-mid);font-size:0.88rem;">
+      <div style="margin-bottom:14px;background:var(--bg-subtle);padding:14px;border-radius:12px;border:1px solid var(--glass-border);">
+        <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:4px;">Security Deposit &amp; Fuel Policy</h4>
+        <p>Standard security deposit of ₱${pol.deposit || 3000} is fully refundable upon return in good condition. Vehicles are provided full-to-full.</p>
+      </div>
+      <div style="margin-bottom:14px;background:var(--bg-subtle);padding:14px;border-radius:12px;border:1px solid var(--glass-border);">
+        <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:4px;">Flexible Down Payment Options</h4>
+        <p>Reserve with either 100% full payment, 50% partial, or 20% reservation fee. Remaining balance settled upon vehicle handover.</p>
+      </div>
+      <div style="margin-bottom:14px;background:var(--bg-subtle);padding:14px;border-radius:12px;border:1px solid var(--glass-border);">
+        <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:4px;">Driver Verification</h4>
+        <p>Zero hassle: No complex online document verification required. Simply show your physical driver's license upon vehicle pickup.</p>
+      </div>
+      <div style="margin-top:20px;text-align:right;">
+        <button type="button" class="btn btn-primary btn-sm" id="pDismissBtn" style="border-radius:99px;padding:8px 24px;">Got it</button>
+      </div>
+    </div>
+  `);
+  const pc = $('#pClose'), pd = $('#pDismissBtn');
+  if (pc) pc.addEventListener('click', closeModal);
+  if (pd) pd.addEventListener('click', closeModal);
+}
+
 export function renderShell() {
   const tabs = PORTAL_TABS[state.portal] || [];
   if (!state.tab || !tabs.find(t => t.id === state.tab)) state.tab = tabs[0]?.id;
@@ -338,41 +359,73 @@ export function renderShell() {
       <div style="min-height:100vh;background:var(--bg-dark);overflow-x:hidden;width:100%;max-width:100vw;">
         <header class="portal-header">
           <div class="portal-header-left">
-            <div style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="brandHomeBtn">
-              <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.95rem;box-shadow:0 2px 5px rgba(37,99,235,0.25);">
-                <i class="fa-solid fa-car"></i>
-              </div>
-              <div>
-                <div style="font-weight:800;font-size:0.92rem;line-height:1.15;color:#0f172a;letter-spacing:-0.01em;">Vehicle Rentals</div>
-                <div style="font-size:0.68rem;color:#2563eb;font-weight:700;letter-spacing:0.02em;">GUEST PORTAL</div>
-              </div>
+            <button type="button" class="guest-menu-btn" id="guestMenuBtn" title="Navigation Menu" aria-label="Navigation Menu">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="brand-logo-badge">VR</div>
+
+            <div style="cursor:pointer;" id="brandHomeBtn">
+              <div class="brand-title">Vehicle Rentals</div>
+              <div class="brand-portal-sub">GUEST PORTAL</div>
             </div>
 
-            <nav style="display:flex;align-items:center;gap:6px;">
-              ${tabs.filter(t => t.id === 'browse' || t.id === 'bookings').map(t => `
-                <button type="button" class="btn nav-tab-btn ${t.id === state.tab ? 'btn-primary' : 'btn-ghost'}" data-tab="${t.id}" style="font-size:0.82rem;padding:6px 14px;border-radius:99px;font-weight:700;">
-                  ${t.label}
+            <!-- Sleek Dropdown Menu (Screenshot 3 style) -->
+            <div class="guest-dropdown-menu hidden" id="guestDropdownMenu">
+              <div class="g-menu-items">
+                <button type="button" class="g-menu-item ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <span>Search Vehicles</span>
                 </button>
-              `).join('')}
-            </nav>
+                <button type="button" class="g-menu-item ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
+                  <i class="fa-regular fa-heart"></i>
+                  <span>My Favorites</span>
+                </button>
+                <button type="button" class="g-menu-item ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span>My Bookings</span>
+                </button>
+                <button type="button" class="g-menu-item" id="gMenuPricing">
+                  <i class="fa-solid fa-tag"></i>
+                  <span>Pricing &amp; Terms</span>
+                </button>
+                <button type="button" class="g-menu-item" id="gMenuSupport">
+                  <i class="fa-solid fa-headset"></i>
+                  <span>Live Support</span>
+                </button>
+              </div>
+              <div class="g-menu-divider"></div>
+              <div class="g-menu-user-row">
+                <div class="g-menu-user-info">
+                  <div class="g-menu-user-name">${state.profile?.full_name || 'Guest Customer'}</div>
+                  <div class="g-menu-user-sub">${state.user?.email || 'Customer Access'}</div>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" id="gMenuLogout" style="color:#ef4444;border-radius:99px;font-size:0.75rem;padding:4px 10px;">Sign out</button>
+              </div>
+            </div>
           </div>
 
           <div class="portal-header-right">
-            ${renderRoleSwitcherHTML(state.portal)}
+            <div class="lang-select-pill" title="Language: English">
+              <span>EN</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
+            </div>
 
-            <button type="button" id="topThemeBtn" title="Toggle Light/Dark Mode" style="width:36px;height:36px;min-width:36px;min-height:36px;border-radius:50%;padding:0;border:1px solid #cbd5e1;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : '#2563eb'};font-size:0.92rem;"></i>
+            <button type="button" id="topThemeBtn" class="topbar-icon-btn" title="Toggle Light/Dark Mode" aria-label="Toggle Light/Dark Mode">
+              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : '#3b82f6'};"></i>
             </button>
 
-            <button type="button" id="topNotifBtn" title="View Notifications" style="position:relative;width:36px;height:36px;min-width:36px;min-height:36px;border-radius:50%;padding:0;border:1px solid #cbd5e1;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-              <i class="fa-solid fa-bell" style="color:#475569;font-size:0.92rem;"></i>
+            <button type="button" id="topNotifBtn" class="topbar-icon-btn" title="View Notifications" aria-label="View Notifications">
+              <i class="fa-solid fa-bell" style="color:${isDark ? '#94a3b8' : '#475569'};"></i>
               ${unreadNotifs > 0 ? `<div class="notif-badge">${unreadNotifs}</div>` : ''}
             </button>
 
-            <button type="button" id="topUserMenuBtn" title="${state.profile?.full_name || 'User'}" style="height:36px;border:1px solid #cbd5e1;background:#fff;display:flex;align-items:center;gap:7px;padding:0 10px 0 5px;border-radius:99px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:800;font-size:0.72rem;display:flex;align-items:center;justify-content:center;">${initials}</div>
-              <span style="font-weight:700;font-size:0.82rem;color:#0f172a;">${firstName}</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.68rem;color:#64748b;"></i>
+            ${renderRoleSwitcherHTML(state.portal)}
+
+            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${state.profile?.full_name || 'User'}">
+              <div class="topbar-user-avatar">${initials}</div>
+              <span class="topbar-user-name">${firstName}</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
             </button>
           </div>
         </header>
@@ -382,11 +435,54 @@ export function renderShell() {
     `;
 
     $('#brandHomeBtn').addEventListener('click', () => { state.tab = 'browse'; renderShell(); });
-    $$('.nav-tab-btn').forEach(btn => btn.addEventListener('click', () => { state.tab = btn.dataset.tab; renderShell(); }));
     $('#topThemeBtn').addEventListener('click', toggleTheme);
     $('#topNotifBtn').addEventListener('click', openNotificationsModal);
     $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
     bindRoleSwitcherEvents();
+
+    const gMenuBtn = $('#guestMenuBtn');
+    const gDropdown = $('#guestDropdownMenu');
+    if (gMenuBtn && gDropdown) {
+      gMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        gDropdown.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!gDropdown.contains(e.target) && e.target !== gMenuBtn) {
+          gDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    $$('.g-menu-item[data-nav]').forEach(item => {
+      item.addEventListener('click', () => {
+        if (gDropdown) gDropdown.classList.add('hidden');
+        state.tab = item.dataset.nav;
+        renderShell();
+      });
+    });
+
+    const gPricing = $('#gMenuPricing');
+    if (gPricing) {
+      gPricing.addEventListener('click', () => {
+        if (gDropdown) gDropdown.classList.add('hidden');
+        openPricingModal();
+      });
+    }
+
+    const gSupport = $('#gMenuSupport');
+    if (gSupport) {
+      gSupport.addEventListener('click', () => {
+        if (gDropdown) gDropdown.classList.add('hidden');
+        const curComp = getSystemSettings().company || DEFAULT_SETTINGS.company;
+        toast(`Support Hotline: ${curComp.phone || '+63 917 123 4567'} | Email: ${curComp.email || 'support@vehiclerental.ph'}`, 'info');
+      });
+    }
+
+    const gLogout = $('#gMenuLogout');
+    if (gLogout) {
+      gLogout.addEventListener('click', logout);
+    }
 
     updateNotificationBadge();
     renderTab();
@@ -402,7 +498,7 @@ export function renderShell() {
             <div style="font-weight:800;font-size:0.92rem;line-height:1.2;color:#0f172a;letter-spacing:-0.01em;">Vehicle Rental Management System</div>
             <div style="font-size:0.7rem;color:#64748b;font-weight:600;margin-top:2px;">${roleTitle} Portal</div>
           </div>
-          <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close Menu">
+          <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close Menu" aria-label="Close Menu">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -416,18 +512,17 @@ export function renderShell() {
             <div class="user-avatar">${initials}</div>
             <div class="user-meta" style="flex:1;">
               <div class="user-name">${state.profile?.full_name || 'User'}</div>
-              <div class="user-role"><i class="fa-solid ${state.portal === 'admin' ? 'fa-shield-halved' : state.portal === 'staff' ? 'fa-user-tie' : 'fa-user-check'}" style="color:#2563eb;margin-right:2px;"></i> ${getRoleDisplayName(state.profile?.role)} · Menu</div>
+              <div class="user-role">${getRoleDisplayName(state.profile?.role)} · Menu</div>
             </div>
-            <i class="fa-solid fa-ellipsis-vertical" style="color:#94a3b8;font-size:0.9rem;"></i>
           </div>
-          <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn" style="color:#dc2626;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+          <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn" style="color:#dc2626;">Log Out</button>
         </div>
       </aside>
 
       <div class="main-wrapper">
         <div class="main-topbar">
           <div style="display:flex;align-items:center;gap:10px;">
-            <button type="button" class="hamburger-btn" id="hamburgerBtn" title="Open Menu">
+            <button type="button" class="hamburger-btn" id="hamburgerBtn" title="Open Navigation Menu" aria-label="Open Navigation Menu">
               <i class="fa-solid fa-bars"></i>
             </button>
             <div style="font-weight:800;font-size:1.05rem;color:#0f172a;display:flex;align-items:center;gap:10px;">
@@ -435,21 +530,26 @@ export function renderShell() {
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            ${renderRoleSwitcherHTML(state.portal)}
+            <div class="lang-select-pill" title="Language: English">
+              <span>EN</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
+            </div>
 
-            <button type="button" id="topThemeBtn" title="Toggle Light/Dark Mode" style="width:36px;height:36px;min-width:36px;min-height:36px;border-radius:50%;padding:0;border:1px solid #cbd5e1;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : '#2563eb'};font-size:0.92rem;"></i>
+            <button type="button" id="topThemeBtn" class="topbar-icon-btn" title="Toggle Light/Dark Mode" aria-label="Toggle Light/Dark Mode">
+              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : 'var(--accent)'};"></i>
             </button>
 
-            <button type="button" id="topNotifBtn" title="View Notifications" style="position:relative;width:36px;height:36px;min-width:36px;min-height:36px;border-radius:50%;padding:0;border:1px solid #cbd5e1;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-              <i class="fa-solid fa-bell" style="color:#475569;font-size:0.92rem;"></i>
+            <button type="button" id="topNotifBtn" class="topbar-icon-btn" title="View Notifications" aria-label="View Notifications">
+              <i class="fa-solid fa-bell" style="color:${isDark ? '#94a3b8' : '#475569'};"></i>
               ${unreadNotifs > 0 ? `<div class="notif-badge">${unreadNotifs}</div>` : ''}
             </button>
 
-            <button type="button" id="topUserMenuBtn" title="${state.profile?.full_name || 'User'}" style="height:36px;border:1px solid #cbd5e1;background:#fff;display:flex;align-items:center;gap:7px;padding:0 10px 0 5px;border-radius:99px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:800;font-size:0.72rem;display:flex;align-items:center;justify-content:center;">${initials}</div>
-              <span style="font-weight:700;font-size:0.82rem;color:#0f172a;">${firstName}</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.68rem;color:#64748b;"></i>
+            ${renderRoleSwitcherHTML(state.portal)}
+
+            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${state.profile?.full_name || 'User'}">
+              <div class="topbar-user-avatar">${initials}</div>
+              <span class="topbar-user-name">${firstName}</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
             </button>
           </div>
         </div>
@@ -495,14 +595,14 @@ export function renderShell() {
 }
 
 function checkPendingManagerAlert() {
-  if (state.portal === 'staff') {
+  if (state.portal === 'staff' || state.portal === 'admin') {
     try {
       const raw = localStorage.getItem('rentflow_pending_manager_alert');
       if (raw) {
         localStorage.removeItem('rentflow_pending_manager_alert');
         const alertData = JSON.parse(raw);
         import('./utils.js').then(({ showBookingAlertPopup }) => {
-          setTimeout(() => showBookingAlertPopup(alertData), 400);
+          setTimeout(() => showBookingAlertPopup(alertData), 450);
         });
       }
     } catch (e) {}
@@ -519,7 +619,7 @@ export async function renderTab() {
     else if (state.portal === 'admin') await renderAdmin(state.tab, view);
   } catch (err) {
     console.error(err);
-    view.innerHTML = `<div class="empty-state"><div class="icon" style="color:#dc2626;font-size:1.8rem;"><i class="fa-solid fa-circle-exclamation"></i></div><p>${err.message}</p></div>`;
+    view.innerHTML = `<div class="empty-state"><p style="color:#dc2626;font-weight:700;">${err.message}</p></div>`;
   }
 }
 
@@ -531,7 +631,8 @@ supabase.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') {
     state.user = null;
     state.profile = null;
-    renderAuth();
+    localStorage.removeItem('rentflow_active_role');
+    renderLandingPage();
   }
 });
 

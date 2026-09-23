@@ -1,9 +1,521 @@
+/* ==========================================================================
+   Mobile-First Responsive Architecture
+   Base rules = Mobile (phones up to 767px)
+   @media (min-width: 768px) = Tablet enhancements
+   @media (min-width: 1024px) = Desktop enhancements
+   ========================================================================== */
+
+/* ==========================================================================
+   1. BASE STYLES — MOBILE DEFAULT (0px – 767px)
+   ========================================================================== */
+
+/* Inputs on mobile: 16px to prevent iOS auto-zoom on focus */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* Off-canvas Navigation by Default */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 280px !important;
+  max-width: 85vw !important;
+  transform: translateX(-100%) !important;
+  box-shadow: none !important;
+  z-index: 1000 !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+}
+
+.sidebar.open {
+  transform: translateX(0) !important;
+  box-shadow: 10px 0 35px rgba(30, 27, 75, 0.25) !important;
+}
+
+.sidebar-overlay {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15, 12, 35, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  z-index: 999 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease !important;
+}
+
+.sidebar-overlay.active {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.sidebar-close-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.hamburger-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-hi);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.main-wrapper {
+  margin-left: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Mobile Topbar & Header */
+.topbar {
+  padding: 10px 14px !important;
+}
+
+.main-topbar,
+.portal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 14px !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.portal-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.portal-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-left: auto !important;
+}
+
+header nav,
+.portal-header nav {
+  display: none !important;
+}
+
+#brandHomeBtn div {
+  display: block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mainView,
+.customer-main-view,
+.admin-main-view {
+  padding: 14px 12px 60px 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Mobile Hero & Filter Card */
+.hero-title {
+  font-size: 1.65rem !important;
+  line-height: 1.2 !important;
+}
+
+.hero-content-grid {
+  grid-template-columns: 1fr !important;
+  gap: 24px !important;
+}
+
+.hero-filter-card {
+  border-radius: 18px !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding: 16px !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.hero-filter-divider {
+  width: 100% !important;
+  height: 1px !important;
+  background: var(--glass-border) !important;
+}
+
+.hero-search-btn {
+  width: 100% !important;
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+/* Mobile Vehicles Grid & Card */
+.grid-vehicles {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.vehicle-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.vehicle-card-image-wrap {
+  height: 175px !important;
+  width: 100% !important;
+}
+
+.vehicle-img-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 175px !important;
+  box-sizing: border-box !important;
+}
+
+.vehicle-body {
+  padding: 16px 14px !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.vehicle-name {
+  font-size: 1.05rem !important;
+  word-break: break-word !important;
+}
+
+.vehicle-foot {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding-top: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.rate {
+  font-size: 1.18rem !important;
+  white-space: nowrap !important;
+}
+
+.btn-sm {
+  padding: 8px 16px !important;
+  font-size: 0.82rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Mobile Filter Pills — Horizontal Touch Carousel */
+.pill-row {
+  overflow-x: auto !important;
+  flex-wrap: nowrap !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  padding-bottom: 6px !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 8px !important;
+}
+
+.pill-row::-webkit-scrollbar {
+  display: none !important;
+}
+
+.pill {
+  flex-shrink: 0 !important;
+  padding: 7px 15px !important;
+  font-size: 0.82rem !important;
+}
+
+/* Mobile Stats Grid & Search */
+.grid-stats {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.search-bar {
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.search-bar input,
+.search-bar select {
+  min-width: 100% !important;
+  width: 100% !important;
+}
+
+.section-head {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 12px !important;
+}
+
+.section-head h2 {
+  font-size: 1.25rem !important;
+}
+
+/* Mobile User Controls */
+#topUserMenuBtn span {
+  display: none !important;
+}
+
+#topUserMenuBtn {
+  padding: 0 !important;
+  min-width: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  justify-content: center !important;
+}
+
+.sys-status-pill {
+  display: none !important;
+}
+
+.detail-grid {
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+.grid-2 {
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+}
+
+.auth-card {
+  padding: 24px 18px !important;
+}
+
+/* Mobile Modals */
+.modal {
+  width: calc(100% - 24px) !important;
+  max-width: 520px !important;
+  margin: 12px auto !important;
+  padding: 20px 16px !important;
+  max-height: calc(100vh - 24px) !important;
+  overflow-y: auto !important;
+  border-radius: 16px !important;
+}
+
+/* Mobile Booking Stepper */
+.booking-stepper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 4px !important;
+  padding: 8px 10px !important;
+}
+
+.booking-stepper::-webkit-scrollbar {
+  display: none !important;
+}
+
+.step-item {
+  font-size: 0.74rem !important;
+  white-space: nowrap !important;
+}
+
+.pay-tier-grid {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+/* Mobile Landing Page Grids */
+.lp-fleet-grid,
+.lp-features-grid,
+.lp-reviews-grid,
+.why-us-grid {
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+}
+
+/* Compact demo label on small screens */
+.demo-role-label {
+  display: none !important;
+}
+
+.demo-role-pill {
+  padding: 4px 8px !important;
+  font-size: 0.72rem !important;
+}
+
+.demo-customer-select {
+  max-width: 135px !important;
+  font-size: 0.74rem !important;
+  padding: 0 6px !important;
+}
+
+
+/* ==========================================================================
+   2. TABLET BREAKPOINT (≥ 768px)
+   ========================================================================== */
+@media (min-width: 768px) {
+  .topbar {
+    padding: 12px 24px !important;
+  }
+
+  .main-topbar,
+  .portal-header {
+    padding: 12px 24px !important;
+  }
+
+  #mainView,
+  .customer-main-view,
+  .admin-main-view {
+    padding: 22px 24px 60px 24px !important;
+  }
+
+  #topUserMenuBtn span {
+    display: inline !important;
+  }
+
+  #topUserMenuBtn {
+    padding: 4px 12px 4px 6px !important;
+    min-width: auto !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: var(--radius-full) !important;
+  }
+
+  .hero-title {
+    font-size: 2.2rem !important;
+  }
+
+  .hero-content-grid {
+    grid-template-columns: 1.1fr 0.9fr !important;
+    gap: 32px !important;
+  }
+
+  .hero-filter-card {
+    border-radius: 9999px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 8px 12px 8px 24px !important;
+    gap: 16px !important;
+  }
+
+  .hero-filter-divider {
+    width: 1px !important;
+    height: 32px !important;
+  }
+
+  .hero-search-btn {
+    width: auto !important;
+  }
+
+  .grid-vehicles {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .vehicle-card-image-wrap {
+    height: 190px !important;
+  }
+
+  .vehicle-img-wrapper {
+    height: 190px !important;
+  }
+
+  .grid-stats {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+
+  .search-bar {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .search-bar input {
+    flex: 1 !important;
+    min-width: 240px !important;
+    width: auto !important;
+  }
+
+  .search-bar select {
+    width: auto !important;
+    min-width: 160px !important;
+  }
+
+  .section-head {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .pay-tier-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+  }
+
+  .lp-fleet-grid,
+  .lp-features-grid,
+  .lp-reviews-grid,
+  .why-us-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .modal {
+    width: 90% !important;
+    padding: 24px !important;
+    border-radius: 20px !important;
+  }
+
+  .auth-card {
+    padding: 32px 28px !important;
+  }
+}
+
+
+/* ==========================================================================
+   3. DESKTOP BREAKPOINT (≥ 1024px)
+   ========================================================================== */
 @media (min-width: 1024px) {
   .sidebar {
     transform: translateX(0) !important;
+    position: fixed !important;
+    width: 270px !important;
     box-shadow: none !important;
-    position: fixed;
-    width: 270px;
   }
 
   .sidebar-overlay {
@@ -15,236 +527,68 @@
   }
 
   .main-wrapper {
-    margin-left: 270px;
+    margin-left: 270px !important;
   }
 
   .hamburger-btn {
     display: none !important;
-  }
-}
-
-
-@media (max-width: 1023px) {
-  .sidebar {
-    transform: translateX(-100%);
-    width: 280px;
-    box-shadow: none;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: 8px 0 30px rgba(15, 23, 42, 0.15);
-  }
-
-  .main-wrapper {
-    margin-left: 0;
-  }
-
-  .hamburger-btn {
-    display: flex;
-  }
-}
-
-
-@media (max-width: 768px) {
-  .topbar {
-    padding: 10px 14px;
-  }
-
-  .main-topbar,
-  .portal-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 10px 14px !important;
-    gap: 8px;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .portal-header-left {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-  }
-
-  .portal-header-right {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    margin-left: auto !important;
   }
 
   header nav,
   .portal-header nav {
-    display: none !important;
-  }
-
-  #brandHomeBtn div {
-    display: block;
-    max-width: 130px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: flex !important;
   }
 
   #mainView,
   .customer-main-view,
   .admin-main-view {
-    padding: 16px 12px 60px 12px !important;
+    padding: 28px 36px 60px 36px !important;
   }
 
-  .detail-grid {
-    grid-template-columns: 1fr;
+  .hero-title {
+    font-size: 2.85rem !important;
   }
 
-  .auth-card {
-    padding: 24px 18px;
+  .hero-content-grid {
+    grid-template-columns: 1.15fr 0.85fr !important;
+    gap: 48px !important;
   }
 
   .grid-vehicles {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 16px;
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
+    grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)) !important;
+    gap: 24px !important;
   }
 
-  .vehicle-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
+  .vehicle-card-image-wrap {
+    height: 205px !important;
   }
 
   .vehicle-img-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 180px;
-    box-sizing: border-box !important;
-  }
-
-  .vehicle-body {
-    padding: 16px 14px;
-    gap: 10px;
-    min-width: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .vehicle-name {
-    font-size: 1.05rem;
-    word-break: break-word;
-  }
-
-  .vehicle-foot {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px;
-    padding-top: 10px;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .rate {
-    font-size: 1.15rem;
-    white-space: nowrap;
-  }
-
-  .btn-sm {
-    padding: 7px 14px;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-  }
-
-  .grid-stats {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .search-bar {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .search-bar input,
-  .search-bar select {
-    min-width: 100%;
-    width: 100%;
+    height: 205px !important;
   }
 
   .pill-row {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: 4px;
-    margin-bottom: 12px;
-    width: 100%;
-    max-width: 100%;
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
   }
 
-  .pill-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .pill {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    font-size: 0.8rem;
-  }
-
-  .section-head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-  }
-
-  .section-head h2 {
-    font-size: 1.25rem;
-  }
-
-  #topUserMenuBtn span,
-  #topUserMenuBtn .fa-chevron-down {
-    display: none;
-  }
-
-  #topUserMenuBtn {
-    padding: 0 !important;
-    min-width: 36px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50% !important;
-    justify-content: center;
+  .lp-fleet-grid,
+  .lp-features-grid,
+  .lp-reviews-grid,
+  .why-us-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 24px !important;
   }
 
   .sys-status-pill {
-    display: none !important;
-  }
-}
-
-@media (max-width: 640px) {
-  .demo-role-label {
-    display: none !important;
-  }
-  .demo-role-pill {
-    padding: 4px 8px !important;
-    font-size: 0.72rem !important;
-  }
-  .demo-customer-select {
-    max-width: 135px;
-    font-size: 0.74rem !important;
-    padding: 0 6px !important;
+    display: inline-flex !important;
   }
 }
 
 
+/* ==========================================================================
+   4. PRINT MEDIA RULES
+   ========================================================================== */
 @media print {
   body {
     background: #ffffff !important;
@@ -259,7 +603,8 @@
   .no-print,
   .toast-wrap,
   .sidebar,
-  .main-topbar {
+  .main-topbar,
+  .hamburger-btn {
     display: none !important;
   }
 

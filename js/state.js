@@ -174,7 +174,7 @@ export const DEFAULT_SETTINGS = {
   },
   appearance: {
     theme: 'light',
-    accentColor: '#2563eb',
+    accentColor: '#7c3aed',
     fontFamily: 'Plus Jakarta Sans',
   },
   promoCodes: []
@@ -232,28 +232,28 @@ export function saveSystemSettings(newSettings) {
 
 export const PORTAL_TABS = {
   customer: [
-    { id: 'browse', label: '<i class="fa-solid fa-car"></i> Browse' },
-    { id: 'bookings', label: '<i class="fa-solid fa-calendar-check" style="color:#059669;"></i> Bookings' },
-    { id: 'favorites', label: '<i class="fa-solid fa-heart" style="color:#e11d48;"></i> Favorites' },
-    { id: 'profile', label: '<i class="fa-solid fa-id-card"></i> Profile' },
+    { id: 'browse', label: 'Browse' },
+    { id: 'bookings', label: 'Bookings' },
+    { id: 'favorites', label: 'Favorites' },
+    { id: 'profile', label: 'Profile' },
   ],
   staff: [
-    { id: 'dashboard', label: '<i class="fa-solid fa-chart-pie"></i> Operations Dashboard' },
-    { id: 'requests', label: '<i class="fa-solid fa-clipboard-question"></i> Booking Requests' },
-    { id: 'active', label: '<i class="fa-solid fa-key"></i> Active Rentals' },
-    { id: 'returns', label: '<i class="fa-solid fa-rotate-left"></i> Returns' },
-    { id: 'refunds', label: '<i class="fa-solid fa-hand-holding-dollar"></i> Refunds & Claims' },
-    { id: 'history', label: '<i class="fa-solid fa-clock-rotate-left"></i> History' },
+    { id: 'dashboard', label: 'Operations Dashboard' },
+    { id: 'requests', label: 'Booking Requests' },
+    { id: 'active', label: 'Active Rentals' },
+    { id: 'returns', label: 'Returns' },
+    { id: 'refunds', label: 'Refunds & Claims' },
+    { id: 'history', label: 'History' },
   ],
   admin: [
-    { id: 'dashboard', label: '<i class="fa-solid fa-chart-pie"></i> Dashboard' },
-    { id: 'customers', label: '<i class="fa-solid fa-users"></i> Customers' },
-    { id: 'vehicles', label: '<i class="fa-solid fa-car-side"></i> Vehicles' },
-    { id: 'categories', label: '<i class="fa-solid fa-tags"></i> Categories & Rates' },
-    { id: 'users', label: '<i class="fa-solid fa-user-gear"></i> System Roles' },
-    { id: 'rentals', label: '<i class="fa-solid fa-list-check"></i> Rentals & Transactions' },
-    { id: 'reports', label: '<i class="fa-solid fa-file-invoice-dollar"></i> Reports' },
-    { id: 'settings', label: '<i class="fa-solid fa-gear"></i> System Settings' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'customers', label: 'Customers' },
+    { id: 'vehicles', label: 'Vehicles' },
+    { id: 'categories', label: 'Categories & Rates' },
+    { id: 'users', label: 'System Roles' },
+    { id: 'rentals', label: 'Rentals & Transactions' },
+    { id: 'reports', label: 'Reports' },
+    { id: 'settings', label: 'System Settings' },
   ],
 };
 

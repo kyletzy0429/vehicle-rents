@@ -340,10 +340,14 @@ export function toggleFavorite(id) {
 let browseFilter = 'all';
 let browseStatusFilter = 'all';
 let browseSearch = '';
+let browseStartDate = '';
+let browseEndDate = '';
 
 export function renderBrowse(view) {
   const cats = ['all', ...state.categories.map(c => c.name)];
+  const todayStr = new Date().toISOString().slice(0, 10);
   const availableCount = state.vehicles.filter(v => v.status === 'available').length;
+
   const filtered = state.vehicles.filter(v => {
     const vCat = getVehicleCategoryName(v);
     const matchesCat = browseFilter === 'all' ||
@@ -356,63 +360,101 @@ export function renderBrowse(view) {
 
   view.innerHTML = `
     <div class="view">
-      <div class="section-head">
-        <div>
-          <h2>Available Vehicles</h2>
-          <p>Find the perfect vehicle for your trip, check dates, and request a booking online.</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="badge badge-available" style="padding:6px 14px;font-size:0.82rem;box-shadow:0 2px 8px rgba(5,150,105,0.15);">
-            <i class="fa-solid fa-circle-check" style="color:#059669;"></i> ${availableCount} Ready &amp; Available
-          </span>
+      <!-- Reference Hero & Availability Search Section -->
+      <div class="hero-availability-container">
+        <div class="hero-tag">KEY 02 — AVAILABILITY</div>
+        <h1 class="hero-title">Search available vehicles</h1>
+        <p class="hero-subtitle">Choose your dates to see what's open, then reserve on the spot.</p>
+
+        <div class="hero-filter-card">
+          <div class="hero-filter-field">
+            <label for="heroStartDate">Pick-up</label>
+            <input type="date" id="heroStartDate" value="${browseStartDate}" min="${todayStr}" />
+          </div>
+          <div class="hero-filter-divider"></div>
+          <div class="hero-filter-field">
+            <label for="heroEndDate">Drop-out</label>
+            <input type="date" id="heroEndDate" value="${browseEndDate}" min="${browseStartDate || todayStr}" />
+          </div>
+          <div class="hero-filter-divider"></div>
+          <div class="hero-filter-field">
+            <label for="heroCategorySelect">Vehicle type</label>
+            <select id="heroCategorySelect">
+              <option value="all" ${browseFilter === 'all' ? 'selected' : ''}>Any type</option>
+              ${state.categories.map(c => `<option value="${c.name}" ${browseFilter.toLowerCase() === c.name.toLowerCase() ? 'selected' : ''}>${c.name}</option>`).join('')}
+            </select>
+          </div>
+          <button type="button" class="btn hero-search-btn" id="heroSearchBtn">
+            Search
+          </button>
         </div>
       </div>
-      <div class="search-bar">
-        <div style="position:relative;flex:1;">
-          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;"></i>
-          <input type="text" id="vSearch" style="padding-left:40px;" placeholder="Search by model, brand, or features…" value="${browseSearch}" />
-        </div>
+
+      <!-- Quick category filter pills -->
+      <div class="pill-row" id="catPills" style="margin-bottom:24px;">
+        <div class="pill ${browseFilter === 'all' ? 'active' : ''}" data-cat="all">All Fleet (${state.vehicles.length})</div>
+        ${state.categories.map(c => `<div class="pill ${browseFilter.toLowerCase() === c.name.toLowerCase() ? 'active' : ''}" data-cat="${c.name}">${c.name}</div>`).join('')}
       </div>
-      <div class="pill-row" style="margin-bottom:8px;">
-        <div class="pill ${browseStatusFilter === 'all' ? 'active' : ''}" data-status="all">All Vehicles</div>
-        <div class="pill ${browseStatusFilter === 'available' ? 'active' : ''}" data-status="available" style="${browseStatusFilter === 'available' ? 'background:#059669;color:#fff;font-weight:700;' : 'border-color:#a7f3d0;color:#047857;background:#ecfdf5;font-weight:600;'}">
-          <i class="fa-solid fa-circle-check"></i> Available Only (${availableCount})
-        </div>
-      </div>
-      <div class="pill-row" id="catPills">
-        ${cats.map(c => `<div class="pill ${browseFilter === c ? 'active' : ''}" data-cat="${c}">${c === 'all' ? 'All Categories' : c}</div>`).join('')}
-      </div>
+
+      <!-- Vehicle Cards Grid -->
       <div class="grid grid-vehicles" id="vehicleGrid">
-        ${filtered.length ? filtered.map(vehicleCardHTML).join('') : emptyState('fa-solid fa-car', 'No vehicles match your search or filter.')}
+        ${filtered.length ? filtered.map(vehicleCardHTML).join('') : emptyState('', 'No vehicles match your search or filter criteria.')}
       </div>
     </div>
   `;
 
-  $('#vSearch').addEventListener('input', (e) => { browseSearch = e.target.value; renderBrowse(view); });
-  $$('[data-status]').forEach(p => p.addEventListener('click', () => { browseStatusFilter = p.dataset.status; renderBrowse(view); }));
-  $$('#catPills .pill').forEach(p => p.addEventListener('click', () => { browseFilter = p.dataset.cat; renderBrowse(view); }));
-  $$('#vehicleGrid .vehicle-card').forEach(card => card.addEventListener('click', () => openVehicleDetail(Number(card.dataset.id))));
-  $$('#vehicleGrid .fav-heart-btn').forEach(btn => btn.addEventListener('click', (e) => {
+  const sStart = $('#heroStartDate');
+  const sEnd = $('#heroEndDate');
+  const sCat = $('#heroCategorySelect');
+  const sBtn = $('#heroSearchBtn');
+
+  if (sStart) {
+    sStart.addEventListener('change', () => {
+      browseStartDate = sStart.value;
+      if (sEnd && sStart.value) sEnd.min = sStart.value;
+    });
+  }
+  if (sEnd) {
+    sEnd.addEventListener('change', () => {
+      browseEndDate = sEnd.value;
+    });
+  }
+  if (sCat) {
+    sCat.addEventListener('change', () => {
+      browseFilter = sCat.value;
+    });
+  }
+  if (sBtn) {
+    sBtn.addEventListener('click', () => {
+      browseStartDate = sStart ? sStart.value : '';
+      browseEndDate = sEnd ? sEnd.value : '';
+      browseFilter = sCat ? sCat.value : 'all';
+      if (browseStartDate && browseEndDate && browseEndDate < browseStartDate) {
+        toast('Drop-out date must be on or after Pick-up date.', 'error');
+        return;
+      }
+      renderBrowse(view);
+    });
+  }
+
+  $$('#catPills .pill').forEach(p => p.addEventListener('click', () => {
+    browseFilter = p.dataset.cat;
+    if (sCat) sCat.value = browseFilter;
+    renderBrowse(view);
+  }));
+
+  $$('#vehicleGrid .vehicle-card').forEach(card => card.addEventListener('click', () => {
+    openVehicleDetail(Number(card.dataset.id), browseStartDate, browseEndDate);
+  }));
+
+  $$('#vehicleGrid .vehicle-book-pill-btn').forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openVehicleDetail(Number(btn.dataset.bookBtn), browseStartDate, browseEndDate);
+  }));
+
+  $$('#vehicleGrid .vehicle-fav-btn').forEach(btn => btn.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleFavorite(Number(btn.dataset.favid));
-  }));
-  $$('#vehicleGrid .card-angle-btn').forEach(btn => btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const cardId = btn.dataset.cardid;
-    const angle = btn.dataset.angle;
-    const imgEl = document.getElementById(`cardImg-${cardId}`);
-    if (imgEl) {
-      imgEl.className = `vehicle-img ${angle === 'side' ? 'side-view' : (angle === 'rear' ? 'rear-view' : '')}`;
-    }
-    const parent = btn.closest('.card-angle-dots');
-    if (parent) {
-      parent.querySelectorAll('.card-angle-btn').forEach(b => {
-        b.style.color = '#64748b';
-        b.style.fontWeight = '600';
-      });
-      btn.style.color = '#2563eb';
-      btn.style.fontWeight = '700';
-    }
   }));
 }
 
@@ -422,67 +464,39 @@ export function vehicleCardHTML(v) {
   const hasAC = v.has_ac !== undefined ? v.has_ac : true;
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
-  const isMotorcycle = catName === 'Motorcycles' || (v.name || '').toLowerCase().includes('motor') || (v.name || '').toLowerCase().includes('click') || (v.name || '').toLowerCase().includes('nmax') || (v.name || '').toLowerCase().includes('adv');
-
   const favs = getFavorites();
   const isFav = favs.includes(v.id);
-
   const isAvailable = v.status === 'available';
-  const isRented = v.status === 'rented';
-  const isMaintenance = v.status === 'maintenance';
-
-  let statusClass = 'badge-available';
-  let badgeContent = '';
-  if (isAvailable) {
-    statusClass = 'badge-available';
-    badgeContent = `<i class="fa-solid fa-circle-check" style="color:#059669;"></i> Available`;
-  } else if (isRented) {
-    statusClass = 'badge-rented';
-    badgeContent = `<i class="fa-solid fa-clock" style="color:#dc2626;"></i> Rented`;
-  } else if (isMaintenance) {
-    statusClass = 'badge-maintenance';
-    badgeContent = `<i class="fa-solid fa-wrench" style="color:#ca8a04;"></i> Maintenance ${v.maintenance_days ? `(${v.maintenance_days}d)` : ''}`;
-  } else {
-    statusClass = `badge-${v.status}`;
-    badgeContent = `<i class="fa-solid fa-car-side"></i> ${v.status}`;
-  }
 
   return `
     <div class="glass vehicle-card" data-id="${v.id}">
-      <div class="vehicle-img-wrapper">
-        <img class="vehicle-img" id="cardImg-${v.id}" src="${exactImg}" alt="${v.name}" onerror="this.src='${exactImg}'" loading="lazy" />
-        <div class="fav-heart-btn ${isFav ? 'active' : ''}" data-favid="${v.id}" title="${isFav ? 'Remove from Favorites' : 'Save to Favorites'}">
-          <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart" style="color:${isFav ? '#e11d48' : '#64748b'};font-size:0.95rem;"></i>
-        </div>
-        <div class="vehicle-badge-pos">
-          <span class="badge ${statusClass}">${badgeContent}</span>
-        </div>
-        <div class="card-angle-dots">
-          <button type="button" class="card-angle-btn active" data-cardid="${v.id}" data-angle="front" title="Front View" style="border:none;background:none;cursor:pointer;padding:0 3px;font-size:0.68rem;font-weight:700;color:#2563eb;">Front</button>
-          <span style="color:#cbd5e1;font-size:0.65rem;">·</span>
-          <button type="button" class="card-angle-btn" data-cardid="${v.id}" data-angle="side" title="Side View" style="border:none;background:none;cursor:pointer;padding:0 3px;font-size:0.68rem;font-weight:600;color:#64748b;">Side</button>
-          <span style="color:#cbd5e1;font-size:0.65rem;">·</span>
-          <button type="button" class="card-angle-btn" data-cardid="${v.id}" data-angle="rear" title="Rear Perspective" style="border:none;background:none;cursor:pointer;padding:0 3px;font-size:0.68rem;font-weight:600;color:#64748b;">Rear</button>
-        </div>
+      <div class="vehicle-card-image-wrap">
+        <img class="vehicle-card-img" id="cardImg-${v.id}" src="${exactImg}" alt="${v.name}" onerror="this.src='${exactImg}'" loading="lazy" />
+        <button type="button" class="vehicle-fav-btn ${isFav ? 'active' : ''}" data-favid="${v.id}" title="${isFav ? 'Remove from Favorites' : 'Save to Favorites'}">
+          <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+        </button>
       </div>
-      <div class="vehicle-body">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <span class="vehicle-cat-tag"><i class="fa-solid fa-layer-group"></i> ${catName}</span>
-          <span style="font-size:0.75rem;color:#64748b;font-weight:600;"><i class="fa-solid fa-id-card"></i> ${maskPlate(v.plate_number)}</span>
+      <div class="vehicle-card-content">
+        <div class="vehicle-card-category">${catName.toUpperCase()}</div>
+        <h3 class="vehicle-card-name">${v.name}</h3>
+        <div class="vehicle-card-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-count">(5.0)</span>
         </div>
-        <div class="vehicle-name">${v.name}</div>
-        <div class="vehicle-meta">
-          <span><i class="fa-solid fa-users" style="color:#2563eb;"></i> ${isMotorcycle ? '2 Seats' : (v.seats ?? '5 Seats')}</span>
-          <span><i class="fa-solid fa-gear" style="color:#2563eb;"></i> ${v.transmission ?? 'Automatic'}</span>
-          <span><i class="fa-solid fa-gas-pump" style="color:#2563eb;"></i> ${fuelType}</span>
-          <span><i class="fa-solid fa-${isMotorcycle ? 'helmet-safety' : (hasAC ? 'snowflake' : 'fan')}" style="color:${isMotorcycle ? '#059669' : '#2563eb'};"></i> ${isMotorcycle ? 'Helmet' : (hasAC ? 'AC' : 'Non-AC')}</span>
+        <p class="vehicle-card-desc">
+          ${v.description || `${v.seats || 5}-Seater · ${v.transmission || 'Automatic'} · ${fuelType} · ${hasAC ? 'Air Conditioned' : 'Comfortable'}`}
+        </p>
+        <div class="vehicle-card-price-row">
+          <div class="vehicle-card-price">
+            ${fmtMoney(rate)} <span class="price-unit">/ day</span>
+          </div>
+          <span class="badge ${isAvailable ? 'badge-available' : 'badge-rented'}">
+            ${isAvailable ? 'Available' : 'Booked'}
+          </span>
         </div>
-        <div class="vehicle-foot">
-          <div class="rate">${fmtMoney(rate)} <span>/ day</span></div>
-          <button class="btn btn-sm ${isAvailable ? 'btn-primary' : 'btn-ghost'}">
-            ${isAvailable ? '<i class="fa-solid fa-calendar-plus"></i> Rent Now' : '<i class="fa-solid fa-eye"></i> Details'}
-          </button>
-        </div>
+        <button type="button" class="btn btn-primary vehicle-book-pill-btn" data-book-btn="${v.id}">
+          Book Now
+        </button>
       </div>
     </div>
   `;

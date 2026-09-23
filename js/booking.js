@@ -1,9 +1,9 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings, saveLocalBooking } from './state.js';
+import { state, DEFAULT_SETTINGS, getSystemSettings, saveLocalBooking, getLocalBookings } from './state.js';
 import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, closeModal, showBookingAlertPopup } from './utils.js';
 import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage } from './vehicles.js';
 
-export async function openVehicleDetail(id) {
+export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') {
   const v = state.vehicles.find(v => v.id === id);
   if (!v) return;
   const fuelType = v.fuel_type ?? 'Gasoline';
@@ -13,10 +13,20 @@ export async function openVehicleDetail(id) {
   let drivers = state.drivers || [];
   const [{ data: fetchedDrivers }, { data: bookedIntervals }] = await Promise.all([
     drivers.length ? Promise.resolve({ data: drivers }) : supabase.from('drivers').select('*').order('name'),
-    supabase.from('bookings').select('start_date, end_date').eq('vehicle_id', v.id).in('status', ['pending', 'approved', 'active']).gte('end_date', todayStr).order('start_date'),
+    supabase.from('bookings').select('start_date, end_date, status').eq('vehicle_id', v.id).in('status', ['pending', 'approved', 'active', 'reserved', 'completed']).gte('end_date', todayStr).order('start_date'),
   ]);
   drivers = (fetchedDrivers || []).map(d => ({ ...d, daily_fee: Number(d.daily_fee || 0) < 500 ? 500 : Number(d.daily_fee) }));
   state.drivers = drivers;
+
+  // Merge both Supabase and local demo bookings so all reserved/paid bookings accurately block the calendar
+  const localList = getLocalBookings().filter(b => 
+    (Number(b.vehicle_id) === Number(v.id) || Number(b.vehicles?.id) === Number(v.id)) &&
+    ['pending', 'approved', 'active', 'reserved', 'completed'].includes(b.status) &&
+    (b.end_date >= todayStr || !b.end_date)
+  ).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
+
+  const dbList = (bookedIntervals || []).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
+  const allBookedIntervals = [...dbList, ...localList].filter(b => b.start_date && b.end_date);
 
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
@@ -31,16 +41,16 @@ export async function openVehicleDetail(id) {
   let badgeContent = '';
   if (isAvailable) {
     statusBadgeClass = 'badge-available';
-    badgeContent = `<i class="fa-solid fa-circle-check" style="color:#059669;"></i> Available for Rent`;
+    badgeContent = `Available for Rent`;
   } else if (isRented) {
     statusBadgeClass = 'badge-rented';
-    badgeContent = `<i class="fa-solid fa-clock" style="color:#dc2626;"></i> Currently Rented`;
+    badgeContent = `Currently Rented`;
   } else if (isMaintenance) {
     statusBadgeClass = 'badge-maintenance';
-    badgeContent = `<i class="fa-solid fa-wrench" style="color:#ca8a04;"></i> In Maintenance ${v.maintenance_days ? `(${v.maintenance_days}d)` : ''}`;
+    badgeContent = `In Maintenance ${v.maintenance_days ? `(${v.maintenance_days}d)` : ''}`;
   } else {
     statusBadgeClass = `badge-${v.status}`;
-    badgeContent = `<i class="fa-solid fa-car-side"></i> ${v.status}`;
+    badgeContent = `${v.status}`;
   }
 
   let currentStep = 1;
@@ -50,9 +60,9 @@ export async function openVehicleDetail(id) {
     <div class="modal-head">
       <div>
         <h3 style="font-size:1.25rem;font-weight:800;color:#0f172a;">${v.name}</h3>
-        <span class="muted" style="font-size:0.78rem;"><i class="fa-solid fa-layer-group"></i> ${catName} · Plate: ${maskPlate(v.plate_number)}</span>
+        <span class="muted" style="font-size:0.78rem;">${catName} · Plate: ${maskPlate(v.plate_number)}</span>
       </div>
-      <div class="modal-close" id="mClose">✕</div>
+      <div class="modal-close" id="mClose">Close</div>
     </div>
 
     <div class="booking-stepper">
@@ -90,47 +100,47 @@ export async function openVehicleDetail(id) {
         </div>
         <div>
           <label>Daily Rental Rate</label>
-          <div style="font-weight:800;font-size:1.05rem;color:#2563eb;">${fmtMoney(rate)} <span style="font-size:0.75rem;font-weight:500;color:#64748b;">/ day</span></div>
+          <div style="font-weight:800;font-size:1.05rem;color:var(--accent);">${fmtMoney(rate)} <span style="font-size:0.75rem;font-weight:500;color:#64748b;">/ day</span></div>
         </div>
         <div>
           <label>Passenger Capacity</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;"><i class="fa-solid fa-users" style="color:#2563eb;"></i> ${isMotorcycle ? '2 Passengers' : (v.seats ?? '5 Passengers')}</div>
+          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${isMotorcycle ? '2 Passengers' : (v.seats ?? '5 Passengers')}</div>
         </div>
         <div>
           <label>Transmission</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;"><i class="fa-solid fa-gear" style="color:#2563eb;"></i> ${v.transmission ?? 'Automatic'}</div>
+          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${v.transmission ?? 'Automatic'}</div>
         </div>
         <div>
           <label>Fuel Type</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;"><i class="fa-solid fa-gas-pump" style="color:#d97706;"></i> ${fuelType}</div>
+          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${fuelType}</div>
         </div>
         <div>
           <label>${isMotorcycle ? 'Included Gear' : 'Air Conditioning'}</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;"><i class="fa-solid fa-${isMotorcycle ? 'helmet-safety' : (hasAC ? 'snowflake' : 'fan')}" style="color:${isMotorcycle ? '#059669' : (hasAC ? '#0284c7' : '#94a3b8')};"></i> ${isMotorcycle ? 'Helmet Included' : (hasAC ? 'Air Conditioned' : 'Non-AC')}</div>
+          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${isMotorcycle ? 'Helmet Included' : (hasAC ? 'Air Conditioned' : 'Non-AC')}</div>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;margin-top:14px;">
         <button type="button" class="btn btn-primary btn-block" id="btnGoStep2">
-          Proceed to Schedule &amp; Driver <i class="fa-solid fa-arrow-right"></i>
+          Proceed to Schedule &amp; Driver
         </button>
       </div>
     </div>
 
     <div class="step-content hidden" id="stepSection2">
       <h4 style="margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#0f172a;">
-        <i class="fa-solid fa-calendar-days" style="color:#2563eb;"></i> 1. Select Rental Dates
+        1. Select Rental Dates
       </h4>
       <div id="calWidgetContainer"></div>
       <div class="detail-grid" style="margin-bottom:12px;">
-        <div class="field"><label>Start Date</label><input type="date" id="bStart" min="${todayStr}" /></div>
-        <div class="field"><label>End Date</label><input type="date" id="bEnd" min="${todayStr}" /></div>
+        <div class="field"><label>Pick-up Date</label><input type="date" id="bStart" min="${todayStr}" /></div>
+        <div class="field"><label>Drop-out Date</label><input type="date" id="bEnd" min="${todayStr}" /></div>
       </div>
       <div id="availabilityMsg" class="muted" style="margin-bottom:12px;"></div>
 
       <div class="divider"></div>
       <h4 style="margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#0f172a;">
-        <i class="fa-solid fa-money-bill-wave" style="color:#059669;"></i> 2. Billing Method
+        2. Billing Method
       </h4>
       <div class="detail-grid" style="margin-bottom:14px;">
         <div class="field">
@@ -148,7 +158,7 @@ export async function openVehicleDetail(id) {
 
       <div class="divider"></div>
       <h4 style="margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#0f172a;">
-        <i class="fa-solid fa-id-badge" style="color:#7c3aed;"></i> 3. Driver Option <span style="font-weight:500;font-size:0.75rem;color:#94a3b8;">(Optional)</span>
+        3. Driver Option <span style="font-weight:500;font-size:0.75rem;color:#94a3b8;">(Optional)</span>
       </h4>
       <div class="field">
         <select id="driverSelect" style="font-size:0.88rem;">
@@ -160,10 +170,10 @@ export async function openVehicleDetail(id) {
 
       <div style="display:flex;gap:10px;margin-top:16px;">
         <button type="button" class="btn btn-ghost" id="btnBackStep1" style="flex:1;">
-          <i class="fa-solid fa-arrow-left"></i> Back
+          Back
         </button>
         <button type="button" class="btn btn-primary" id="btnGoStep3" style="flex:2;" disabled>
-          Review Pricing Breakdown <i class="fa-solid fa-arrow-right"></i>
+          Review Pricing Breakdown
         </button>
       </div>
     </div>
@@ -172,7 +182,6 @@ export async function openVehicleDetail(id) {
       <div id="transparentPricingContainer"></div>
 
       <div class="guarantee-box">
-        <i class="fa-solid fa-shield-halved" style="color:#059669;font-size:1.1rem;margin-top:2px;"></i>
         <div>
           <strong>100% Transparent Guarantee:</strong> Walang hidden fees. Full-to-full fuel policy. Libreng cancellation hanggang 24 oras bago ang pickup. Walang kailangang online license upload — ipresenta lamang ang physical driver's license kapag nag-pickup na ng sasakyan.
         </div>
@@ -196,10 +205,10 @@ export async function openVehicleDetail(id) {
 
       <div style="display:flex;gap:10px;margin-top:14px;">
         <button type="button" class="btn btn-ghost" id="btnBackStep2" style="flex:1;">
-          <i class="fa-solid fa-arrow-left"></i> Back
+          Back
         </button>
         <button type="button" class="btn btn-primary" id="submitBooking" style="flex:2;">
-          <i class="fa-solid fa-circle-check"></i> Submit Booking Request
+          Submit Booking Request
         </button>
       </div>
     </div>
@@ -265,7 +274,7 @@ export async function openVehicleDetail(id) {
         <div class="detail-grid" style="gap:8px;">
           <div><label style="font-size:0.68rem;">License Type</label><div style="font-weight:600;font-size:0.84rem;color:#0f172a;">${d.license_type ?? 'Professional'}</div></div>
           <div><label style="font-size:0.68rem;">Experience</label><div style="font-weight:600;font-size:0.84rem;color:#0f172a;">${d.experience_years ?? '3'}+ years</div></div>
-          <div><label style="font-size:0.68rem;">Rating</label><div style="font-weight:600;font-size:0.84rem;color:#d97706;"><i class="fa-solid fa-star" style="color:#eab308;font-size:0.78rem;"></i> ${d.rating ?? '4.5'} / 5.0</div></div>
+          <div><label style="font-size:0.68rem;">Rating</label><div style="font-weight:600;font-size:0.84rem;color:#d97706;">Rating: ${d.rating ?? '4.5'} / 5.0</div></div>
           <div><label style="font-size:0.68rem;">Driver Fee</label><div style="font-weight:700;font-size:0.84rem;color:#059669;">${fmtMoney(d.daily_fee ?? 500)} / day</div></div>
         </div>
       </div>
@@ -300,7 +309,7 @@ export async function openVehicleDetail(id) {
       const dateIso = `${calViewYear}-${monthStr}-${dayStr}`;
 
       const isPast = dateIso < todayStr;
-      const isBooked = bookedIntervals && bookedIntervals.some(b => dateIso >= b.start_date && dateIso <= b.end_date);
+      const isBooked = allBookedIntervals && allBookedIntervals.some(b => dateIso >= b.start_date && dateIso <= b.end_date);
       const isStart = selectedStartVal === dateIso;
       const isEnd = selectedEndVal === dateIso;
       const isInRange = selectedStartVal && selectedEndVal && dateIso > selectedStartVal && dateIso < selectedEndVal;
@@ -313,7 +322,7 @@ export async function openVehicleDetail(id) {
       else if (isInRange) dayClass += ' cal-day-in-range';
 
       daysHTML += `
-        <div class="cal-day ${dayClass}" data-date="${dateIso}" ${isPast || isBooked ? 'style="pointer-events:none;"' : ''}>
+        <div class="cal-day ${dayClass}" data-date="${dateIso}" ${isPast || isBooked ? `style="pointer-events:none;" title="${isBooked ? 'Booked (Unavailable)' : 'Past Date'}"` : ''}>
           ${d}
         </div>
       `;
@@ -322,9 +331,9 @@ export async function openVehicleDetail(id) {
     calContainer.innerHTML = `
       <div class="custom-calendar">
         <div class="cal-header">
-          <button class="cal-nav-btn" id="calPrevMonth"><i class="fa-solid fa-chevron-left"></i></button>
+          <button type="button" class="cal-nav-btn" id="calPrevMonth" title="Previous Month" aria-label="Previous Month"><i class="fa-solid fa-chevron-left"></i></button>
           <div class="cal-month-title">${monthNames[calViewMonth]} ${calViewYear}</div>
-          <button class="cal-nav-btn" id="calNextMonth"><i class="fa-solid fa-chevron-right"></i></button>
+          <button type="button" class="cal-nav-btn" id="calNextMonth" title="Next Month" aria-label="Next Month"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div class="cal-weekdays">
           <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
@@ -333,7 +342,7 @@ export async function openVehicleDetail(id) {
         <div class="cal-legend">
           <div><span class="cal-legend-dot" style="background:#10b981;"></span> Available for Rent</div>
           <div><span class="cal-legend-dot" style="background:#ef4444;"></span> Booked (Disabled)</div>
-          <div><span class="cal-legend-dot" style="background:#2563eb;"></span> Selected</div>
+          <div><span class="cal-legend-dot" style="background:var(--accent);"></span> Selected</div>
         </div>
       </div>
     `;
@@ -359,7 +368,9 @@ export async function openVehicleDetail(id) {
           start.value = clickedDate;
           end.value = '';
         } else if (clickedDate > start.value) {
-          const hasBookedInside = bookedIntervals && bookedIntervals.some(b => b.start_date > start.value && b.start_date < clickedDate);
+          const hasBookedInside = allBookedIntervals && allBookedIntervals.some(b => {
+            return (b.start_date > start.value && b.start_date < clickedDate) || (b.end_date >= start.value && b.start_date <= clickedDate);
+          });
           if (hasBookedInside) {
             toast('Cannot select range across already booked dates.', 'error');
             start.value = clickedDate;
@@ -377,13 +388,21 @@ export async function openVehicleDetail(id) {
     });
   }
 
+  // Prepopulate dates if passed from Hero Availability search
+  if (prefillStart) {
+    start.value = prefillStart;
+    if (prefillEnd && prefillEnd >= prefillStart) {
+      end.value = prefillEnd;
+    }
+  }
+
   renderInteractiveCalendar();
 
   start.addEventListener('change', () => {
     if (!start.value) return;
     end.min = start.value;
-    if (bookedIntervals && bookedIntervals.length) {
-      const nextBooked = bookedIntervals.find(b => b.start_date >= start.value);
+    if (allBookedIntervals && allBookedIntervals.length) {
+      const nextBooked = allBookedIntervals.find(b => b.start_date >= start.value);
       if (nextBooked) {
         const prevDay = new Date(new Date(nextBooked.start_date).getTime() - 86400000).toISOString().slice(0, 10);
         end.max = prevDay >= start.value ? prevDay : start.value;
@@ -409,20 +428,20 @@ export async function openVehicleDetail(id) {
     }
 
     if (new Date(end.value) < new Date(start.value)) {
-      availMsg.innerHTML = `<span style="color:#dc2626;font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> Return date must be on or after start date.</span>`;
+      availMsg.innerHTML = `<span style="color:#dc2626;font-weight:600;">Drop-out date must be on or after pick-up date.</span>`;
       btnGoStep3.disabled = true;
       return;
     }
     if (v.status === 'maintenance') {
-      availMsg.innerHTML = `<span style="color:#d97706;font-weight:700;"><i class="fa-solid fa-triangle-exclamation"></i> This vehicle is currently undergoing scheduled maintenance.</span>`;
+      availMsg.innerHTML = `<span style="color:#d97706;font-weight:700;">This vehicle is currently undergoing scheduled maintenance.</span>`;
       btnGoStep3.disabled = true;
       return;
     }
 
-    if (bookedIntervals && bookedIntervals.length) {
-      const conflict = bookedIntervals.find(b => start.value <= b.end_date && end.value >= b.start_date);
+    if (allBookedIntervals && allBookedIntervals.length) {
+      const conflict = allBookedIntervals.find(b => start.value <= b.end_date && end.value >= b.start_date);
       if (conflict) {
-        availMsg.innerHTML = `<span style="color:#dc2626;font-weight:700;"><i class="fa-solid fa-circle-xmark"></i> Date Conflict: Vehicle is already booked from ${fmtDate(conflict.start_date)} to ${fmtDate(conflict.end_date)}. Please select different dates.</span>`;
+        availMsg.innerHTML = `<span style="color:#dc2626;font-weight:700;">Date Conflict: Vehicle is already booked from ${fmtDate(conflict.start_date)} to ${fmtDate(conflict.end_date)}. Please select different dates.</span>`;
         btnGoStep3.disabled = true;
         return;
       }
@@ -439,7 +458,7 @@ export async function openVehicleDetail(id) {
 
     if (error) { availMsg.textContent = 'Could not check availability.'; return; }
     if (overlaps && overlaps.length) {
-      availMsg.innerHTML = `<span style="color:#dc2626;font-weight:700;"><i class="fa-solid fa-circle-xmark"></i> Dates already booked. Please choose available dates above.</span>`;
+      availMsg.innerHTML = `<span style="color:#dc2626;font-weight:700;">Dates already booked. Please choose available dates above.</span>`;
       btnGoStep3.disabled = true;
       return;
     }
@@ -451,7 +470,7 @@ export async function openVehicleDetail(id) {
     let vehicleCost = isPerKm ? (kmRate * estKm) : (days * rate);
 
     if (isPerKm && estKm <= 0) {
-      availMsg.innerHTML = `<span style="color:#059669;font-weight:600;"><i class="fa-solid fa-circle-check"></i> Dates available. Please enter estimated kilometers to calculate price.</span>`;
+      availMsg.innerHTML = `<span style="color:#059669;font-weight:600;">Dates available. Please enter estimated kilometers to calculate price.</span>`;
       btnGoStep3.disabled = true;
       return;
     }
@@ -461,7 +480,7 @@ export async function openVehicleDetail(id) {
     const driverFee = selectedDriver ? (selectedDriver.daily_fee ?? 500) * days : 0;
     const totalAmount = vehicleCost + driverFee;
 
-    availMsg.innerHTML = `<span style="color:#059669;font-weight:700;"><i class="fa-solid fa-circle-check"></i> Dates available for rent! (${days} day${days > 1 ? 's' : ''})</span>`;
+    availMsg.innerHTML = `<span style="color:#059669;font-weight:700;">Dates available for rent! (${days} day${days > 1 ? 's' : ''})</span>`;
     btnGoStep3.disabled = false;
 
     calculatedBookingData = {
@@ -495,7 +514,7 @@ export async function openVehicleDetail(id) {
     pricingContainer.innerHTML = `
       <div class="price-breakdown-card">
         <h4 style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-receipt" style="color:#2563eb;"></i> Transparent Itemized Breakdown
+          Transparent Itemized Breakdown
         </h4>
 
         <div class="price-item">
@@ -593,7 +612,7 @@ export async function openVehicleDetail(id) {
   submitBtn.addEventListener('click', async () => {
     if (!calculatedBookingData) return;
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Submitting Request…`;
+    submitBtn.textContent = 'Submitting Request…';
 
     const finalAmount = calculatedBookingData.finalPayableTotal !== undefined ? calculatedBookingData.finalPayableTotal : calculatedBookingData.totalAmount;
     const paidAmount = selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * 0.2);
@@ -678,8 +697,10 @@ export async function openVehicleDetail(id) {
       localStorage.setItem('rentflow_pending_manager_alert', JSON.stringify(recordToSave));
     } catch (e) {}
 
-    // Trigger real-time floating pop-up notification with audio chime!
-    showBookingAlertPopup(recordToSave);
+    // Trigger real-time floating pop-up notification with audio chime ONLY if in staff/admin portal
+    if (state.portal === 'staff' || state.portal === 'admin') {
+      showBookingAlertPopup(recordToSave);
+    }
 
     if (calculatedBookingData.dId) {
       await supabase.from('driver_assignments').insert({
@@ -697,16 +718,13 @@ export async function openVehicleDetail(id) {
 
     openModal(`
       <div style="text-align:center;margin-bottom:18px;">
-        <div style="width:56px;height:56px;border-radius:50%;background:#ecfdf5;border:2px solid #a7f3d0;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
-          <i class="fa-solid fa-circle-check" style="font-size:28px;color:#059669;"></i>
-        </div>
         <h2 style="font-size:1.3rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Booking Submitted Successfully!</h2>
         <span class="badge badge-pending" style="font-size:0.75rem;">Pending Staff Approval</span>
         <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Booking Reference: <strong style="color:#0f172a;">${refNum}</strong></p>
       </div>
 
       <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
-        <i class="fa-solid fa-car" style="color:#2563eb;"></i> Booking Summary
+        Booking Summary
       </h4>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
         <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name}</span></div>
@@ -719,11 +737,11 @@ export async function openVehicleDetail(id) {
         ${appliedPromo ? `
           <div class="receipt-row"><span style="color:#059669;font-weight:700;">Promo Discount</span><span style="font-weight:700;color:#059669;">${appliedPromo.code} (-${fmtMoney(appliedPromo.discount)})</span></div>
         ` : ''}
-        <div class="receipt-row"><span style="color:#64748b;">Payment Structure</span><span style="font-weight:700;color:#2563eb;">${selectedDownpaymentPct === 100 ? 'Full Payment (100%)' : '20% Downpayment'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Payment Structure</span><span style="font-weight:700;color:var(--accent);">${selectedDownpaymentPct === 100 ? 'Full Payment (100%)' : '20% Downpayment'}</span></div>
       </div>
 
       <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
-        <i class="fa-solid fa-receipt" style="color:#059669;"></i> Transparent Total
+        Transparent Total
       </h4>
       <div class="receipt" style="margin-bottom:16px;">
         <div class="receipt-row"><span>Vehicle Rental</span><span>${fmtMoney(calculatedBookingData.vehicleCost)}</span></div>
@@ -740,8 +758,7 @@ export async function openVehicleDetail(id) {
         <div class="receipt-row receipt-total"><span>Total Estimated Cost</span><span>${fmtMoney(finalAmount)}</span></div>
       </div>
 
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
-        <i class="fa-solid fa-circle-info" style="color:#0284c7;font-size:1.1rem;margin-top:2px;"></i>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
         <p style="font-size:0.78rem;color:#0369a1;line-height:1.5;margin:0;">
           Staff will review your booking request and notify you once approved. You will be able to complete payment online or upon physical pickup of the vehicle.
         </p>
