@@ -391,7 +391,7 @@ export function renderShell() {
                 </button>
                 <button type="button" class="g-menu-item" id="gMenuSupport">
                   <i class="fa-solid fa-headset"></i>
-                  <span>Live Support</span>
+                  <span>Support</span>
                 </button>
               </div>
               <div class="g-menu-divider"></div>
