@@ -8,7 +8,8 @@ export async function renderCustomer(tab, view) {
   if (tab === 'browse') return renderBrowse(view);
   if (tab === 'favorites') return renderCustomerFavorites(view);
   if (tab === 'bookings') return renderMyBookings(view);
-  if (tab === 'profile') return renderCustomerProfile(view);
+  state.tab = 'browse';
+  return renderBrowse(view);
 }
 
 export async function renderCustomerFavorites(view) {

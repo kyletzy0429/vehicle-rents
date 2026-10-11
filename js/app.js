@@ -226,18 +226,11 @@ export function openUserMenuModal() {
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
         <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'mark.ramos@gmail.com'}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 582 9140'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Driver License</span><span style="font-weight:600;color:#0f172a;">${p.license_number || 'N02-19-482019'}</span></div>
       </div>
 
       <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Customer Menu</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-        <button class="btn btn-ghost" id="umProfile" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
-          <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Profile &amp; Contact Details</div>
-            <div style="font-size:0.75rem;color:#64748b;">View &amp; update personal info, phone, and address</div>
-          </div>
-        </button>
 
         <button class="btn btn-ghost" id="umBookings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
@@ -295,8 +288,6 @@ export function openUserMenuModal() {
   if (sRet) sRet.addEventListener('click', () => { closeModal(); state.tab = 'returns'; renderShell(); });
 
   // Customer shortcuts
-  const pBtn = $('#umProfile');
-  if (pBtn) pBtn.addEventListener('click', () => { closeModal(); state.tab = 'profile'; renderShell(); });
   const bBtn = $('#umBookings');
   if (bBtn) bBtn.addEventListener('click', () => { closeModal(); state.tab = 'bookings'; renderShell(); });
   const fBtn = $('#umFavorites');

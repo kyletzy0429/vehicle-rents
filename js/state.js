@@ -235,7 +235,6 @@ export const PORTAL_TABS = {
     { id: 'browse', label: 'Browse' },
     { id: 'bookings', label: 'Bookings' },
     { id: 'favorites', label: 'Favorites' },
-    { id: 'profile', label: 'Profile' },
   ],
   staff: [
     { id: 'dashboard', label: 'Operations Dashboard' },

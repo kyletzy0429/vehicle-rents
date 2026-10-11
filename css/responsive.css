@@ -585,6 +585,34 @@ header nav,
   }
 }
 
+@media (max-width: 580px) {
+  .manager-booking-popup {
+    width: calc(100vw - 20px) !important;
+    top: 10px !important;
+    padding: 12px 14px 10px 14px !important;
+    border-radius: 16px !important;
+  }
+  .popup-body {
+    gap: 10px !important;
+  }
+  .popup-vehicle-thumb-wrap {
+    width: 76px !important;
+    height: 56px !important;
+  }
+  .popup-actions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .popup-act-btn {
+    flex: 1 1 calc(50% - 6px) !important;
+    padding: 7px 10px !important;
+    font-size: 0.74rem !important;
+  }
+  .popup-btn-dismiss {
+    margin-left: 0 !important;
+    flex-basis: 100% !important;
+  }
+}
 
 /* ==========================================================================
    4. PRINT MEDIA RULES
@@ -602,6 +630,7 @@ header nav,
   .btn,
   .no-print,
   .toast-wrap,
+  .manager-booking-popup,
   .sidebar,
   .main-topbar,
   .hamburger-btn {

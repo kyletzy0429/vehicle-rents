@@ -56,6 +56,10 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   let currentStep = 1;
   let selectedDownpaymentPct = 100;
 
+  const savedProfileStr = localStorage.getItem('rentflow_guest_profile');
+  const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : {};
+  const p = { ...(state.profile || {}), ...savedProfile };
+
   const modal = openModal(`
     <div class="modal-head">
       <div>
@@ -68,7 +72,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     <div class="booking-stepper">
       <div class="step-item active" id="stepNode1" data-step="1">
         <span class="step-num">1</span>
-        <span class="step-title">Vehicle Details</span>
+        <span class="step-title">Vehicle</span>
       </div>
       <div class="step-divider" id="stepDiv1"></div>
       <div class="step-item" id="stepNode2" data-step="2">
@@ -78,7 +82,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       <div class="step-divider" id="stepDiv2"></div>
       <div class="step-item" id="stepNode3" data-step="3">
         <span class="step-num">3</span>
-        <span class="step-title">Transparent Pricing</span>
+        <span class="step-title">Fill-up &amp; Payment</span>
       </div>
     </div>
 
@@ -173,12 +177,57 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
           Back
         </button>
         <button type="button" class="btn btn-primary" id="btnGoStep3" style="flex:2;" disabled>
-          Review Pricing Breakdown
+          Proceed to Fill-up &amp; Pricing
         </button>
       </div>
     </div>
 
     <div class="step-content hidden" id="stepSection3">
+      <!-- ═══ RENTER FILL-UP FORM ═══ -->
+      <div class="renter-fillup-card">
+        <div class="renter-fillup-header">
+          <div class="renter-fillup-icon">
+            <i class="fa-solid fa-user-pen"></i>
+          </div>
+          <div>
+            <h4 class="renter-fillup-title">Renter Information (Guest Details)</h4>
+            <span class="renter-fillup-sub">Pakilagay ang inyong impormasyon para sa opisyal na booking</span>
+          </div>
+        </div>
+
+        <div class="detail-grid" style="margin-bottom:12px;">
+          <div class="field">
+            <label style="font-weight:700;font-size:0.78rem;">Full Name (Buong Pangalan) <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="renterName" value="${p.full_name || state.user?.user_metadata?.full_name || ''}" placeholder="e.g. Mark Lester Ramos" required />
+          </div>
+          <div class="field">
+            <label style="font-weight:700;font-size:0.78rem;">Phone Number (Contact Number) <span style="color:#ef4444;">*</span></label>
+            <input type="tel" id="renterPhone" value="${p.phone || ''}" placeholder="e.g. 0917 582 9140" required />
+          </div>
+        </div>
+
+        <div class="detail-grid" style="margin-bottom:12px;">
+          <div class="field">
+            <label style="font-weight:700;font-size:0.78rem;">Email Address</label>
+            <input type="email" id="renterEmail" value="${p.email || state.user?.email || ''}" placeholder="e.g. mark.ramos@gmail.com" />
+          </div>
+          <div class="field">
+            <label style="font-weight:700;font-size:0.78rem;">Driver's License No. <span style="font-weight:400;font-size:0.72rem;color:#94a3b8;">(Optional)</span></label>
+            <input type="text" id="renterLicense" value="${p.license_number || ''}" placeholder="e.g. N02-19-482019" />
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:12px;">
+          <label style="font-weight:700;font-size:0.78rem;">Meetup / Delivery Address or Notes <span style="font-weight:400;font-size:0.72rem;color:#94a3b8;">(Optional)</span></label>
+          <input type="text" id="renterAddress" value="${p.address || ''}" placeholder="e.g. Puerto Princesa Airport / Hotel Lobby" />
+        </div>
+
+        <div class="renter-verify-badge">
+          <i class="fa-solid fa-circle-check" style="color:#059669;font-size:0.95rem;"></i>
+          <span>Physical driver's license will be verified in-person upon vehicle meetup / pickup. No online upload required.</span>
+        </div>
+      </div>
+
       <div id="transparentPricingContainer"></div>
 
       <div class="guarantee-box">
@@ -611,6 +660,33 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
   submitBtn.addEventListener('click', async () => {
     if (!calculatedBookingData) return;
+
+    const rNameInput = $('#renterName');
+    const rPhoneInput = $('#renterPhone');
+    const rName = rNameInput ? rNameInput.value.trim() : '';
+    const rPhone = rPhoneInput ? rPhoneInput.value.trim() : '';
+    const rEmail = $('#renterEmail')?.value.trim() || '';
+    const rLicense = $('#renterLicense')?.value.trim() || '';
+    const rAddress = $('#renterAddress')?.value.trim() || '';
+
+    if (!rName) {
+      toast('Pakilagay ang inyong buong pangalan (Full Name).', 'error');
+      if (rNameInput) {
+        rNameInput.focus();
+        rNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    if (!rPhone) {
+      toast('Pakilagay ang inyong contact phone number.', 'error');
+      if (rPhoneInput) {
+        rPhoneInput.focus();
+        rPhoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting Request…';
 
@@ -618,7 +694,33 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     const paidAmount = selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * 0.2);
     const balanceDue = finalAmount - paidAmount;
 
-    const contactNote = `Contact: ${state.profile?.full_name || 'Customer'} (${state.profile?.phone || 'No phone'})`;
+    // Update profile in state and storage so user does not need to retype next time
+    if (!state.profile) state.profile = {};
+    if (rName) state.profile.full_name = rName;
+    if (rPhone) state.profile.phone = rPhone;
+    if (rEmail) state.profile.email = rEmail;
+    if (rLicense) state.profile.license_number = rLicense;
+    if (rAddress) state.profile.address = rAddress;
+
+    try {
+      localStorage.setItem('rentflow_guest_profile', JSON.stringify({
+        full_name: rName,
+        phone: rPhone,
+        email: rEmail,
+        license_number: rLicense,
+        address: rAddress
+      }));
+      if (state.user?.id) {
+        supabase.from('profiles').update({
+          full_name: rName,
+          phone: rPhone,
+          license_number: rLicense,
+          address: rAddress
+        }).eq('id', state.user.id).catch(() => {});
+      }
+    } catch (e) {}
+
+    const contactNote = `Contact: ${rName} (${rPhone || 'No phone'})${rLicense ? ` | Lic: ${rLicense}` : ''}${rAddress ? ` | Meetup: ${rAddress}` : ''}`;
     const fullNotes = contactNote;
 
     const bookingPayload = {
@@ -684,9 +786,10 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       ...bookingPayload,
       ...(newBooking || {}),
       id: newBooking?.id || `bk-${Date.now().toString().slice(-6)}`,
-      customer_name: state.profile?.full_name || 'Guest Customer',
-      customer_email: state.profile?.email || state.user?.email,
-      customer_phone: state.profile?.phone || '',
+      customer_name: rName,
+      customer_email: rEmail,
+      customer_phone: rPhone,
+      driver_license: rLicense,
       vehicles: { ...v },
       created_at: newBooking?.created_at || new Date().toISOString()
     };
@@ -727,6 +830,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         Booking Summary
       </h4>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div class="receipt-row"><span style="color:#64748b;">Renter</span><span style="font-weight:700;color:#0f172a;">${rName} (${rPhone || 'No phone'})</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Category</span><span style="color:#0f172a;">${catName}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Plate Number</span><span style="color:#0f172a;">${maskPlate(v.plate_number)}</span></div>

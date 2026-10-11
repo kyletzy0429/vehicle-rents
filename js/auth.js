@@ -114,13 +114,13 @@ export function renderLandingPage() {
             <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Reserve</button>
           </div>
           <div class="lp-hero-stats">
-            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Guest Rating</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">100%</span><span class="lp-stat-label">Realtime Sync</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">24 / 7</span><span class="lp-stat-label">Personalized Service</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">0 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Guest Rating</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">0%</span><span class="lp-stat-label">Realtime Sync</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">0</span><span class="lp-stat-label">Personalized Service</span></div>
           </div>
         </div>
         <div class="lp-hero-image-wrap">
-          <img src="images/hero-fleet.jpg" alt="Premium Fleet Showroom" class="lp-hero-img" />
+          <img src="images/hero-fleet.jpg?v=2" alt="Premium Fleet Showroom" class="lp-hero-img" />
           <div class="lp-hero-availability-badge">
             <div class="lp-avail-dot"></div>
             <span class="lp-avail-label">LIVE AVAILABILITY</span>
@@ -220,11 +220,6 @@ export function renderLandingPage() {
               <div class="lp-perk-icon"><i class="fa-solid fa-key"></i></div>
               <h3>Contactless Key Handover</h3>
               <p>Seamless digital vehicle access, GPS tracking, and digital concierge at your fingertips.</p>
-            </div>
-            <div class="lp-perk-card">
-              <div class="lp-perk-icon"><i class="fa-solid fa-wifi"></i></div>
-              <h3>Free Wi-Fi &amp; GPS</h3>
-              <p>Complimentary portable Wi-Fi and built-in GPS navigation on all premium vehicle rentals.</p>
             </div>
             <div class="lp-perk-card">
               <div class="lp-perk-icon"><i class="fa-solid fa-truck-pickup"></i></div>
@@ -478,14 +473,14 @@ export function renderAuth() {
       </div>
 
       <div class="auth-split-right">
-        <img src="images/hero-fleet.jpg" alt="Premium Fleet" class="auth-hero-img" />
+        <img src="images/hero-fleet.jpg?v=2" alt="Premium Fleet" class="auth-hero-img" />
         <div class="auth-hero-overlay">
           <h2 class="auth-hero-tagline">Every ride, elegantly managed.</h2>
           <p class="auth-hero-sub">From pick-up to drop-out, one system keeps your fleet, guests, and staff perfectly in sync.</p>
         </div>
         <div class="auth-rating-badge">
           <div class="auth-rating-label">GUEST RATING</div>
-          <div class="auth-rating-val">4.9 <span>/ 5</span></div>
+          <div class="auth-rating-val">0 <span>/ 5</span></div>
         </div>
       </div>
     </div>
@@ -704,11 +699,7 @@ export async function bootstrapSession() {
       }, 500);
     }
 
-    if (state.portal === 'customer' && !bookVehicleId) {
-      setTimeout(() => {
-        promptCustomerOnboardingModal();
-      }, 400);
-    }
+    // Details are collected directly in the booking form as requested
   } catch (fatalErr) {
     console.error('Fatal error during bootstrapSession:', fatalErr);
     renderLandingPage();

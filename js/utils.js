@@ -366,7 +366,7 @@ export function playNotificationChime() {
   }
 }
 
-// Floating real-time notification pop-up for new guest booking
+// Floating real-time notification pop-up for new guest booking (Centered Heads-Up Display)
 export function showBookingAlertPopup(b) {
   if (!b) return;
   // ONLY show quick approve popup to staff or admin portal
@@ -382,6 +382,8 @@ export function showBookingAlertPopup(b) {
   const v = b.vehicles || {};
   const vName = v.name || 'Rental Vehicle';
   const vImg = v.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400';
+  const vPlate = v.plate_number ? maskPlate(v.plate_number) : '';
+  const vCategory = v.category ? (v.category.charAt(0).toUpperCase() + v.category.slice(1)) : '';
   const custName = b.customer_name || b.profiles?.full_name || 'Guest Customer';
   const custPhone = b.customer_phone || b.profiles?.phone || '';
   const totalAmt = Number(b.total_amount || 0);
@@ -389,51 +391,83 @@ export function showBookingAlertPopup(b) {
   const popup = document.createElement('div');
   popup.className = 'manager-booking-popup';
   popup.id = 'activeBookingPopup';
+  popup.setAttribute('role', 'alert');
+  popup.setAttribute('aria-live', 'assertive');
 
   popup.innerHTML = `
     <div class="popup-head">
       <div class="popup-tag">
         <span class="popup-pulse-dot"></span>
-        <span>New Booking Received!</span>
+        <span class="popup-tag-text">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          New Booking Received
+        </span>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span class="popup-badge-time">Just Now</span>
-        <button type="button" class="popup-close-btn" id="popupCloseBtn" title="Close Notification">Close</button>
+      <div class="popup-head-right">
+        <span class="popup-badge-time">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Just Now
+        </span>
+        <button type="button" class="popup-close-btn" id="popupCloseBtn" aria-label="Close Notification" title="Close Notification">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
     </div>
 
     <div class="popup-body">
-      <img src="${vImg}" class="popup-vehicle-img" alt="${vName}" />
+      <div class="popup-vehicle-thumb-wrap">
+        <img src="${vImg}" class="popup-vehicle-img" alt="${vName}" onerror="this.src='https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400'" />
+        ${vCategory ? `<span class="popup-cat-badge">${vCategory}</span>` : ''}
+      </div>
       <div class="popup-details">
-        <div class="popup-vehicle-title">${vName}</div>
+        <div class="popup-vehicle-header">
+          <div class="popup-vehicle-title" title="${vName}">${vName}</div>
+          ${vPlate ? `<span class="popup-plate-badge">${vPlate}</span>` : ''}
+        </div>
         <div class="popup-customer-line">
-          <strong>${custName}</strong> ${custPhone ? `<span class="muted">(${custPhone})</span>` : ''}
+          <span class="popup-cust-avatar">${custName.charAt(0).toUpperCase()}</span>
+          <span class="popup-cust-name">${custName}</span>
+          ${custPhone ? `<span class="popup-cust-phone"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>${custPhone}</span>` : ''}
         </div>
         <div class="popup-meta-line">
-          <span>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
-          <span class="popup-total">${fmtMoney(totalAmt)}</span>
+          <div class="popup-dates-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
+          </div>
+          <div class="popup-total-badge">
+            <span class="popup-total-val">${fmtMoney(totalAmt)}</span>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="popup-actions">
-      <button type="button" class="btn btn-primary btn-sm" id="popupViewBtn" style="font-size:0.78rem;padding:6px 12px;">
-        View in Manager
+      <button type="button" class="popup-act-btn popup-btn-approve" id="popupApproveBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Quick Approve</span>
       </button>
-      <button type="button" class="btn btn-sm" id="popupApproveBtn" style="background:#059669;color:#fff;border:none;font-size:0.78rem;padding:6px 12px;">
-        Quick Approve
+      <button type="button" class="popup-act-btn popup-btn-view" id="popupViewBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <span>View in Manager</span>
       </button>
-      <button type="button" class="btn btn-ghost btn-sm" id="popupDismissBtn" style="font-size:0.78rem;padding:6px 10px;color:#64748b;">
-        Dismiss
+      <button type="button" class="popup-act-btn popup-btn-dismiss" id="popupDismissBtn">
+        <span>Dismiss</span>
       </button>
+    </div>
+
+    <div class="popup-timer-track">
+      <div class="popup-timer-bar"></div>
     </div>
   `;
 
   document.body.appendChild(popup);
 
+  let isDismissed = false;
   const dismiss = () => {
+    if (isDismissed) return;
+    isDismissed = true;
     popup.classList.add('popup-fade-out');
-    setTimeout(() => popup.remove(), 300);
+    setTimeout(() => popup.remove(), 320);
   };
 
   const cBtn = popup.querySelector('#popupCloseBtn');
@@ -447,9 +481,20 @@ export function showBookingAlertPopup(b) {
   if (vBtn) {
     vBtn.addEventListener('click', () => {
       dismiss();
-      import('./auth.js').then(({ switchSystemRole }) => {
-        switchSystemRole('staff');
-      });
+      if (state.portal === 'staff') {
+        state.tab = 'requests';
+        if (window.renderTab) window.renderTab();
+      } else if (state.portal === 'admin') {
+        state.tab = 'rentals';
+        if (window.renderTab) window.renderTab();
+      } else {
+        import('./auth.js').then(({ switchSystemRole }) => {
+          switchSystemRole('staff').then(() => {
+            state.tab = 'requests';
+            if (window.renderTab) window.renderTab();
+          });
+        });
+      }
     });
   }
 
@@ -458,7 +503,10 @@ export function showBookingAlertPopup(b) {
   if (aBtn) {
     aBtn.addEventListener('click', async () => {
       aBtn.disabled = true;
-      aBtn.textContent = 'Approving…';
+      aBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="fa-spin"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+        <span>Approving…</span>
+      `;
       const { updateLocalBookingStatus } = await import('./state.js');
       updateLocalBookingStatus(b.id, 'approved');
       try {
@@ -470,11 +518,35 @@ export function showBookingAlertPopup(b) {
     });
   }
 
-  // Auto-dismiss after 12 seconds
-  setTimeout(() => {
-    if (document.body.contains(popup)) {
-      dismiss();
-    }
-  }, 12000);
+  // Intelligent Countdown Timer with Pause on Hover
+  let remainingTime = 12000;
+  let timerStart = Date.now();
+  let dismissTimeout = null;
+
+  const startTimer = (duration) => {
+    timerStart = Date.now();
+    dismissTimeout = setTimeout(() => {
+      if (document.body.contains(popup)) {
+        dismiss();
+      }
+    }, duration);
+  };
+
+  startTimer(remainingTime);
+
+  popup.addEventListener('mouseenter', () => {
+    clearTimeout(dismissTimeout);
+    remainingTime -= (Date.now() - timerStart);
+    if (remainingTime < 1000) remainingTime = 1000;
+  });
+
+  popup.addEventListener('mouseleave', () => {
+    startTimer(remainingTime);
+  });
+}
+
+// Make accessible on window for direct testing
+if (typeof window !== 'undefined') {
+  window.showBookingAlertPopup = showBookingAlertPopup;
 }
 
