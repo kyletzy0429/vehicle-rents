@@ -8,6 +8,7 @@ import {
 import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole } from './auth.js';
 import { renderCustomer } from './customer.js?v=2.6';
 import { renderStaff, renderAdmin } from './admin.js?v=2.6';
+import { initRealtimeSync } from './realtime.js';
 
 export function renderRoleSwitcherHTML(currentRole) {
   const roleLabels = {
@@ -600,10 +601,12 @@ function checkPendingManagerAlert() {
   }
 }
 
-export async function renderTab() {
+export async function renderTab(silent = false) {
   const view = $('#mainView');
   if (!view) return;
-  view.innerHTML = '<div class="loading-spin"></div>';
+  if (!silent) {
+    view.innerHTML = '<div class="loading-spin"></div>';
+  }
   try {
     if (state.portal === 'customer') await renderCustomer(state.tab, view);
     else if (state.portal === 'staff') await renderStaff(state.tab, view);
@@ -627,4 +630,8 @@ supabase.auth.onAuthStateChange((event) => {
   }
 });
 
-bootstrapSession();
+bootstrapSession().then(() => {
+  initRealtimeSync();
+}).catch(() => {
+  initRealtimeSync();
+});

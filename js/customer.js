@@ -3,6 +3,7 @@ import { state, DEFAULT_SETTINGS, getSystemSettings, getLocalBookings, updateLoc
 import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, closeModal, emptyState } from './utils.js';
 import { getFavorites, toggleFavorite, vehicleCardHTML, renderBrowse, getExactVehicleImage, loadVehicles } from './vehicles.js';
 import { openVehicleDetail } from './booking.js';
+import { broadcastBookingStatusChange } from './realtime.js';
 
 export async function renderCustomer(tab, view) {
   if (tab === 'browse') return renderBrowse(view);
@@ -680,6 +681,15 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           console.warn('DB payment update notice:', e);
         }
       }
+
+      // Update local storage and broadcast live to staff dashboard
+      updateLocalBookingStatus(bookingId, 'active', {
+        paid_amount: newTotalPaid,
+        balance_due: newBalance,
+        payment_type: newPaymentType,
+        downpayment_percent: selectedPct
+      });
+      broadcastBookingStatusChange(bookingId, 'active');
 
       toast(selectedMethod === 'cash'
         ? `Reservation confirmed for Cash payment on pickup (${fmtMoney(payNow)})!`

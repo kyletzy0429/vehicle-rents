@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings } from './state.js';
+import { state, DEFAULT_SETTINGS, getSystemSettings, getLocalBookings } from './state.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -188,24 +188,52 @@ export async function fetchLiveNotifications() {
   try {
     let bookingNotifs = [];
     if (state.portal === 'customer') {
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('*, vehicles(name)')
-        .eq('customer_id', state.user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (bookings && bookings.length > 0) {
-        bookingNotifs = bookings.map(b => buildCustomerNotif(b));
+      let dbBookings = [];
+      try {
+        const { data } = await supabase
+          .from('bookings')
+          .select('*, vehicles(name)')
+          .eq('customer_id', state.user.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (data) dbBookings = data;
+      } catch (e) {}
+
+      const localList = getLocalBookings().filter(b => b.customer_id === state.user.id);
+      const dbIds = new Set(dbBookings.map(b => String(b.id)));
+      const merged = [...dbBookings];
+      for (const lb of localList) {
+        if (!dbIds.has(String(lb.id))) {
+          merged.push(lb);
+        }
       }
+      merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      bookingNotifs = merged.map(b => buildCustomerNotif(b));
     } else {
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('*, vehicles(name), profiles!customer_id(full_name)')
-        .order('created_at', { ascending: false })
-        .limit(25);
-      if (bookings && bookings.length > 0) {
-        bookingNotifs = bookings.map(b => buildStaffNotif(b));
+      let dbBookings = [];
+      try {
+        const { data } = await supabase
+          .from('bookings')
+          .select('*, vehicles(name), profiles!customer_id(full_name)')
+          .order('created_at', { ascending: false })
+          .limit(25);
+        if (data) dbBookings = data;
+      } catch (e) {}
+
+      const localList = getLocalBookings();
+      const dbIds = new Set(dbBookings.map(b => String(b.id)));
+      const merged = [...dbBookings];
+      for (const lb of localList) {
+        if (!dbIds.has(String(lb.id))) {
+          merged.push({
+            ...lb,
+            vehicles: lb.vehicles || { name: 'Vehicle' },
+            profiles: lb.profiles || { full_name: lb.customer_name || 'Guest Customer' }
+          });
+        }
       }
+      merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      bookingNotifs = merged.map(b => buildStaffNotif(b));
     }
 
     const readIds = getReadNotifIds();
@@ -512,6 +540,9 @@ export function showBookingAlertPopup(b) {
       try {
         await supabase.from('bookings').update({ status: 'approved' }).eq('id', b.id);
       } catch (e) {}
+      import('./realtime.js').then(({ broadcastBookingStatusChange }) => {
+        broadcastBookingStatusChange(b.id, 'approved');
+      }).catch(() => {});
       toast(`Booking for ${custName} (${vName}) Approved!`, 'success');
       dismiss();
       if (window.renderTab) window.renderTab();

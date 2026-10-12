@@ -2,6 +2,7 @@ import { supabase } from './config.js';
 import { state, DEFAULT_SETTINGS, getSystemSettings, saveLocalBooking, getLocalBookings } from './state.js';
 import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, closeModal, showBookingAlertPopup } from './utils.js';
 import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage } from './vehicles.js';
+import { broadcastNewBookingRequest } from './realtime.js';
 
 export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') {
   const v = state.vehicles.find(v => v.id === id);
@@ -829,15 +830,8 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     };
     saveLocalBooking(recordToSave);
 
-    // Save pending manager alert into localStorage
-    try {
-      localStorage.setItem('rentflow_pending_manager_alert', JSON.stringify(recordToSave));
-    } catch (e) {}
-
-    // Trigger real-time floating pop-up notification with audio chime ONLY if in staff/admin portal
-    if (state.portal === 'staff' || state.portal === 'admin') {
-      showBookingAlertPopup(recordToSave);
-    }
+    // Broadcast live event across all open windows, tabs, and portals
+    broadcastNewBookingRequest(recordToSave);
 
     if (calculatedBookingData.dId) {
       await supabase.from('driver_assignments').insert({

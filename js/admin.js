@@ -3,6 +3,7 @@ import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getLoca
 import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, closeModal, emptyState, getRoleDisplayName, applyTheme } from './utils.js';
 import { getExactVehicleImage, getVehicleDailyRate, setVehicleCustomRate, getVehicleCategoryName, loadVehicles, loadCategories, PH_CATEGORIES } from './vehicles.js';
 import { openRefundVoucherModal } from './customer.js';
+import { broadcastBookingStatusChange } from './realtime.js';
 
 export async function renderStaff(tab, view) {
   if (tab === 'dashboard') return renderStaffDashboard(view);
@@ -272,6 +273,7 @@ export async function renderStaffDashboard(view) {
     const id = btn.dataset.dashApprove;
     btn.disabled = true;
     updateLocalBookingStatus(id, 'approved');
+    broadcastBookingStatusChange(id, 'approved');
     try {
       await supabase.from('bookings').update({ status: 'approved', reviewed_by: state.user.id }).eq('id', id);
     } catch (e) {}
@@ -284,6 +286,7 @@ export async function renderStaffDashboard(view) {
     const reason = prompt('Reason for rejecting this request:', 'Vehicle unavailable for requested dates.');
     if (reason === null) return;
     updateLocalBookingStatus(id, 'rejected', { review_notes: reason });
+    broadcastBookingStatusChange(id, 'rejected', { reason });
     try {
       await supabase.from('bookings').update({ status: 'rejected', reviewed_by: state.user.id, review_notes: reason }).eq('id', id);
     } catch (e) {}
@@ -548,6 +551,7 @@ export async function renderStaffRequests(view) {
     btn.disabled = true;
 
     updateLocalBookingStatus(id, 'approved');
+    broadcastBookingStatusChange(id, 'approved');
 
     try {
       await supabase.from('bookings').update({
@@ -567,6 +571,7 @@ export async function renderStaffRequests(view) {
     if (reason === null) return;
 
     updateLocalBookingStatus(id, 'rejected', { review_notes: reason });
+    broadcastBookingStatusChange(id, 'rejected', { reason });
 
     try {
       await supabase.from('bookings').update({
