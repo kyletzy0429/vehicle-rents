@@ -3256,3 +3256,39 @@
 @media (min-width: 1024px) and (max-width: 1200px) {
   .lp-hero-headline { font-size: 2.2rem; }
 }
+
+/* ── Post-Booking Pay Now & Pay Later Cards ── */
+.post-pay-card {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+.post-pay-card:hover {
+  transform: translateY(-3px);
+}
+.post-pay-now-btn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.42) !important;
+}
+.post-pay-later-btn:hover {
+  border-color: var(--accent) !important;
+  background: #fdfaff !important;
+  box-shadow: 0 10px 24px rgba(124, 58, 237, 0.12) !important;
+}
+@media (max-width: 600px) {
+  .post-pay-card {
+    min-height: 135px;
+  }
+}
+[data-theme="dark"] .post-pay-later-btn {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+[data-theme="dark"] .post-pay-later-btn span,
+[data-theme="dark"] .post-pay-later-btn div {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .post-pay-later-btn:hover {
+  background: rgba(51, 65, 85, 0.95) !important;
+  border-color: var(--accent) !important;
+}

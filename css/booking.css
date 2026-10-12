@@ -335,3 +335,216 @@
   color: #a7f3d0;
 }
 
+/* ═══ Payment Timing Selection (Pay Now vs Pay Later) ═══ */
+.pay-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 520px) {
+  .pay-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pay-mode-card {
+  background: var(--bg-card, #ffffff);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 13px 12px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.pay-mode-card:hover {
+  border-color: #c4b5fd;
+  background: #faf7fd;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.08);
+}
+
+.pay-mode-card.active {
+  border-color: var(--accent);
+  background: #f5f3ff;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.16);
+}
+
+.pay-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.pay-mode-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pay-mode-badge.badge-fast {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--accent);
+}
+
+.pay-mode-badge.badge-cash {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.pay-mode-icon {
+  font-size: 1rem;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.pay-mode-card.active .pay-mode-icon {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+.pay-mode-title {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+  margin-bottom: 3px;
+}
+
+.pay-mode-card.active .pay-mode-title {
+  color: var(--accent);
+}
+
+.pay-mode-desc {
+  font-size: 0.72rem;
+  color: var(--text-mid, #64748b);
+  line-height: 1.35;
+}
+
+[data-theme="dark"] .pay-mode-card {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(51, 65, 85, 0.8);
+}
+
+[data-theme="dark"] .pay-mode-card:hover {
+  border-color: #8b5cf6;
+  background: rgba(30, 41, 59, 0.95);
+}
+
+[data-theme="dark"] .pay-mode-card.active {
+  border-color: #8b5cf6;
+  background: rgba(124, 58, 237, 0.18);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25);
+}
+
+[data-theme="dark"] .pay-mode-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .pay-mode-desc {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pay-mode-badge.badge-cash {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+
+/* ==========================================================================
+   Venue Express Pickup QR Pass Styles
+   ========================================================================== */
+.venue-pass-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.venue-pass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.venue-pass-ref {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.8px;
+  background: rgba(124, 58, 237, 0.09);
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.venue-qr-wrapper {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 16px;
+  display: inline-block;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.venue-qr-img {
+  width: 175px;
+  height: 175px;
+  display: block;
+  object-fit: contain;
+}
+
+.venue-pass-instructions {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+[data-theme="dark"] .venue-pass-card {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .venue-pass-instructions {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .venue-qr-wrapper {
+  background: #ffffff; /* keep white background for clear scanner contrast */
+  border-color: #475569;
+}
+
+
+

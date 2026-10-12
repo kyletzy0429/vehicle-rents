@@ -297,16 +297,19 @@ export function customerBookingRow(b) {
   const isPartial = b.balance_due && Number(b.balance_due) > 0 && Number(b.paid_amount || 0) > 0;
   let actions = '';
   if (b.status === 'pending') {
-    actions = `<button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')">Cancel Request</button>`;
+    actions = `
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>
+      <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')">Cancel Request</button>
+    `;
   } else if (b.status === 'approved') {
     actions = `
-      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')">Pay / Reserve</button>
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>
       <button type="button" class="btn btn-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')">Cancel</button>
     `;
   } else if (b.status === 'active' || b.status === 'completed') {
     actions = `
-      ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)">Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
-      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')">Receipt</button>
+      ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)"><i class="fa-solid fa-credit-card"></i> Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')"><i class="fa-solid fa-qrcode" style="margin-right:4px;"></i> Receipt & QR Pass</button>
       <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;">Request Refund</button>
     `;
   } else if (b.status === 'cancelled' || b.status === 'rejected') {
@@ -459,9 +462,6 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     </div>
 
     <div class="auth-tabs" style="margin-bottom:16px;">
-      <div class="auth-tab" data-pay-method="cash">
-        Cash on Pickup
-      </div>
       <div class="auth-tab active" data-pay-method="gcash">
         GCash QR
       </div>
@@ -470,6 +470,9 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       </div>
       <div class="auth-tab" data-pay-method="card">
         Card
+      </div>
+      <div class="auth-tab" data-pay-method="cash">
+        Pay on Cash
       </div>
     </div>
 
@@ -500,7 +503,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         const pBtn = modal.querySelector('#payBtn');
         if (pBtn) {
           pBtn.textContent = selectedMethod === 'cash'
-            ? `Reserve Vehicle (Cash on Pickup · ${fmtMoney(payNow)})`
+            ? `Confirm Cash Reservation (${fmtMoney(payNow)})`
             : `Confirm Payment of ${fmtMoney(payNow)}`;
         }
 
@@ -517,26 +520,23 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     if (selectedMethod === 'cash') {
       container.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
-          <div style="font-weight:700;font-size:0.95rem;color:#166534;margin-bottom:4px;">Cash on Pickup / Counter</div>
+          <div style="font-weight:700;font-size:0.95rem;color:#166534;margin-bottom:4px;">Pay on Cash (Venue Pickup)</div>
           <p style="font-size:0.82rem;color:#15803d;margin:0 0 12px 0;line-height:1.4;">
             Magbayad ng cash nang direkta sa branch counter bago kunin ang susi ng sasakyan.
           </p>
           <div style="background:#ffffff;border:1px dashed #86efac;border-radius:8px;padding:12px;text-align:left;font-size:0.78rem;color:#334155;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-              <span style="color:#64748b;">Halaga na babayaran sa counter:</span>
+              <span style="color:#64748b;">Halaga na babayaran sa venue:</span>
               <strong style="color:#166534;font-size:0.9rem;">${fmtMoney(payNow)}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-              <span style="color:#64748b;">Pickup Counter:</span>
-              <strong style="color:#0f172a;">RentFlow Main Hub Counter</strong>
-            </div>
-            <div style="font-size:0.72rem;color:#64748b;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:6px;">
-              I-confirm ang reservation para mai-reserve agad ang sasakyan para sa iyo.
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748b;">Pickup Counter / Venue:</span>
+              <strong style="color:#0f172a;">123 PPC MAIN BRANCH VENUE</strong>
             </div>
           </div>
         </div>
       `;
-      if (pBtn) pBtn.textContent = `Reserve Vehicle (Cash on Pickup · ${fmtMoney(payNow)})`;
+      if (pBtn) pBtn.textContent = `Confirm Cash Reservation (${fmtMoney(payNow)})`;
     } else if (selectedMethod === 'gcash') {
       container.innerHTML = `
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
@@ -634,8 +634,8 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       payBtn.textContent = selectedMethod === 'cash' ? 'Confirming Cash Reservation…' : 'Verifying Payment…';
 
       const methodName = selectedMethod === 'cash' ? 'Cash on Pickup' : selectedMethod === 'gcash' ? 'GCash QR' : selectedMethod === 'bank_qr' ? 'Bank QR Ph' : 'Card';
-      const newTotalPaid = currentPaid + payNow;
-      const newBalance = Math.max(0, totalAmount - newTotalPaid);
+      const newTotalPaid = selectedMethod === 'cash' ? currentPaid : (currentPaid + payNow);
+      const newBalance = selectedMethod === 'cash' ? (totalAmount - currentPaid) : Math.max(0, totalAmount - newTotalPaid);
       const newPaymentType = newBalance === 0 ? 'full' : 'partial';
       const finalRefNo = selectedMethod === 'cash' ? `CASH-${bookingId}-${Date.now().toString().slice(-4)}` : (refNo || `RCPT-${bookingId}`);
 
@@ -682,7 +682,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       }
 
       toast(selectedMethod === 'cash'
-        ? `Reservation confirmed for Cash Payment on Pickup (${fmtMoney(payNow)})!`
+        ? `Reservation confirmed for Cash payment on pickup (${fmtMoney(payNow)})!`
         : (newBalance > 0
           ? `Reservation secured with ${selectedPct}% Deposit (${fmtMoney(payNow)})!`
           : `Payment verified via ${methodName}! Booking fully paid.`
@@ -740,73 +740,161 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
   const fuelType = v.fuel_type ?? 'Gasoline';
   const hasAC = v.has_ac !== undefined ? v.has_ac : true;
   const days = daysBetween(b.start_date, b.end_date);
-  const refCode = refNo || `REF-${Date.now().toString().slice(-6)}`;
+  const refCode = refNo || b.ref_number || `REF-${String(b.id).slice(-4)}-${Date.now().toString().slice(-4)}`;
   const sysSettings = getSystemSettings();
   const comp = sysSettings.company || DEFAULT_SETTINGS.company;
 
+  const customerName = state.profile?.full_name || b.customer_name || 'Customer';
+  const customerPhone = state.profile?.phone || b.customer_phone || comp.phone || 'N/A';
+  const customerLicense = state.profile?.license_number || b.driver_license || 'Physical card verified at meetup';
+  const vehicleName = v.name || 'Rental Vehicle';
+  const categoryName = v.categories?.name || 'Standard';
+  const plateNo = v.plate_number ? maskPlate(v.plate_number) : 'Unassigned';
+  const paidAmount = Number(b.paid_amount || b.total_amount || 0);
+  const balDue = Number(b.balance_due || 0);
+  const isFullPaid = balDue === 0;
+
+  // Complete, structured Pass payload that instantly displays clean information upon scanning by ANY smartphone camera or QR reader
+  const qrDataPayload = `=== RENTFLOW VENUE VERIFIED PASS ===
+REF CODE: ${refCode} (ID: #${b.id})
+CUSTOMER: ${customerName}
+CONTACT: ${customerPhone}
+LICENSE: ${customerLicense}
+VEHICLE: ${vehicleName} (${plateNo})
+CATEGORY: ${categoryName}
+PERIOD: ${fmtDate(b.start_date)} to ${fmtDate(b.end_date)} (${days} Days)
+PAY METHOD: ${payMethod}
+TOTAL RENTAL: ${fmtMoney(b.total_amount)}
+AMOUNT PAID: ${fmtMoney(paidAmount)}
+BALANCE DUE: ${isFullPaid ? 'PAID IN FULL (PHP 0.00)' : fmtMoney(balDue)}
+VENUE PICKUP: ${comp.address || '123 PPC MAIN BRANCH VENUE'}
+VERIFICATION: VALID & CONFIRMED OFFICIAL PASS
+ISSUED AT: ${new Date().toLocaleString()}
+====================================`;
+
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(qrDataPayload)}`;
+
   const modal = openModal(`
     <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
-      <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Payment Receipt</div>
+      <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Payment Receipt &amp; Venue Pass</div>
       <div class="modal-close" id="mClose" onclick="window.closeModal()">Close</div>
     </div>
-    <div style="text-align:center;margin-bottom:18px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
+        <i class="fa-solid fa-circle-check" style="font-size:1.5rem;color:#fff;"></i>
+      </div>
       <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Payment Successful!</h2>
       <span class="badge badge-completed" style="font-size:0.75rem;">Paid via ${payMethod}</span>
-      <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Ref / Transaction No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
+      <p class="muted" style="margin-top:6px;font-size:0.82rem;color:#64748b;">Ref / Transaction No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Reservation &amp; Vehicle Summary</h4>
+    <!-- Official Venue QR Check-In Pass -->
+    <div class="venue-pass-card">
+      <div class="venue-pass-badge">
+        <i class="fa-solid fa-qrcode"></i> Venue Express Pickup QR Pass
+      </div>
+      <div>
+        <span class="venue-pass-ref"><i class="fa-solid fa-ticket" style="margin-right:4px;"></i> Pass Code: ${refCode}</span>
+      </div>
+
+      <div class="venue-qr-wrapper">
+        <img src="${qrImageUrl}" alt="Venue QR Pass" class="venue-qr-img" />
+      </div>
+
+      <div style="font-weight:800;font-size:0.9rem;color:#0f172a;margin-bottom:4px;">
+        I-scan sa Venue para sa Mabilisang Pag-claim
+      </div>
+      <p class="venue-pass-instructions">
+        Ipakita ang QR code na ito sa venue counter (<strong style="color:var(--text-hi,#0f172a);">${comp.address || '123 PPC MAIN BRANCH VENUE'}</strong>). I-scan lamang ito ng staff gamit ang phone o scanner upang agad makita ang kumpletong detalye ng iyong booking.
+      </p>
+
+      <!-- Scanned Details Preview Card -->
+      <div style="margin-top:12px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;text-align:left;">
+        <div style="font-weight:700;font-size:0.78rem;color:#64748b;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="fa-solid fa-circle-info" style="color:var(--accent);margin-right:4px;"></i> QR Code Encoded Details</span>
+          <span class="badge badge-completed" style="font-size:0.68rem;"><i class="fa-solid fa-shield-halved" style="margin-right:3px;"></i> Verified Pass</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:#1e293b;">
+          <div><span style="color:#64748b;">Customer:</span> <strong>${customerName}</strong></div>
+          <div><span style="color:#64748b;">Phone:</span> <strong>${customerPhone}</strong></div>
+          <div><span style="color:#64748b;">Vehicle:</span> <strong>${vehicleName}</strong></div>
+          <div><span style="color:#64748b;">Plate:</span> <strong>${plateNo}</strong></div>
+          <div><span style="color:#64748b;">Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+          <div><span style="color:#64748b;">Duration:</span> <strong>${days} day(s)</strong></div>
+          <div><span style="color:#64748b;">Paid:</span> <strong style="color:#059669;">${fmtMoney(paidAmount)}</strong></div>
+          <div><span style="color:#64748b;">Status:</span> <strong style="color:${isFullPaid ? '#059669' : 'var(--accent)'};">${isFullPaid ? 'Fully Paid' : `Bal: ${fmtMoney(balDue)}`}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+      <i class="fa-solid fa-car" style="color:var(--accent);"></i> Reservation &amp; Vehicle Summary
+    </h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:#64748b;">Customer</span><span style="font-weight:700;color:#0f172a;">${state.profile?.full_name ?? 'Customer'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Driver's License</span><span style="font-weight:700;color:#0f172a;">${state.profile?.license_number ? state.profile.license_number : 'Physical card verified upon meetup'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name ?? 'Rental Vehicle'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Category</span><span style="color:#0f172a;">${v.categories?.name ?? 'Standard'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Plate Number</span><span style="color:#0f172a;">${maskPlate(v.plate_number)}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Customer</span><span style="font-weight:700;color:#0f172a;">${customerName}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Driver's License</span><span style="font-weight:700;color:#0f172a;">${customerLicense}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${vehicleName}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Category</span><span style="color:#0f172a;">${categoryName}</span></div>
+      <div class="receipt-row"><span style="color:#64748b;">Plate Number</span><span style="color:#0f172a;">${plateNo}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Pickup Date</span><span style="color:#0f172a;font-weight:600;">${fmtDate(b.start_date)}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Return Date</span><span style="color:#0f172a;font-weight:600;">${fmtDate(b.end_date)}</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Rental Period</span><span style="color:#0f172a;">${days} day(s)</span></div>
       <div class="receipt-row"><span style="color:#64748b;">Fuel / AC</span><span style="color:#0f172a;">${fuelType} · ${hasAC ? 'With AC' : 'Non-AC'}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Payment &amp; Receipt Summary</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+      <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Payment &amp; Receipt Summary
+    </h4>
     <div class="receipt" style="margin-bottom:16px;">
       <div class="receipt-row"><span>Payment Method</span><span style="font-weight:700;color:#059669;">${payMethod}</span></div>
       <div class="receipt-row"><span>Total Rental Cost</span><span style="font-weight:700;color:#0f172a;">${fmtMoney(b.total_amount)}</span></div>
-      <div class="receipt-row"><span>Amount Paid Now</span><span style="font-weight:700;color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)}</span></div>
-      ${b.balance_due && Number(b.balance_due) > 0 ? `
+      <div class="receipt-row"><span>Amount Paid Now</span><span style="font-weight:700;color:#059669;">${fmtMoney(paidAmount)}</span></div>
+      ${balDue > 0 ? `
         <div class="receipt-row" style="background:#eff6ff;padding:6px 8px;border-radius:6px;margin:4px 0;">
           <span style="color:#1d4ed8;font-weight:600;">Remaining Balance Due at Pickup</span>
-          <span style="font-weight:800;color:#1d4ed8;">${fmtMoney(b.balance_due)}</span>
+          <span style="font-weight:800;color:#1d4ed8;">${fmtMoney(balDue)}</span>
         </div>
       ` : ''}
       <div class="divider"></div>
-      <div class="receipt-row receipt-total"><span>Payment Status</span><span class="badge ${b.balance_due && Number(b.balance_due) > 0 ? 'badge-reserved' : 'badge-completed'}">${b.balance_due && Number(b.balance_due) > 0 ? 'RESERVED (PARTIAL)' : 'FULL PAYMENT'}</span></div>
+      <div class="receipt-row receipt-total"><span>Payment Status</span><span class="badge ${balDue > 0 ? 'badge-reserved' : 'badge-completed'}">${balDue > 0 ? 'RESERVED (PARTIAL)' : 'FULL PAYMENT'}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Rental Details</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+      <i class="fa-solid fa-location-dot" style="color:var(--accent);"></i> Rental &amp; Pickup Venue Details
+    </h4>
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;margin-bottom:14px;">
       <div class="receipt-row"><span style="color:#0369a1;">Pickup Location</span><span style="color:#0f172a;font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
       <div class="receipt-row"><span style="color:#0369a1;">Return Location</span><span style="color:#0f172a;font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
       <div class="receipt-row"><span style="color:#0369a1;">Fuel Policy</span><span style="color:#0f172a;">Full-to-Full</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Insurance</span><span style="color:#0f172a;">Basic coverage included</span></div>
+      <div class="receipt-row"><span style="color:#0369a1;">Insurance</span><span style="color:#0f172a;">Comprehensive coverage included</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Support Contact</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+      <i class="fa-solid fa-headset" style="color:#059669;"></i> Support Contact
+    </h4>
     <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:14px;margin-bottom:16px;">
       <div class="receipt-row"><span style="color:#065f46;">Hotline</span><span style="font-weight:700;color:#0f172a;">${comp.phone || '+63 67676767'}</span></div>
       <div class="receipt-row"><span style="color:#065f46;">Mobile</span><span style="font-weight:700;color:#0f172a;">${comp.mobile || '+63 917 123 4567'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Email</span><span style="font-weight:600;color:#0f172a;">${comp.email || 'vehicleretal.ph'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Email</span><span style="font-weight:600;color:#0f172a;">${comp.email || 'vehiclerental.ph'}</span></div>
       <div class="receipt-row"><span style="color:#065f46;">Address</span><span style="color:#0f172a;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
     </div>
 
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <h4 style="margin:0 0 8px 0;display:flex;align-items:center;gap:6px;color:#92400e;font-size:0.88rem;">Important Information</h4>
-      <p style="font-size:0.82rem;color:#78350f;line-height:1.6;margin:0;">Please arrive at least <strong>15 minutes before</strong> your scheduled pickup time. Don't forget to bring your <strong>driving license</strong> and a <strong>valid ID</strong> for verification.</p>
+      <h4 style="margin:0 0 8px 0;display:flex;align-items:center;gap:6px;color:#92400e;font-size:0.88rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Important Instructions
+      </h4>
+      <p style="font-size:0.82rem;color:#78350f;line-height:1.6;margin:0;">
+        Pumunta sa venue nang hindi bababa sa <strong>15 minuto bago</strong> ang scheduled pickup time. Ipakita ang <strong>QR Code Pass</strong> sa itaas kasama ang iyong <strong>driver's license</strong> at <strong>1 valid ID</strong>.
+      </p>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button type="button" class="btn btn-ghost btn-block" id="printPaidReceiptBtn" onclick="window.print()">Print Official Receipt</button>
-      <button type="button" class="btn btn-primary btn-block" id="closePaidReceiptBtn" onclick="window.closeModal()">Done</button>
+      <button type="button" class="btn btn-ghost btn-block" id="printPaidReceiptBtn" onclick="window.print()" style="flex:1;">
+        <i class="fa-solid fa-print" style="margin-right:6px;"></i> Print Official Receipt &amp; QR Pass
+      </button>
+      <button type="button" class="btn btn-primary btn-block" id="closePaidReceiptBtn" onclick="window.closeModal()" style="flex:1;">
+        <i class="fa-solid fa-check" style="margin-right:6px;"></i> Done
+      </button>
     </div>
   `);
 
@@ -1013,6 +1101,7 @@ export async function openRefundVoucherModal(bookingId) {
   `);
 }
 
+window.openPaymentModal = openPaymentModal;
 window.openRefundRequestModal = openRefundRequestModal;
 window.openPaidReceiptModal = openPaidReceiptModal;
 window.openRefundVoucherModal = openRefundVoucherModal;

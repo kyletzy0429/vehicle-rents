@@ -108,6 +108,13 @@ export async function renderStaffDashboard(view) {
             <div style="font-size:0.75rem;color:#64748b;">${refundClaims.length} pending transfer</div>
           </div>
         </button>
+
+        <button type="button" class="btn btn-ghost" id="quickVerifyPass" style="justify-content:flex-start;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(99,102,241,0.08));border:1.5px dashed #a78bfa;padding:12px 14px;border-radius:12px;">
+          <div style="text-align:left;">
+            <div style="font-weight:700;font-size:0.88rem;color:var(--accent);"><i class="fa-solid fa-qrcode" style="margin-right:4px;"></i> Verify QR Pass</div>
+            <div style="font-size:0.75rem;color:#64748b;">Venue scan &amp; check-in</div>
+          </div>
+        </button>
       </div>
 
       <!-- Main Operations Grid: Urgent Requests & Fleet Status -->
@@ -256,6 +263,9 @@ export async function renderStaffDashboard(view) {
 
   const navRef = $('#quickNavRefunds');
   if (navRef) navRef.addEventListener('click', () => { state.tab = 'refunds'; window.renderShell(); });
+
+  const navQr = $('#quickVerifyPass');
+  if (navQr) navQr.addEventListener('click', () => openVenuePassVerificationModal(bookings));
 
   // Bind Approve and Reject buttons right on the dashboard
   $$('[data-dash-approve]').forEach(btn => btn.addEventListener('click', async () => {
@@ -2570,3 +2580,138 @@ export function attachSettingsFormListeners(view, currentSettings) {
     });
   }
 }
+
+export function openVenuePassVerificationModal(bookings = []) {
+  const modal = openModal(`
+    <div class="modal-head" style="margin-bottom:12px;">
+      <div>
+        <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;"><i class="fa-solid fa-qrcode" style="color:var(--accent);margin-right:6px;"></i> Venue Express QR Pass Verification</h3>
+        <span class="muted" style="font-size:0.78rem;">Scan customer QR code pass or enter Booking / Reference Code</span>
+      </div>
+      <div class="modal-close" id="mClosePass" onclick="window.closeModal()">Close</div>
+    </div>
+
+    <div style="margin:16px 0;">
+      <div class="field">
+        <label style="font-weight:700;font-size:0.82rem;color:#334155;">Scan or Enter Booking Reference / Pass Code</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="venuePassInput" placeholder="e.g. BK-..., REF-..., or Booking ID" style="flex:1;font-size:0.95rem;font-family:monospace;padding:10px 12px;" autofocus />
+          <button type="button" class="btn btn-primary" id="btnLookupPass"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Verify</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="venuePassResult" style="min-height:120px;">
+      <div style="text-align:center;padding:24px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+        <i class="fa-solid fa-barcode" style="font-size:2rem;margin-bottom:8px;color:#94a3b8;display:block;"></i>
+        <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or reference code entry…</div>
+        <div style="font-size:0.75rem;margin-top:4px;">I-scan gamit ang scanner o i-type ang code mula sa resibo ng customer.</div>
+      </div>
+    </div>
+  `);
+
+  const input = modal.querySelector('#venuePassInput');
+  const btn = modal.querySelector('#btnLookupPass');
+  const result = modal.querySelector('#venuePassResult');
+  const mClose = modal.querySelector('#mClosePass');
+  if (mClose) mClose.addEventListener('click', closeModal);
+
+  async function doLookup() {
+    const raw = (input.value || '').trim();
+    if (!raw) {
+      toast('Please enter a Booking Reference or ID.', 'error');
+      return;
+    }
+    const clean = raw.toLowerCase();
+    let allList = bookings && bookings.length ? bookings : await fetchMergedBookings();
+
+    const b = (allList || []).find(item => {
+      const idMatch = String(item.id).toLowerCase() === clean;
+      const refMatch = String(item.ref_number || '').toLowerCase() === clean;
+      const nameMatch = String(item.customer_name || '').toLowerCase().includes(clean);
+      const rawContains = clean.includes(String(item.id).toLowerCase()) || (item.ref_number && clean.includes(String(item.ref_number).toLowerCase()));
+      return idMatch || refMatch || nameMatch || rawContains;
+    });
+
+    if (!b) {
+      result.innerHTML = `
+        <div style="text-align:center;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#991b1b;">
+          <i class="fa-solid fa-circle-xmark" style="font-size:1.8rem;margin-bottom:6px;display:block;"></i>
+          <strong>Pass Not Found</strong>
+          <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${raw}</strong>". Pakisuri ang reference code sa resibo.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const v = b.vehicles || {};
+    const cName = getBookingCustomerName(b);
+    const cPhone = getBookingCustomerPhone(b);
+    const isPartial = b.balance_due && Number(b.balance_due) > 0;
+
+    result.innerHTML = `
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span class="badge badge-completed" style="font-size:0.78rem;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> PASS VERIFIED · ${b.status.toUpperCase()}</span>
+          <span style="font-family:monospace;font-weight:800;color:#0f172a;font-size:0.88rem;">${b.ref_number || ('#' + b.id)}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;color:#1e293b;margin-bottom:14px;">
+          <div><span style="color:#64748b;">Customer:</span> <strong>${cName}</strong></div>
+          <div><span style="color:#64748b;">Phone:</span> <strong>${cPhone || 'N/A'}</strong></div>
+          <div><span style="color:#64748b;">Vehicle:</span> <strong>${v.name || 'Vehicle'}</strong></div>
+          <div><span style="color:#64748b;">Plate:</span> <strong>${v.plate_number ? maskPlate(v.plate_number) : 'N/A'}</strong></div>
+          <div><span style="color:#64748b;">Rental Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+          <div><span style="color:#64748b;">Payment:</span> <strong style="color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)} Paid</strong></div>
+          <div style="grid-column:span 2;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;margin-top:4px;">
+            ${isPartial
+              ? `<span style="color:#d97706;font-weight:700;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> Remaining Balance Due: ${fmtMoney(b.balance_due)}</span> (Collect prior to vehicle release)`
+              : `<span style="color:#059669;font-weight:700;"><i class="fa-solid fa-check-double" style="margin-right:4px;"></i> Fully Paid (₱0.00 Balance Due)</span>`}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnPassViewReceipt" style="flex:1;">
+            <i class="fa-solid fa-receipt" style="margin-right:4px;"></i> View Receipt &amp; QR
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnPassCheckIn" style="flex:1;">
+            <i class="fa-solid fa-key" style="margin-right:4px;"></i> Release Vehicle &amp; Handover
+          </button>
+        </div>
+      </div>
+    `;
+
+    const viewRcpt = result.querySelector('#btnPassViewReceipt');
+    if (viewRcpt) {
+      viewRcpt.onclick = () => {
+        closeModal();
+        if (window.openPaidReceiptModal) window.openPaidReceiptModal(b.id);
+      };
+    }
+
+    const checkInBtn = result.querySelector('#btnPassCheckIn');
+    if (checkInBtn) {
+      checkInBtn.onclick = async () => {
+        updateLocalBookingStatus(b.id, 'active');
+        try {
+          await supabase.from('bookings').update({ status: 'active' }).eq('id', b.id);
+          if (b.vehicle_id) {
+            await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+          }
+        } catch (e) {}
+        toast(`Vehicle handover confirmed! Booking #${b.id} is now Active.`, 'success');
+        closeModal();
+        if (window.renderTab) window.renderTab();
+      };
+    }
+  }
+
+  if (btn) btn.addEventListener('click', doLookup);
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLookup();
+    });
+  }
+}
+
+window.openVenuePassVerificationModal = openVenuePassVerificationModal;
+

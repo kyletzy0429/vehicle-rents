@@ -55,6 +55,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
   let currentStep = 1;
   let selectedDownpaymentPct = 100;
+  let selectedPaymentTiming = 'pay_now';
 
   const savedProfileStr = localStorage.getItem('rentflow_guest_profile');
   const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : {};
@@ -248,6 +249,20 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             <div class="tier-label">Reserve (20% Down)</div>
             <div class="tier-amount" id="payDownAmount">₱0.00</div>
             <div class="tier-sub">Remaining balance upon vehicle pickup</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="margin-bottom:8px;">Payment Method</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="payMethodGrid">
+          <div class="pay-mode-card active" id="payOptOnline" data-timing="pay_now">
+            <div class="pay-mode-title">Pay Online</div>
+            <div class="pay-mode-desc">Magbayad gamit ang GCash, Maya QR, Bank, o Card sa My Bookings.</div>
+          </div>
+          <div class="pay-mode-card" id="payOptCash" data-timing="pay_later">
+            <div class="pay-mode-title">Pay on Cash</div>
+            <div class="pay-mode-desc">Magbayad ng Cash kapag na-meetup o na-pickup na ang sasakyan.</div>
           </div>
         </div>
       </div>
@@ -651,6 +666,21 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         optFull.classList.remove('active');
       };
     }
+
+    // Toggle Pay Online vs Pay on Cash
+    const payOptOnline = $('#payOptOnline'), payOptCash = $('#payOptCash');
+    if (payOptOnline && payOptCash) {
+      payOptOnline.onclick = () => {
+        selectedPaymentTiming = 'pay_now';
+        payOptOnline.classList.add('active');
+        payOptCash.classList.remove('active');
+      };
+      payOptCash.onclick = () => {
+        selectedPaymentTiming = 'pay_later';
+        payOptCash.classList.add('active');
+        payOptOnline.classList.remove('active');
+      };
+    }
   }
 
   btnGoStep3.addEventListener('click', () => {
@@ -781,11 +811,15 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       };
     }
 
+    const refNum = `BK-${Date.now().toString().slice(-8)}`;
+
     // Save into multi-user demo store so other roles (Staff, Admin) can see it immediately
     const recordToSave = {
       ...bookingPayload,
       ...(newBooking || {}),
       id: newBooking?.id || `bk-${Date.now().toString().slice(-6)}`,
+      ref_number: refNum,
+      payment_timing: selectedPaymentTiming,
       customer_name: rName,
       customer_email: rEmail,
       customer_phone: rPhone,
@@ -813,70 +847,15 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     }
 
     closeModal();
-
-    const refNum = `BK-${Date.now().toString().slice(-8)}`;
-    const sysSettings = getSystemSettings();
-    const comp = sysSettings.company || DEFAULT_SETTINGS.company;
-    const pol = sysSettings.policy || DEFAULT_SETTINGS.policy;
-
-    openModal(`
-      <div style="text-align:center;margin-bottom:18px;">
-        <h2 style="font-size:1.3rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Booking Submitted Successfully!</h2>
-        <span class="badge badge-pending" style="font-size:0.75rem;">Pending Staff Approval</span>
-        <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Booking Reference: <strong style="color:#0f172a;">${refNum}</strong></p>
-      </div>
-
-      <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
-        Booking Summary
-      </h4>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
-        <div class="receipt-row"><span style="color:#64748b;">Renter</span><span style="font-weight:700;color:#0f172a;">${rName} (${rPhone || 'No phone'})</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Category</span><span style="color:#0f172a;">${catName}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Plate Number</span><span style="color:#0f172a;">${maskPlate(v.plate_number)}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Pickup Date</span><span style="color:#0f172a;font-weight:600;">${fmtDate(start.value)}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Return Date</span><span style="color:#0f172a;font-weight:600;">${fmtDate(end.value)}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Duration</span><span style="color:#0f172a;">${calculatedBookingData.days} day(s)</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Driver Option</span><span style="font-weight:600;color:#0f172a;">${calculatedBookingData.selectedDriver ? calculatedBookingData.selectedDriver.name : 'Self-Drive'}</span></div>
-        ${appliedPromo ? `
-          <div class="receipt-row"><span style="color:#059669;font-weight:700;">Promo Discount</span><span style="font-weight:700;color:#059669;">${appliedPromo.code} (-${fmtMoney(appliedPromo.discount)})</span></div>
-        ` : ''}
-        <div class="receipt-row"><span style="color:#64748b;">Payment Structure</span><span style="font-weight:700;color:var(--accent);">${selectedDownpaymentPct === 100 ? 'Full Payment (100%)' : '20% Downpayment'}</span></div>
-      </div>
-
-      <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
-        Transparent Total
-      </h4>
-      <div class="receipt" style="margin-bottom:16px;">
-        <div class="receipt-row"><span>Vehicle Rental</span><span>${fmtMoney(calculatedBookingData.vehicleCost)}</span></div>
-        ${calculatedBookingData.driverFee > 0 ? `<div class="receipt-row"><span>Driver Fee</span><span>${fmtMoney(calculatedBookingData.driverFee)}</span></div>` : ''}
-        ${appliedPromo ? `
-          <div class="receipt-row" style="color:#059669;font-weight:700;">
-            <span>Promo Discount (${appliedPromo.code})</span>
-            <span>- ${fmtMoney(appliedPromo.discount)}</span>
-          </div>
-        ` : ''}
-        <div class="receipt-row"><span>Comprehensive Protection</span><span style="color:#059669;font-weight:600;">Included Free</span></div>
-        <div class="receipt-row"><span>Sanitation &amp; Prep</span><span style="color:#059669;font-weight:600;">Included Free</span></div>
-        <div class="divider"></div>
-        <div class="receipt-row receipt-total"><span>Total Estimated Cost</span><span>${fmtMoney(finalAmount)}</span></div>
-      </div>
-
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
-        <p style="font-size:0.78rem;color:#0369a1;line-height:1.5;margin:0;">
-          Staff will review your booking request and notify you once approved. You will be able to complete payment online or upon physical pickup of the vehicle.
-        </p>
-      </div>
-
-      <button class="btn btn-primary btn-block" id="confirmClose">View My Bookings</button>
-    `);
-
-    $('#confirmClose').addEventListener('click', () => {
-      closeModal();
-      state.tab = 'bookings';
-      if (window.renderShell) {
-        window.renderShell();
-      }
-    });
+    state.tab = 'bookings';
+    if (window.renderShell) {
+      window.renderShell();
+    }
+    if (selectedPaymentTiming === 'pay_now') {
+      toast('Booking submitted! Maaari ka nang magbayad online gamit ang "Pay Now" button sa My Bookings.', 'success');
+    } else {
+      toast('Booking submitted! Naka-reserve para sa Cash payment kapag na-pickup o na-meetup na ang sasakyan.', 'success');
+    }
   });
 }
+
