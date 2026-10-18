@@ -546,5 +546,741 @@
   border-color: #475569;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   HERTZ / BOOKING.COM STYLE TWO-MONTH DATE RANGE PICKER
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Date Bar Header with Pickup / Return Display Cards */
+.cal-booking-inputs-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.cal-input-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.cal-input-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.cal-input-card.active {
+  background: #ffffff;
+  border-color: #1e293b;
+  box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.12);
+}
+
+.cal-input-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.cal-input-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-date-text {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cal-time-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  background: #ede9fe;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.cal-input-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.cal-summary-pill {
+  padding: 8px 14px;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.cal-summary-days {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+}
+
+/* Dual-Month Popover / Widget Container */
+.custom-calendar.cal-dual-layout {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* Dual Header */
+.cal-dual-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr 36px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cal-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  font-size: 0.85rem;
+  transition: all 0.18s ease;
+}
+
+.cal-nav-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.cal-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cal-panel-title {
+  text-align: center;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+/* Dual Months Grid (Side-by-Side) */
+.cal-dual-months {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.cal-dual-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Weekday Row: S M T W T F S */
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+/* Days Grid: 7 columns */
+.cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+/* Day Tiles */
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.cal-day-empty {
+  cursor: default;
+  background: transparent !important;
+}
+
+/* Past Dates - muted, plain text, no colored bg */
+.cal-day-past {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+/* Booked Dates */
+.cal-day-booked {
+  background: #f1f5f9 !important;
+  color: #cbd5e1 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+/* Available Dates - Colored rounded blocks according to price tier */
+.cal-day-price-low {
+  background: #71deb5;
+  color: #0f172a;
+}
+
+.cal-day-price-mid {
+  background: #fbc072;
+  color: #0f172a;
+}
+
+.cal-day-price-high {
+  background: #fda4af;
+  color: #0f172a;
+}
+
+/* Hover effects */
+.cal-day-price:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+}
+
+/* Selected Range - Dark charcoal / navy pills matching screenshot */
+.cal-dual-layout .cal-day-selected,
+.cal-day-selected {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  z-index: 4;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.35);
+}
+
+.cal-dual-layout .cal-day-start,
+.cal-day-start {
+  border-radius: 8px 0 0 8px !important;
+}
+
+.cal-dual-layout .cal-day-end,
+.cal-day-end {
+  border-radius: 0 8px 8px 0 !important;
+}
+
+.cal-dual-layout .cal-day-single,
+.cal-day-single {
+  border-radius: 8px !important;
+}
+
+/* In-range days */
+.cal-dual-layout .cal-day-in-range,
+.cal-day-in-range {
+  background: #273549 !important;
+  color: #ffffff !important;
+  border-radius: 0 !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+/* Hover Range Preview */
+.cal-dual-layout .cal-day-hover-in-range,
+.cal-day-hover-in-range {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #ffffff !important;
+  border-radius: 0 !important;
+}
+
+/* Price Legend at Bottom */
+.cal-price-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.cal-price-legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.cal-legend-pill {
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.2px;
+}
+
+.cal-pill-low {
+  background: #71deb5;
+  color: #0f172a;
+}
+
+.cal-pill-mid {
+  background: #fbc072;
+  color: #0f172a;
+}
+
+.cal-pill-high {
+  background: #fda4af;
+  color: #0f172a;
+}
+
+.cal-legend-note {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENTAL EXTENSION MODAL STYLES
+   ══════════════════════════════════════════════════════════════════ */
+.ext-modal-wrap {
+  width: 100%;
+  max-width: 580px;
+}
+
+.ext-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.ext-v-img {
+  width: 90px;
+  height: 65px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.ext-summary-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ext-v-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ext-sub-info {
+  font-size: 0.78rem;
+  color: var(--text-mid, #64748b);
+  margin-bottom: 6px;
+}
+
+.ext-date-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ext-badge-old {
+  font-size: 0.72rem;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #475569;
+}
+
+.ext-badge-new {
+  font-size: 0.72rem;
+  background: #f5f3ff;
+  border: 1px solid #c4b5fd;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--accent, #7c3aed);
+}
+
+.ext-section-box {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.ext-quick-days {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ext-day-chip {
+  flex: 1;
+  min-width: 60px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+  user-select: none;
+}
+
+.ext-day-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.ext-day-chip.active {
+  background: #1e293b;
+  border-color: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.25);
+}
+
+.ext-stepper-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.ext-stepper-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.ext-stepper-btn:hover {
+  background: #e2e8f0;
+}
+
+.ext-stepper-val {
+  flex: 1;
+  border: none;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+  padding: 0;
+  background: transparent;
+}
+
+.ext-date-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  outline: none;
+}
+
+.ext-date-input:focus {
+  border-color: var(--accent, #7c3aed);
+}
+
+.ext-calc-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.ext-calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.ext-calc-row.highlight {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 8px 0;
+}
+
+.ext-calc-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 6px 0;
+}
+
+.ext-calc-row.total-row {
+  padding-top: 8px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ext-new-total {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+}
+
+.ext-calc-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+}
+
+.ext-checking-box {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ext-alert-danger {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #991b1b;
+  display: flex;
+  gap: 10px;
+  font-size: 0.84rem;
+}
+
+.ext-alert-success {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #065f46;
+  display: flex;
+  gap: 10px;
+  font-size: 0.84rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DARK MODE ADAPTATIONS
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .cal-booking-inputs-bar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cal-input-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cal-input-card.active {
+  background: #1e293b;
+  border-color: #94a3b8;
+}
+
+[data-theme="dark"] .cal-date-text {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .cal-time-badge {
+  background: rgba(124, 58, 237, 0.25);
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .custom-calendar.cal-dual-layout {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .cal-panel-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .cal-nav-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .cal-day-past {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .cal-price-legend {
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] .cal-legend-note {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ext-summary-card,
+[data-theme="dark"] .ext-section-box,
+[data-theme="dark"] .ext-calc-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .ext-day-chip {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .ext-day-chip.active {
+  background: var(--accent, #7c3aed);
+  border-color: var(--accent, #7c3aed);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ext-stepper-wrap {
+  border-color: #475569;
+  background: #0f172a;
+}
+
+[data-theme="dark"] .ext-stepper-btn {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .ext-stepper-val,
+[data-theme="dark"] .ext-date-input {
+  color: #f8fafc;
+  background: #0f172a;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .ext-calc-row {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ext-calc-row.highlight,
+[data-theme="dark"] .ext-calc-row.total-row {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .ext-calc-divider {
+  background: #334155;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (MOBILE & TABLET)
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .cal-dual-months {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .cal-dual-header {
+    grid-template-columns: 36px 1fr 36px;
+    gap: 8px;
+  }
+
+  .cal-panel-title-right {
+    display: none;
+  }
+
+  .cal-booking-inputs-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cal-input-divider {
+    transform: rotate(90deg);
+    margin: 2px 0;
+  }
+
+  .cal-summary-pill {
+    width: 100%;
+  }
+
+  .custom-calendar.cal-dual-layout {
+    padding: 14px 12px;
+  }
+}
+
+
 
 

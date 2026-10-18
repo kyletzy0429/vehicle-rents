@@ -6,7 +6,15 @@ import { openRefundVoucherModal } from './customer.js';
 import { broadcastBookingStatusChange } from './realtime.js';
 
 export async function renderStaff(tab, view) {
+  if (window._activeStaffPageScanner) {
+    try {
+      if (window._activeStaffPageScanner.isScanning) await window._activeStaffPageScanner.stop();
+      window._activeStaffPageScanner.clear();
+    } catch(e) {}
+    window._activeStaffPageScanner = null;
+  }
   if (tab === 'dashboard') return renderStaffDashboard(view);
+  if (tab === 'scanner') return renderStaffScanner(view);
   if (tab === 'requests') return renderStaffRequests(view);
   if (tab === 'active') return renderStaffActive(view);
   if (tab === 'returns') return renderStaffReturns(view);
@@ -619,7 +627,10 @@ export async function renderStaffActive(view) {
                 </div>
               </div>
               ${badgeHTML}
-              <div class="item-actions">${actionBtn}</div>
+              <div class="item-actions">
+                ${actionBtn}
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')"><i class="fa-solid fa-clock-rotate-left"></i> Extend</button>
+              </div>
             </div>
           `;
   }).join('') : emptyState('', 'No approved or active rentals.')}
@@ -1119,7 +1130,7 @@ export function openVehicleForm(id) {
         </select>
       </div>
       <div class="field">
-        <label>Daily Rental Rate (₱ / day)</label>
+        <label>Daily Rental Rate (per day)</label>
         <input id="fRate" type="number" step="50" min="100" value="${currentRate}" placeholder="e.g. 2500" required />
       </div>
       <div class="field" id="fMaintDaysBox" style="${(v?.status === 'in_service' || v?.status === 'maintenance' || v?.status === 'scheduled_maint') ? '' : 'display:none;'}">
@@ -1801,10 +1812,28 @@ export async function renderAdminRentals(view) {
 
   view.innerHTML = `
     <div class="view">
-      <div class="section-head"><div><h2>Rentals &amp; Transactions</h2><p>Every booking and its payment status.</p></div></div>
+      <div class="section-head">
+        <div>
+          <h2>Rentals &amp; Transactions</h2>
+          <p>Every booking, rental duration, and payment status.</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal()">
+          <i class="fa-solid fa-clock-rotate-left"></i> Extend a Rental
+        </button>
+      </div>
       <div class="glass" style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Vehicle</th><th>Customer</th><th>Dates</th><th>Amount</th><th>Status</th><th>Payments</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Customer</th>
+              <th>Dates</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payments</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
           <tbody>
             ${bookings.map(b => `
               <tr>
@@ -1814,8 +1843,13 @@ export async function renderAdminRentals(view) {
                 <td>${fmtMoney(b.total_amount)}</td>
                 <td><span class="badge badge-${b.status}">${b.status}</span></td>
                 <td>${(b.payments || []).map(p => `<span class="badge badge-${p.status}" style="margin-right:4px;">${fmtMoney(p.amount)}</span>`).join('') || '—'}</td>
+                <td>
+                  ${['approved', 'active', 'reserved'].includes(b.status)
+                    ? `<button type="button" class="btn btn-secondary btn-xs" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')"><i class="fa-solid fa-clock-rotate-left"></i> Extend</button>`
+                    : '—'}
+                </td>
               </tr>
-            `).join('') || `<tr><td colspan="6" class="center muted">No bookings yet.</td></tr>`}
+            `).join('') || `<tr><td colspan="7" class="center muted">No bookings yet.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -2007,7 +2041,7 @@ export async function openLogServiceModal(vehicleId) {
         </select>
       </div>
       <div class="field">
-        <label>Estimated Cost (₱)</label>
+        <label>Estimated Cost</label>
         <input type="number" id="srvCost" placeholder="e.g. 4500" value="3500" />
       </div>
       <div class="field">
@@ -2325,7 +2359,7 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
           </div>
           <div class="field">
             <label>Operating Currency</label>
-            <input type="text" id="cfgCompCurrency" value="${comp.currency || '₱ (PHP)'}" placeholder="₱ (PHP)" />
+            <input type="text" id="cfgCompCurrency" value="${comp.currency || 'PHP'}" placeholder="PHP" />
           </div>
         </div>
 
@@ -2366,7 +2400,7 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
             </select>
           </div>
           <div class="field">
-            <label>Overdue / Late Return Fee (₱ per hour)</label>
+            <label>Overdue / Late Return Fee (per hour)</label>
             <input type="number" id="cfgLateFee" value="${pol.lateFeePerHour || 300}" min="0" step="50" />
           </div>
         </div>
@@ -2586,45 +2620,395 @@ export function attachSettingsFormListeners(view, currentSettings) {
   }
 }
 
+// ==========================================
+// VENUE EXPRESS QR PASS SCANNER ENGINE
+// ==========================================
+
+let activeModalQrScanner = null;
+window._activeStaffPageScanner = null;
+
+export function playScanBeep() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  } catch (e) {}
+}
+
+export function parseScannedQrCode(text) {
+  if (!text) return '';
+  const str = String(text).trim();
+
+  // 1. REF CODE: BK-... (ID: #...)
+  const refCodeMatch = str.match(/REF\s*CODE:\s*([A-Za-z0-9_-]+)/i);
+  if (refCodeMatch && refCodeMatch[1]) return refCodeMatch[1];
+
+  // 2. ID: #...
+  const idMatch = str.match(/ID:\s*#?([A-Za-z0-9_-]+)/i);
+  if (idMatch && idMatch[1]) return idMatch[1];
+
+  // 3. BK-... pattern
+  const bkMatch = str.match(/BK-[A-Za-z0-9_-]+/i);
+  if (bkMatch) return bkMatch[0];
+
+  // 4. REF-... pattern
+  const refMatch = str.match(/REF-[A-Za-z0-9_-]+/i);
+  if (refMatch) return refMatch[0];
+
+  // 5. URL parameter match (?ref=... or ?id=...)
+  const urlParamMatch = str.match(/[?&](?:ref|id|code)=([A-Za-z0-9_-]+)/i);
+  if (urlParamMatch) return urlParamMatch[1];
+
+  return str.split('\n')[0].trim();
+}
+
+function renderVerifiedPassCard(b, onScanAgain, onDismiss) {
+  const v = b.vehicles || {};
+  const cName = getBookingCustomerName(b);
+  const cPhone = getBookingCustomerPhone(b);
+  const isPartial = b.balance_due && Number(b.balance_due) > 0;
+
+  return `
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="badge badge-completed" style="font-size:0.78rem;">
+          <i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> PASS VERIFIED · ${b.status.toUpperCase()}
+        </span>
+        <span style="font-family:monospace;font-weight:800;color:#0f172a;font-size:0.88rem;">
+          ${b.ref_number || ('#' + b.id)}
+        </span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;color:#1e293b;margin-bottom:14px;">
+        <div><span style="color:#64748b;">Customer:</span> <strong>${cName}</strong></div>
+        <div><span style="color:#64748b;">Phone:</span> <strong>${cPhone || 'N/A'}</strong></div>
+        <div><span style="color:#64748b;">Vehicle:</span> <strong>${v.name || 'Vehicle'}</strong></div>
+        <div><span style="color:#64748b;">Plate:</span> <strong>${v.plate_number ? maskPlate(v.plate_number) : 'N/A'}</strong></div>
+        <div><span style="color:#64748b;">Rental Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+        <div><span style="color:#64748b;">Payment:</span> <strong style="color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)} Paid</strong></div>
+        <div style="grid-column:span 2;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;margin-top:4px;">
+          ${isPartial
+            ? `<span style="color:#d97706;font-weight:700;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> Remaining Balance Due: ${fmtMoney(b.balance_due)}</span> (Collect before key handover)`
+            : `<span style="color:#059669;font-weight:700;"><i class="fa-solid fa-check-double" style="margin-right:4px;"></i> Fully Paid (0.00 Balance Due)</span>`}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnPassViewReceipt" style="flex:1;">
+          <i class="fa-solid fa-receipt" style="margin-right:4px;"></i> View Receipt &amp; QR
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnPassCheckIn" style="flex:1;">
+          <i class="fa-solid fa-key" style="margin-right:4px;"></i> Release Vehicle &amp; Handover
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnPassScanAnother" style="flex:1;background:#fff;border:1px solid #cbd5e1;">
+          <i class="fa-solid fa-camera" style="margin-right:4px;"></i> Scan Another
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 export function openVenuePassVerificationModal(bookings = []) {
   const modal = openModal(`
-    <div class="modal-head" style="margin-bottom:12px;">
-      <div>
-        <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;"><i class="fa-solid fa-qrcode" style="color:var(--accent);margin-right:6px;"></i> Venue Express QR Pass Verification</h3>
-        <span class="muted" style="font-size:0.78rem;">Scan customer QR code pass or enter Booking / Reference Code</span>
+    <div class="modal-head" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(124,58,237,0.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.15rem;">
+          <i class="fa-solid fa-qrcode"></i>
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;">Venue Express QR Pass Verification</h3>
+          <span class="muted" style="font-size:0.78rem;">Live camera scanning, image upload, and fast check-in</span>
+        </div>
       </div>
-      <div class="modal-close" id="mClosePass" onclick="window.closeModal()">Close</div>
+      <div class="modal-close" id="mClosePass">Close</div>
     </div>
 
-    <div style="margin:16px 0;">
-      <div class="field">
-        <label style="font-weight:700;font-size:0.82rem;color:#334155;">Scan or Enter Booking Reference / Pass Code</label>
+    <!-- Mode Tabs: Camera, Upload, Manual -->
+    <div class="qr-mode-tabs" id="qrModalTabs">
+      <button type="button" class="qr-mode-tab active" data-tab="camera">
+        <i class="fa-solid fa-camera"></i> Live Camera
+      </button>
+      <button type="button" class="qr-mode-tab" data-tab="upload">
+        <i class="fa-solid fa-image"></i> Upload QR Image
+      </button>
+      <button type="button" class="qr-mode-tab" data-tab="manual">
+        <i class="fa-solid fa-keyboard"></i> Manual Code
+      </button>
+    </div>
+
+    <!-- Live Camera Scanner -->
+    <div id="qrModalCameraSection">
+      <div class="qr-reader-wrap" id="qrModalReaderWrap">
+        <div id="qrModalReader" style="width:100%;height:100%;"></div>
+        <div class="qr-scanner-reticle" id="qrModalReticle" style="display:none;">
+          <div class="qr-laser-line"></div>
+        </div>
+        <div class="qr-cam-toolbar" id="qrModalToolbar" style="display:none;">
+          <button type="button" class="qr-cam-btn" id="qrModalFlipBtn" title="Switch Camera">
+            <i class="fa-solid fa-camera-rotate"></i> Flip
+          </button>
+          <button type="button" class="qr-cam-btn" id="qrModalStopBtn" title="Stop Camera" style="color:#ef4444;">
+            <i class="fa-solid fa-stop"></i> Stop
+          </button>
+        </div>
+        <div id="qrModalStartOverlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,23,42,0.85);color:#fff;padding:20px;text-align:center;z-index:4;">
+          <i class="fa-solid fa-expand" style="font-size:2.4rem;color:#c084fc;margin-bottom:12px;"></i>
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Camera QR Scanner Ready</div>
+          <p style="font-size:0.78rem;color:#94a3b8;margin:0 0 16px;max-width:280px;">Align customer QR pass within camera viewfinder to verify instantly.</p>
+          <button type="button" class="btn btn-primary btn-sm" id="qrModalStartBtn" style="padding:8px 18px;font-size:0.85rem;">
+            <i class="fa-solid fa-video" style="margin-right:6px;"></i> Start Camera
+          </button>
+        </div>
+      </div>
+      <div id="qrModalCamNotice" style="text-align:center;font-size:0.75rem;color:#64748b;margin-bottom:12px;">
+        Supports smartphone cameras, laptop webcams &amp; physical barcode/QR scans.
+      </div>
+    </div>
+
+    <!-- Upload Image Section -->
+    <div id="qrModalUploadSection" style="display:none;margin-bottom:16px;">
+      <div class="qr-dropzone" id="qrModalDropzone">
+        <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.2rem;color:var(--accent);margin-bottom:8px;display:block;"></i>
+        <div style="font-weight:700;font-size:0.88rem;color:#0f172a;margin-bottom:4px;">Upload or Drop QR Code Photo</div>
+        <div style="font-size:0.75rem;color:#64748b;margin-bottom:12px;">Choose a photo or screenshot from the customer's phone</div>
+        <input type="file" id="qrModalFileInput" accept="image/*" style="display:none;" />
+        <button type="button" class="btn btn-ghost btn-sm" id="qrModalFileSelectBtn" style="border:1px solid #cbd5e1;background:#fff;">
+          <i class="fa-solid fa-folder-open" style="margin-right:6px;"></i> Choose Image File
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Code Section -->
+    <div id="qrModalManualSection" style="display:none;margin-bottom:16px;">
+      <div class="field" style="margin:0;">
+        <label style="font-weight:700;font-size:0.82rem;color:#334155;">Enter Booking Reference / Pass Code</label>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="venuePassInput" placeholder="e.g. BK-..., REF-..., or Booking ID" style="flex:1;font-size:0.95rem;font-family:monospace;padding:10px 12px;" autofocus />
+          <input type="text" id="venuePassInput" placeholder="e.g. BK-..., REF-..., or Booking ID" style="flex:1;font-size:0.95rem;font-family:monospace;padding:10px 12px;" />
           <button type="button" class="btn btn-primary" id="btnLookupPass"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Verify</button>
         </div>
       </div>
     </div>
 
-    <div id="venuePassResult" style="min-height:120px;">
-      <div style="text-align:center;padding:24px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
-        <i class="fa-solid fa-barcode" style="font-size:2rem;margin-bottom:8px;color:#94a3b8;display:block;"></i>
-        <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or reference code entry…</div>
-        <div style="font-size:0.75rem;margin-top:4px;">I-scan gamit ang scanner o i-type ang code mula sa resibo ng customer.</div>
+    <!-- Result Area -->
+    <div id="venuePassResult" style="min-height:100px;">
+      <div style="text-align:center;padding:20px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+        <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
+        <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or code entry…</div>
+        <div style="font-size:0.75rem;margin-top:4px;">Start camera scanner above, upload a QR photo, or enter reference code.</div>
       </div>
     </div>
-  `);
+  `, true);
 
   const input = modal.querySelector('#venuePassInput');
   const btn = modal.querySelector('#btnLookupPass');
   const result = modal.querySelector('#venuePassResult');
   const mClose = modal.querySelector('#mClosePass');
-  if (mClose) mClose.addEventListener('click', closeModal);
 
-  async function doLookup() {
-    const raw = (input.value || '').trim();
+  const camSection = modal.querySelector('#qrModalCameraSection');
+  const uploadSection = modal.querySelector('#qrModalUploadSection');
+  const manualSection = modal.querySelector('#qrModalManualSection');
+
+  const startBtn = modal.querySelector('#qrModalStartBtn');
+  const stopBtn = modal.querySelector('#qrModalStopBtn');
+  const flipBtn = modal.querySelector('#qrModalFlipBtn');
+  const startOverlay = modal.querySelector('#qrModalStartOverlay');
+  const reticle = modal.querySelector('#qrModalReticle');
+  const toolbar = modal.querySelector('#qrModalToolbar');
+  const camNotice = modal.querySelector('#qrModalCamNotice');
+
+  const dropzone = modal.querySelector('#qrModalDropzone');
+  const fileInput = modal.querySelector('#qrModalFileInput');
+  const fileSelectBtn = modal.querySelector('#qrModalFileSelectBtn');
+
+  let camerasList = [];
+  let currentCamIdx = 0;
+
+  // Cleanup helper
+  const cleanupCamera = async () => {
+    if (activeModalQrScanner) {
+      try {
+        if (activeModalQrScanner.isScanning) await activeModalQrScanner.stop();
+        activeModalQrScanner.clear();
+      } catch (e) {}
+      activeModalQrScanner = null;
+    }
+  };
+
+  const closeModalSafe = async () => {
+    await cleanupCamera();
+    closeModal();
+  };
+
+  if (mClose) mClose.addEventListener('click', closeModalSafe);
+
+  // Tab switching
+  modal.querySelectorAll('#qrModalTabs .qr-mode-tab').forEach(tabBtn => {
+    tabBtn.addEventListener('click', async () => {
+      modal.querySelectorAll('#qrModalTabs .qr-mode-tab').forEach(t => t.classList.remove('active'));
+      tabBtn.classList.add('active');
+      const target = tabBtn.dataset.tab;
+
+      if (target === 'camera') {
+        camSection.style.display = 'block';
+        uploadSection.style.display = 'none';
+        manualSection.style.display = 'none';
+      } else if (target === 'upload') {
+        await stopCamera();
+        camSection.style.display = 'none';
+        uploadSection.style.display = 'block';
+        manualSection.style.display = 'none';
+      } else if (target === 'manual') {
+        await stopCamera();
+        camSection.style.display = 'none';
+        uploadSection.style.display = 'none';
+        manualSection.style.display = 'block';
+        input.focus();
+      }
+    });
+  });
+
+  // Start Camera
+  async function startCamera() {
+    if (typeof window.Html5Qrcode === 'undefined') {
+      toast('Scanner library loading. Please wait a moment.', 'info');
+      return;
+    }
+
+    try {
+      if (!activeModalQrScanner) {
+        activeModalQrScanner = new window.Html5Qrcode('qrModalReader');
+      }
+
+      try {
+        camerasList = await window.Html5Qrcode.getCameras();
+      } catch (e) {
+        camerasList = [];
+      }
+
+      const cameraConfig = camerasList.length > 0 
+        ? camerasList[currentCamIdx % camerasList.length].id 
+        : { facingMode: 'environment' };
+
+      await activeModalQrScanner.start(
+        cameraConfig,
+        {
+          fps: 15,
+          qrbox: { width: 230, height: 230 },
+          aspectRatio: 1.0
+        },
+        (decodedText) => {
+          playScanBeep();
+          toast('QR Code detected!', 'success');
+          stopCamera();
+          const parsed = parseScannedQrCode(decodedText);
+          input.value = parsed;
+          doLookup(parsed);
+        },
+        () => {}
+      );
+
+      if (startOverlay) startOverlay.style.display = 'none';
+      if (reticle) reticle.style.display = 'block';
+      if (toolbar) toolbar.style.display = 'flex';
+      if (camNotice) camNotice.innerHTML = '<span style="color:#059669;font-weight:700;">● Camera Active</span> — Align QR code inside frame.';
+    } catch (err) {
+      console.warn('Camera failed to start:', err);
+      if (startOverlay) startOverlay.style.display = 'flex';
+      if (reticle) reticle.style.display = 'none';
+      if (toolbar) toolbar.style.display = 'none';
+      if (camNotice) camNotice.innerHTML = `<span style="color:#dc2626;font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Camera permission needed or unavailable.</span> Use Upload QR Image or Manual Code.`;
+      toast('Camera notice: ' + (err.message || 'Permission denied'), 'error');
+    }
+  }
+
+  // Stop Camera
+  async function stopCamera() {
+    if (activeModalQrScanner && activeModalQrScanner.isScanning) {
+      try {
+        await activeModalQrScanner.stop();
+      } catch(e) {}
+    }
+    if (startOverlay) startOverlay.style.display = 'flex';
+    if (reticle) reticle.style.display = 'none';
+    if (toolbar) toolbar.style.display = 'none';
+    if (camNotice) camNotice.innerHTML = 'Camera paused. Click Start Camera to resume scanning.';
+  }
+
+  // Flip Camera
+  async function flipCamera() {
+    if (camerasList.length > 1) {
+      currentCamIdx = (currentCamIdx + 1) % camerasList.length;
+      await stopCamera();
+      await startCamera();
+      toast('Switched camera', 'info');
+    } else {
+      toast('Only 1 camera detected on this system.', 'info');
+    }
+  }
+
+  if (startBtn) startBtn.addEventListener('click', startCamera);
+  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
+  if (flipBtn) flipBtn.addEventListener('click', flipCamera);
+
+  // File Upload handling
+  if (fileSelectBtn) fileSelectBtn.addEventListener('click', () => fileInput.click());
+  if (dropzone) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== fileSelectBtn) fileInput.click();
+    });
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processUploadedQrFile(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processUploadedQrFile(e.target.files[0]);
+      }
+    });
+  }
+
+  async function processUploadedQrFile(file) {
+    if (typeof window.Html5Qrcode === 'undefined') {
+      toast('Scanner library loading. Please try again.', 'info');
+      return;
+    }
+    toast('Scanning uploaded image for QR code…', 'info');
+    try {
+      const tempScanner = activeModalQrScanner || new window.Html5Qrcode('qrModalReader');
+      const decodedText = await tempScanner.scanFile(file, true);
+      playScanBeep();
+      toast('QR Code verified from image!', 'success');
+      const parsed = parseScannedQrCode(decodedText);
+      input.value = parsed;
+      doLookup(parsed);
+    } catch (err) {
+      console.warn('QR file decoding failed:', err);
+      toast('No readable QR code found in uploaded image. Please try another photo.', 'error');
+    }
+  }
+
+  // Lookup & Verification logic
+  async function doLookup(overrideCode = '') {
+    const raw = (overrideCode || input.value || '').trim();
     if (!raw) {
-      toast('Please enter a Booking Reference or ID.', 'error');
+      toast('Please enter or scan a Booking Reference or ID.', 'error');
       return;
     }
     const clean = raw.toLowerCase();
@@ -2644,52 +3028,41 @@ export function openVenuePassVerificationModal(bookings = []) {
           <i class="fa-solid fa-circle-xmark" style="font-size:1.8rem;margin-bottom:6px;display:block;"></i>
           <strong>Pass Not Found</strong>
           <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${raw}</strong>". Pakisuri ang reference code sa resibo.</p>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnModalRetryScan" style="margin-top:10px;color:#991b1b;border:1px solid #fca5a5;">
+            <i class="fa-solid fa-camera" style="margin-right:4px;"></i> Scan Another Pass
+          </button>
         </div>
       `;
+      const retryBtn = result.querySelector('#btnModalRetryScan');
+      if (retryBtn) retryBtn.onclick = () => {
+        input.value = '';
+        startCamera();
+      };
       return;
     }
 
-    const v = b.vehicles || {};
-    const cName = getBookingCustomerName(b);
-    const cPhone = getBookingCustomerPhone(b);
-    const isPartial = b.balance_due && Number(b.balance_due) > 0;
-
-    result.innerHTML = `
-      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <span class="badge badge-completed" style="font-size:0.78rem;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> PASS VERIFIED · ${b.status.toUpperCase()}</span>
-          <span style="font-family:monospace;font-weight:800;color:#0f172a;font-size:0.88rem;">${b.ref_number || ('#' + b.id)}</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;color:#1e293b;margin-bottom:14px;">
-          <div><span style="color:#64748b;">Customer:</span> <strong>${cName}</strong></div>
-          <div><span style="color:#64748b;">Phone:</span> <strong>${cPhone || 'N/A'}</strong></div>
-          <div><span style="color:#64748b;">Vehicle:</span> <strong>${v.name || 'Vehicle'}</strong></div>
-          <div><span style="color:#64748b;">Plate:</span> <strong>${v.plate_number ? maskPlate(v.plate_number) : 'N/A'}</strong></div>
-          <div><span style="color:#64748b;">Rental Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
-          <div><span style="color:#64748b;">Payment:</span> <strong style="color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)} Paid</strong></div>
-          <div style="grid-column:span 2;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;margin-top:4px;">
-            ${isPartial
-              ? `<span style="color:#d97706;font-weight:700;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> Remaining Balance Due: ${fmtMoney(b.balance_due)}</span> (Collect prior to vehicle release)`
-              : `<span style="color:#059669;font-weight:700;"><i class="fa-solid fa-check-double" style="margin-right:4px;"></i> Fully Paid (₱0.00 Balance Due)</span>`}
-          </div>
-        </div>
-
-        <div style="display:flex;gap:8px;">
-          <button type="button" class="btn btn-ghost btn-sm" id="btnPassViewReceipt" style="flex:1;">
-            <i class="fa-solid fa-receipt" style="margin-right:4px;"></i> View Receipt &amp; QR
-          </button>
-          <button type="button" class="btn btn-primary btn-sm" id="btnPassCheckIn" style="flex:1;">
-            <i class="fa-solid fa-key" style="margin-right:4px;"></i> Release Vehicle &amp; Handover
-          </button>
-        </div>
-      </div>
-    `;
+    result.innerHTML = renderVerifiedPassCard(b);
 
     const viewRcpt = result.querySelector('#btnPassViewReceipt');
     if (viewRcpt) {
-      viewRcpt.onclick = () => {
-        closeModal();
+      viewRcpt.onclick = async () => {
+        await closeModalSafe();
         if (window.openPaidReceiptModal) window.openPaidReceiptModal(b.id);
+      };
+    }
+
+    const scanAnother = result.querySelector('#btnPassScanAnother');
+    if (scanAnother) {
+      scanAnother.onclick = () => {
+        input.value = '';
+        result.innerHTML = `
+          <div style="text-align:center;padding:20px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+            <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
+            <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or code entry…</div>
+            <div style="font-size:0.75rem;margin-top:4px;">Start camera scanner above, upload a QR photo, or enter reference code.</div>
+          </div>
+        `;
+        startCamera();
       };
     }
 
@@ -2697,6 +3070,7 @@ export function openVenuePassVerificationModal(bookings = []) {
     if (checkInBtn) {
       checkInBtn.onclick = async () => {
         updateLocalBookingStatus(b.id, 'active');
+        broadcastBookingStatusChange(b.id, 'active');
         try {
           await supabase.from('bookings').update({ status: 'active' }).eq('id', b.id);
           if (b.vehicle_id) {
@@ -2704,19 +3078,449 @@ export function openVenuePassVerificationModal(bookings = []) {
           }
         } catch (e) {}
         toast(`Vehicle handover confirmed! Booking #${b.id} is now Active.`, 'success');
-        closeModal();
+        await closeModalSafe();
         if (window.renderTab) window.renderTab();
       };
     }
   }
 
-  if (btn) btn.addEventListener('click', doLookup);
+  if (btn) btn.addEventListener('click', () => doLookup());
   if (input) {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') doLookup();
     });
   }
+
+  // Auto-attempt starting camera if supported
+  setTimeout(() => {
+    startCamera();
+  }, 250);
+}
+
+export async function renderStaffScanner(view) {
+  const bookings = await fetchMergedBookings();
+  const pendingHandovers = bookings.filter(b => (b.status === 'approved' || b.status === 'pending' || b.status === 'active'));
+
+  view.innerHTML = `
+    <div class="view">
+      <div class="section-head" style="margin-bottom:20px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Venue QR Pass Scanner</h2>
+            <span class="badge badge-completed" style="font-size:0.72rem;"><i class="fa-solid fa-bolt" style="margin-right:4px;"></i> Live Operations</span>
+          </div>
+          <p style="color:#64748b;font-size:0.85rem;margin:0;">
+            Scan customer QR venue passes with camera, upload photos/screenshots, or verify reference codes for fast vehicle handover.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="gap:24px;align-items:start;">
+        <!-- Scanner Column -->
+        <div class="glass card qr-scanner-card" style="padding:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">
+              <i class="fa-solid fa-qrcode" style="color:var(--accent);margin-right:6px;"></i> Scan Customer Pass
+            </h3>
+            <span style="font-size:0.75rem;color:#64748b;">Zero-delay venue check-in</span>
+          </div>
+
+          <!-- Mode Tabs -->
+          <div class="qr-mode-tabs" id="pageQrTabs">
+            <button type="button" class="qr-mode-tab active" data-tab="camera">
+              <i class="fa-solid fa-camera"></i> Live Camera
+            </button>
+            <button type="button" class="qr-mode-tab" data-tab="upload">
+              <i class="fa-solid fa-image"></i> Upload QR Image
+            </button>
+            <button type="button" class="qr-mode-tab" data-tab="manual">
+              <i class="fa-solid fa-keyboard"></i> Manual Code
+            </button>
+          </div>
+
+          <!-- Live Camera Section -->
+          <div id="pageQrCameraSection">
+            <div class="qr-reader-wrap" id="pageQrReaderWrap">
+              <div id="pageQrReader" style="width:100%;height:100%;"></div>
+              <div class="qr-scanner-reticle" id="pageQrReticle" style="display:none;">
+                <div class="qr-laser-line"></div>
+              </div>
+              <div class="qr-cam-toolbar" id="pageQrToolbar" style="display:none;">
+                <button type="button" class="qr-cam-btn" id="pageQrFlipBtn" title="Switch Camera">
+                  <i class="fa-solid fa-camera-rotate"></i> Flip
+                </button>
+                <button type="button" class="qr-cam-btn" id="pageQrStopBtn" title="Stop Camera" style="color:#ef4444;">
+                  <i class="fa-solid fa-stop"></i> Stop
+                </button>
+              </div>
+              <div id="pageQrStartOverlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,23,42,0.85);color:#fff;padding:20px;text-align:center;z-index:4;">
+                <i class="fa-solid fa-expand" style="font-size:2.4rem;color:#c084fc;margin-bottom:12px;"></i>
+                <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Camera Scanner Ready</div>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0 0 16px;max-width:260px;">Point camera at customer smartphone QR code to scan.</p>
+                <button type="button" class="btn btn-primary btn-sm" id="pageQrStartBtn" style="padding:8px 18px;font-size:0.85rem;">
+                  <i class="fa-solid fa-video" style="margin-right:6px;"></i> Start Camera
+                </button>
+              </div>
+            </div>
+            <div id="pageQrCamNotice" style="text-align:center;font-size:0.75rem;color:#64748b;margin-bottom:12px;">
+              Supports smartphone rear/front cameras, laptop webcams &amp; QR guns.
+            </div>
+          </div>
+
+          <!-- Upload Image Section -->
+          <div id="pageQrUploadSection" style="display:none;margin-bottom:16px;">
+            <div class="qr-dropzone" id="pageQrDropzone">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.2rem;color:var(--accent);margin-bottom:8px;display:block;"></i>
+              <div style="font-weight:700;font-size:0.88rem;color:#0f172a;margin-bottom:4px;">Upload or Drop QR Code Photo</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-bottom:12px;">Select image or screenshot of the venue pass</div>
+              <input type="file" id="pageQrFileInput" accept="image/*" style="display:none;" />
+              <button type="button" class="btn btn-ghost btn-sm" id="pageQrFileSelectBtn" style="border:1px solid #cbd5e1;background:#fff;">
+                <i class="fa-solid fa-folder-open" style="margin-right:6px;"></i> Choose Image File
+              </button>
+            </div>
+          </div>
+
+          <!-- Manual Code Section -->
+          <div id="pageQrManualSection" style="display:none;margin-bottom:16px;">
+            <div class="field" style="margin:0;">
+              <label style="font-weight:700;font-size:0.82rem;color:#334155;">Enter Booking Reference / Pass Code</label>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="pagePassInput" placeholder="e.g. BK-..., REF-..., or Booking ID" style="flex:1;font-size:0.95rem;font-family:monospace;padding:10px 12px;" />
+                <button type="button" class="btn btn-primary" id="btnPageLookup"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Verify</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Result Area -->
+          <div id="pagePassResult">
+            <div style="text-align:center;padding:24px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+              <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
+              <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or reference code…</div>
+              <div style="font-size:0.75rem;margin-top:4px;">Point camera, upload photo, or enter reference code.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Handover Queue Column -->
+        <div class="glass card" style="padding:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">Awaiting Handover &amp; Pickups</h3>
+              <span style="font-size:0.75rem;color:#64748b;">Approved reservations ready for key release</span>
+            </div>
+            <span class="badge ${pendingHandovers.length > 0 ? 'badge-pending' : 'badge-completed'}">${pendingHandovers.length} records</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;max-height:500px;overflow-y:auto;padding-right:4px;" id="queueListWrap">
+            ${pendingHandovers.length ? pendingHandovers.map(b => {
+              const v = b.vehicles || {};
+              const cName = getBookingCustomerName(b);
+              const isFull = !b.balance_due || Number(b.balance_due) === 0;
+              return `
+                <div class="item-card" style="padding:12px 14px;border:1px solid #e2e8f0;background:#fff;border-radius:10px;cursor:pointer;" data-queue-ref="${b.ref_number || b.id}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-weight:700;font-size:0.86rem;color:#0f172a;">${v.name || 'Vehicle'}</div>
+                    <span class="badge badge-${b.status}" style="font-size:0.7rem;">${b.status.toUpperCase()}</span>
+                  </div>
+                  <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">
+                    <span>Customer: <strong>${cName}</strong></span> · <span>Plate: ${maskPlate(v.plate_number)}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;">
+                    <span style="font-family:monospace;font-weight:700;color:var(--accent);">${b.ref_number || ('#' + b.id)}</span>
+                    <span style="color:${isFull ? '#059669' : '#d97706'};font-weight:700;">${isFull ? 'Paid in Full' : `Bal Due: ${fmtMoney(b.balance_due)}`}</span>
+                  </div>
+                </div>
+              `;
+            }).join('') : `
+              <div style="text-align:center;padding:32px 16px;color:#94a3b8;">
+                <i class="fa-solid fa-calendar-check" style="font-size:2rem;margin-bottom:8px;display:block;"></i>
+                <div style="font-size:0.85rem;font-weight:600;">No pending handovers in queue</div>
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const input = view.querySelector('#pagePassInput');
+  const btn = view.querySelector('#btnPageLookup');
+  const result = view.querySelector('#pagePassResult');
+
+  const camSection = view.querySelector('#pageQrCameraSection');
+  const uploadSection = view.querySelector('#pageQrUploadSection');
+  const manualSection = view.querySelector('#pageQrManualSection');
+
+  const startBtn = view.querySelector('#pageQrStartBtn');
+  const stopBtn = view.querySelector('#pageQrStopBtn');
+  const flipBtn = view.querySelector('#pageQrFlipBtn');
+  const startOverlay = view.querySelector('#pageQrStartOverlay');
+  const reticle = view.querySelector('#pageQrReticle');
+  const toolbar = view.querySelector('#pageQrToolbar');
+  const camNotice = view.querySelector('#pageQrCamNotice');
+
+  const dropzone = view.querySelector('#pageQrDropzone');
+  const fileInput = view.querySelector('#pageQrFileInput');
+  const fileSelectBtn = view.querySelector('#pageQrFileSelectBtn');
+
+  let camerasList = [];
+  let currentCamIdx = 0;
+
+  // Tab switching
+  view.querySelectorAll('#pageQrTabs .qr-mode-tab').forEach(tabBtn => {
+    tabBtn.addEventListener('click', async () => {
+      view.querySelectorAll('#pageQrTabs .qr-mode-tab').forEach(t => t.classList.remove('active'));
+      tabBtn.classList.add('active');
+      const target = tabBtn.dataset.tab;
+
+      if (target === 'camera') {
+        camSection.style.display = 'block';
+        uploadSection.style.display = 'none';
+        manualSection.style.display = 'none';
+      } else if (target === 'upload') {
+        await stopCamera();
+        camSection.style.display = 'none';
+        uploadSection.style.display = 'block';
+        manualSection.style.display = 'none';
+      } else if (target === 'manual') {
+        await stopCamera();
+        camSection.style.display = 'none';
+        uploadSection.style.display = 'none';
+        manualSection.style.display = 'block';
+        if (input) input.focus();
+      }
+    });
+  });
+
+  // Start Camera
+  async function startCamera() {
+    if (typeof window.Html5Qrcode === 'undefined') {
+      toast('Scanner library loading. Please wait a moment.', 'info');
+      return;
+    }
+
+    try {
+      if (!window._activeStaffPageScanner) {
+        window._activeStaffPageScanner = new window.Html5Qrcode('pageQrReader');
+      }
+
+      try {
+        camerasList = await window.Html5Qrcode.getCameras();
+      } catch (e) {
+        camerasList = [];
+      }
+
+      const cameraConfig = camerasList.length > 0 
+        ? camerasList[currentCamIdx % camerasList.length].id 
+        : { facingMode: 'environment' };
+
+      await window._activeStaffPageScanner.start(
+        cameraConfig,
+        {
+          fps: 15,
+          qrbox: { width: 230, height: 230 },
+          aspectRatio: 1.0
+        },
+        (decodedText) => {
+          playScanBeep();
+          toast('QR Code detected!', 'success');
+          stopCamera();
+          const parsed = parseScannedQrCode(decodedText);
+          if (input) input.value = parsed;
+          doLookup(parsed);
+        },
+        () => {}
+      );
+
+      if (startOverlay) startOverlay.style.display = 'none';
+      if (reticle) reticle.style.display = 'block';
+      if (toolbar) toolbar.style.display = 'flex';
+      if (camNotice) camNotice.innerHTML = '<span style="color:#059669;font-weight:700;">● Camera Active</span> — Align QR code inside frame.';
+    } catch (err) {
+      console.warn('Camera failed to start:', err);
+      if (startOverlay) startOverlay.style.display = 'flex';
+      if (reticle) reticle.style.display = 'none';
+      if (toolbar) toolbar.style.display = 'none';
+      if (camNotice) camNotice.innerHTML = `<span style="color:#dc2626;font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Camera permission needed or unavailable.</span> Use Upload QR Image or Manual Code.`;
+      toast('Camera notice: ' + (err.message || 'Permission denied'), 'error');
+    }
+  }
+
+  // Stop Camera
+  async function stopCamera() {
+    if (window._activeStaffPageScanner && window._activeStaffPageScanner.isScanning) {
+      try {
+        await window._activeStaffPageScanner.stop();
+      } catch(e) {}
+    }
+    if (startOverlay) startOverlay.style.display = 'flex';
+    if (reticle) reticle.style.display = 'none';
+    if (toolbar) toolbar.style.display = 'none';
+    if (camNotice) camNotice.innerHTML = 'Camera paused. Click Start Camera to resume scanning.';
+  }
+
+  // Flip Camera
+  async function flipCamera() {
+    if (camerasList.length > 1) {
+      currentCamIdx = (currentCamIdx + 1) % camerasList.length;
+      await stopCamera();
+      await startCamera();
+      toast('Switched camera', 'info');
+    } else {
+      toast('Only 1 camera detected on this system.', 'info');
+    }
+  }
+
+  if (startBtn) startBtn.addEventListener('click', startCamera);
+  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
+  if (flipBtn) flipBtn.addEventListener('click', flipCamera);
+
+  // File Upload handling
+  if (fileSelectBtn) fileSelectBtn.addEventListener('click', () => fileInput.click());
+  if (dropzone) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== fileSelectBtn) fileInput.click();
+    });
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processUploadedQrFile(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processUploadedQrFile(e.target.files[0]);
+      }
+    });
+  }
+
+  async function processUploadedQrFile(file) {
+    if (typeof window.Html5Qrcode === 'undefined') {
+      toast('Scanner library loading. Please try again.', 'info');
+      return;
+    }
+    toast('Scanning uploaded image for QR code…', 'info');
+    try {
+      const tempScanner = window._activeStaffPageScanner || new window.Html5Qrcode('pageQrReader');
+      const decodedText = await tempScanner.scanFile(file, true);
+      playScanBeep();
+      toast('QR Code verified from image!', 'success');
+      const parsed = parseScannedQrCode(decodedText);
+      if (input) input.value = parsed;
+      doLookup(parsed);
+    } catch (err) {
+      console.warn('QR file decoding failed:', err);
+      toast('No readable QR code found in uploaded image. Please try another photo.', 'error');
+    }
+  }
+
+  // Lookup & Verification logic
+  async function doLookup(overrideCode = '') {
+    const raw = (overrideCode || input?.value || '').trim();
+    if (!raw) {
+      toast('Please enter or scan a Booking Reference or ID.', 'error');
+      return;
+    }
+    const clean = raw.toLowerCase();
+    let allList = bookings && bookings.length ? bookings : await fetchMergedBookings();
+
+    const b = (allList || []).find(item => {
+      const idMatch = String(item.id).toLowerCase() === clean;
+      const refMatch = String(item.ref_number || '').toLowerCase() === clean;
+      const nameMatch = String(item.customer_name || '').toLowerCase().includes(clean);
+      const rawContains = clean.includes(String(item.id).toLowerCase()) || (item.ref_number && clean.includes(String(item.ref_number).toLowerCase()));
+      return idMatch || refMatch || nameMatch || rawContains;
+    });
+
+    if (!b) {
+      result.innerHTML = `
+        <div style="text-align:center;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#991b1b;">
+          <i class="fa-solid fa-circle-xmark" style="font-size:1.8rem;margin-bottom:6px;display:block;"></i>
+          <strong>Pass Not Found</strong>
+          <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${raw}</strong>". Pakisuri ang reference code sa resibo.</p>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnPageRetryScan" style="margin-top:10px;color:#991b1b;border:1px solid #fca5a5;">
+            <i class="fa-solid fa-camera" style="margin-right:4px;"></i> Scan Another Pass
+          </button>
+        </div>
+      `;
+      const retryBtn = result.querySelector('#btnPageRetryScan');
+      if (retryBtn) retryBtn.onclick = () => {
+        if (input) input.value = '';
+        startCamera();
+      };
+      return;
+    }
+
+    result.innerHTML = renderVerifiedPassCard(b);
+
+    const viewRcpt = result.querySelector('#btnPassViewReceipt');
+    if (viewRcpt) {
+      viewRcpt.onclick = () => {
+        if (window.openPaidReceiptModal) window.openPaidReceiptModal(b.id);
+      };
+    }
+
+    const scanAnother = result.querySelector('#btnPassScanAnother');
+    if (scanAnother) {
+      scanAnother.onclick = () => {
+        if (input) input.value = '';
+        result.innerHTML = `
+          <div style="text-align:center;padding:24px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+            <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
+            <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or reference code…</div>
+            <div style="font-size:0.75rem;margin-top:4px;">Point camera, upload photo, or enter reference code.</div>
+          </div>
+        `;
+        startCamera();
+      };
+    }
+
+    const checkInBtn = result.querySelector('#btnPassCheckIn');
+    if (checkInBtn) {
+      checkInBtn.onclick = async () => {
+        updateLocalBookingStatus(b.id, 'active');
+        broadcastBookingStatusChange(b.id, 'active');
+        try {
+          await supabase.from('bookings').update({ status: 'active' }).eq('id', b.id);
+          if (b.vehicle_id) {
+            await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+          }
+        } catch (e) {}
+        toast(`Vehicle handover confirmed! Booking #${b.id} is now Active.`, 'success');
+        renderStaffScanner(view);
+      };
+    }
+  }
+
+  if (btn) btn.addEventListener('click', () => doLookup());
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLookup();
+    });
+  }
+
+  // Queue click handlers
+  view.querySelectorAll('[data-queue-ref]').forEach(card => {
+    card.addEventListener('click', () => {
+      const ref = card.dataset.queueRef;
+      if (input) input.value = ref;
+      doLookup(ref);
+    });
+  });
+
+  // Start camera on view load
+  setTimeout(() => {
+    startCamera();
+  }, 250);
 }
 
 window.openVenuePassVerificationModal = openVenuePassVerificationModal;
+window.renderStaffScanner = renderStaffScanner;
+
 

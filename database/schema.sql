@@ -339,7 +339,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Seed Categories
 INSERT INTO public.categories (name, daily_rate, description) VALUES
-  ('Motorcycles', 500.00, 'Automatic scooters & motorbikes (Honda Click 125i @ ₱400, Yamaha NMAX 155 @ ₱500, Honda ADV 160 @ ₱600)'),
+  ('Motorcycles', 500.00, 'Automatic scooters & motorbikes (Honda Click 125i @ 400, Yamaha NMAX 155 @ 500, Honda ADV 160 @ 600)'),
   ('Economy & Hatchbacks', 2200.00, 'Compact fuel-efficient hatchbacks & sedans (Toyota Wigo, Mitsubishi Mirage G4)'),
   ('Sedans', 2500.00, '5-Seater comfortable subcompact sedans (Toyota Vios 1.5 G)'),
   ('MPVs & Crossovers', 3000.00, '7 to 8-Seater family MPVs (Toyota Innova, Mitsubishi Xpander)'),

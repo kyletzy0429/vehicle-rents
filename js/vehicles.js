@@ -93,7 +93,7 @@ export const PH_POPULAR_VEHICLES = [
 ];
 
 export const PH_CATEGORIES = [
-  { name: 'Motorcycles', daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ ₱400, Yamaha NMAX 155 @ ₱500, Honda ADV 160 @ ₱600)' },
+  { name: 'Motorcycles', daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ 400, Yamaha NMAX 155 @ 500, Honda ADV 160 @ 600)' },
   { name: 'Economy & Hatchbacks', daily_rate: 2200, description: 'Compact fuel-efficient hatchbacks & sedans (Toyota Wigo, Mitsubishi Mirage G4)' },
   { name: 'Sedans', daily_rate: 2500, description: '5-Seater comfortable subcompact sedans (Toyota Vios 1.5 G)' },
   { name: 'MPVs & Crossovers', daily_rate: 3000, description: '7 to 8-Seater family MPVs (Toyota Innova, Mitsubishi Xpander)' },
@@ -194,7 +194,7 @@ export async function loadCategories() {
     const motorCat = data.find(c => (c.name || '').toLowerCase().includes('motor'));
     if (motorCat && Number(motorCat.daily_rate) > 600) {
       motorCat.daily_rate = 500;
-      supabase.from('categories').update({ daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ ₱400, Yamaha NMAX 155 @ ₱500, Honda ADV 160 @ ₱600)' }).eq('id', motorCat.id).then(() => { }).catch(() => { });
+      supabase.from('categories').update({ daily_rate: 500, description: 'Automatic scooters & motorbikes (Honda Click 125i @ 400, Yamaha NMAX 155 @ 500, Honda ADV 160 @ 600)' }).eq('id', motorCat.id).then(() => { }).catch(() => { });
     }
   }
 
@@ -343,6 +343,20 @@ let browseSearch = '';
 let browseStartDate = '';
 let browseEndDate = '';
 
+function formatHeroDate(iso) {
+  if (!iso) return 'mm/dd/yyyy';
+  try {
+    const d = new Date(iso + 'T00:00:00');
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return `${dayNames[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
+  } catch (e) {
+    return iso;
+  }
+}
+
+let heroCalYear = new Date().getFullYear();
+let heroCalMonth = new Date().getMonth();
+
 export function renderBrowse(view) {
   const cats = ['all', ...state.categories.map(c => c.name)];
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -366,17 +380,29 @@ export function renderBrowse(view) {
         <h1 class="hero-title">Search available vehicles</h1>
         <p class="hero-subtitle">Choose your dates to see what's open, then reserve on the spot.</p>
 
-        <div class="hero-filter-card">
-          <div class="hero-filter-field">
-            <label for="heroStartDate">Pick-up</label>
-            <input type="date" id="heroStartDate" value="${browseStartDate}" min="${todayStr}" />
+        <div class="hero-filter-card" style="position:relative;" id="heroFilterCard">
+          <div class="hero-filter-field hero-date-box" id="heroPickupBox" title="Click to choose Pick-up Date">
+            <label>Pick-up</label>
+            <div class="hero-date-val-wrap">
+              <i class="fa-regular fa-calendar-days hero-cal-icon"></i>
+              <span class="hero-date-text" id="heroPickupDisplay">${browseStartDate ? formatHeroDate(browseStartDate) : 'mm/dd/yyyy'}</span>
+              <span class="hero-time-badge">Noon</span>
+            </div>
           </div>
+
           <div class="hero-filter-divider"></div>
-          <div class="hero-filter-field">
-            <label for="heroEndDate">Drop-out</label>
-            <input type="date" id="heroEndDate" value="${browseEndDate}" min="${browseStartDate || todayStr}" />
+
+          <div class="hero-filter-field hero-date-box" id="heroDropoffBox" title="Click to choose Drop-out Date">
+            <label>Drop-out</label>
+            <div class="hero-date-val-wrap">
+              <i class="fa-regular fa-calendar-days hero-cal-icon"></i>
+              <span class="hero-date-text" id="heroDropoffDisplay">${browseEndDate ? formatHeroDate(browseEndDate) : 'mm/dd/yyyy'}</span>
+              <span class="hero-time-badge">Noon</span>
+            </div>
           </div>
+
           <div class="hero-filter-divider"></div>
+
           <div class="hero-filter-field">
             <label for="heroCategorySelect">Vehicle type</label>
             <select id="heroCategorySelect">
@@ -384,9 +410,13 @@ export function renderBrowse(view) {
               ${state.categories.map(c => `<option value="${c.name}" ${browseFilter.toLowerCase() === c.name.toLowerCase() ? 'selected' : ''}>${c.name}</option>`).join('')}
             </select>
           </div>
+
           <button type="button" class="btn hero-search-btn" id="heroSearchBtn">
             Search
           </button>
+
+          <!-- Floating Dual-Month Calendar Popover (Booking.com / Hertz style) -->
+          <div class="hero-date-popover" id="heroCalendarPopover" style="display:none;"></div>
         </div>
       </div>
 
@@ -403,31 +433,260 @@ export function renderBrowse(view) {
     </div>
   `;
 
-  const sStart = $('#heroStartDate');
-  const sEnd = $('#heroEndDate');
+  // Calendar popover logic
+  const pBox = $('#heroPickupBox');
+  const dBox = $('#heroDropoffBox');
+  const popover = $('#heroCalendarPopover');
   const sCat = $('#heroCategorySelect');
   const sBtn = $('#heroSearchBtn');
 
-  if (sStart) {
-    sStart.addEventListener('change', () => {
-      browseStartDate = sStart.value;
-      if (sEnd && sStart.value) sEnd.min = sStart.value;
+  function renderHeroCalendar() {
+    if (!popover) return;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const tierLow = 1422;
+    const tierMid = 1743;
+    const tierHigh = 2149;
+
+    function getHeroPriceTier(dateIso) {
+      const d = new Date(dateIso + 'T00:00:00').getDay();
+      if (d === 0 || d === 6) return { tier: 'high', price: tierHigh };
+      if (d === 5) return { tier: 'mid', price: tierMid };
+      return { tier: 'low', price: tierLow };
+    }
+
+    function buildHeroMonthHTML(year, month) {
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstDay = new Date(year, month, 1).getDay();
+
+      let daysHTML = '';
+      for (let i = 0; i < firstDay; i++) {
+        daysHTML += `<div class="cal-day cal-day-empty"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const mStr = String(month + 1).padStart(2, '0');
+        const dStr = String(d).padStart(2, '0');
+        const dateIso = `${year}-${mStr}-${dStr}`;
+
+        const isPast = dateIso < todayStr;
+        const isStart = browseStartDate === dateIso;
+        const isEnd = browseEndDate === dateIso;
+        const isInRange = browseStartDate && browseEndDate && dateIso > browseStartDate && dateIso < browseEndDate;
+        const { tier } = getHeroPriceTier(dateIso);
+
+        if (isPast) {
+          daysHTML += `<div class="cal-day cal-day-past" data-date="${dateIso}">${d}</div>`;
+        } else {
+          let dayClass = `cal-day-price cal-day-price-${tier}`;
+          let tileStyle = '';
+          if (isStart || isEnd) {
+            dayClass += ' cal-day-selected';
+            if (isStart && isEnd) dayClass += ' cal-day-single';
+            else if (isStart) dayClass += ' cal-day-start';
+            else if (isEnd) dayClass += ' cal-day-end';
+            tileStyle = 'background-color:#1e293b !important; color:#ffffff !important; font-weight:800;';
+          } else if (isInRange) {
+            dayClass += ' cal-day-in-range';
+            tileStyle = 'background-color:#273549 !important; color:#ffffff !important; border-radius:0 !important;';
+          } else if (tier === 'low') {
+            tileStyle = 'background-color:#71deb5 !important; color:#0f172a !important; font-weight:700;';
+          } else if (tier === 'mid') {
+            tileStyle = 'background-color:#fbc072 !important; color:#0f172a !important; font-weight:700;';
+          } else if (tier === 'high') {
+            tileStyle = 'background-color:#fda4af !important; color:#0f172a !important; font-weight:700;';
+          }
+
+          daysHTML += `
+            <div class="cal-day ${dayClass}" style="${tileStyle}" data-date="${dateIso}" data-tier="${tier}" title="${monthNames[month]} ${d}, ${year}">
+              ${d}
+            </div>
+          `;
+        }
+      }
+
+      return `
+        <div class="cal-dual-panel">
+          <div class="cal-weekdays">
+            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+          </div>
+          <div class="cal-days-grid">${daysHTML}</div>
+        </div>
+      `;
+    }
+
+    const leftYear = heroCalYear;
+    const leftMonth = heroCalMonth;
+    let rightMonth = heroCalMonth + 1;
+    let rightYear = heroCalYear;
+    if (rightMonth > 11) { rightMonth = 0; rightYear++; }
+
+    const now = new Date();
+    const isPrevDisabled = (leftYear < now.getFullYear()) || (leftYear === now.getFullYear() && leftMonth <= now.getMonth());
+
+    popover.innerHTML = `
+      <div class="cal-dual-header">
+        <button type="button" class="cal-nav-btn" id="heroPrevMonth" ${isPrevDisabled ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="cal-panel-title cal-panel-title-left">${monthNames[leftMonth]} ${leftYear}</div>
+        <div class="cal-panel-title cal-panel-title-right">${monthNames[rightMonth]} ${rightYear}</div>
+        <button type="button" class="cal-nav-btn" id="heroNextMonth">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="cal-dual-months">
+        ${buildHeroMonthHTML(leftYear, leftMonth)}
+        ${buildHeroMonthHTML(rightYear, rightMonth)}
+      </div>
+      <div class="cal-price-legend">
+        <div class="cal-price-legend-item">
+          <span class="cal-legend-pill cal-pill-low">₱${tierLow.toLocaleString()}+</span>
+        </div>
+        <div class="cal-price-legend-item">
+          <span class="cal-legend-pill cal-pill-mid">₱${tierMid.toLocaleString()}+</span>
+        </div>
+        <div class="cal-price-legend-item">
+          <span class="cal-legend-pill cal-pill-high">₱${tierHigh.toLocaleString()}+</span>
+        </div>
+        <span class="cal-legend-note">Based on average prices of all cars.</span>
+      </div>
+    `;
+
+    $('#heroPrevMonth')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isPrevDisabled) return;
+      heroCalMonth--;
+      if (heroCalMonth < 0) { heroCalMonth = 11; heroCalYear--; }
+      renderHeroCalendar();
+    });
+
+    $('#heroNextMonth')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      heroCalMonth++;
+      if (heroCalMonth > 11) { heroCalMonth = 0; heroCalYear++; }
+      renderHeroCalendar();
+    });
+
+    const dayCells = popover.querySelectorAll('.cal-day-price');
+    dayCells.forEach(cell => {
+      cell.addEventListener('mouseenter', () => {
+        if (browseStartDate && !browseEndDate) {
+          const hovered = cell.dataset.date;
+          if (hovered > browseStartDate) {
+            dayCells.forEach(c => {
+              const d = c.dataset.date;
+              if (d > browseStartDate && d <= hovered) {
+                c.classList.add('cal-day-hover-in-range');
+                c.style.backgroundColor = '#273549';
+                c.style.color = '#ffffff';
+                c.style.borderRadius = '0';
+              } else if (d > browseStartDate) {
+                c.classList.remove('cal-day-hover-in-range');
+                const t = c.dataset.tier;
+                if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
+                else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
+                else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
+                c.style.borderRadius = '8px';
+              }
+            });
+          }
+        }
+      });
+
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const clicked = cell.dataset.date;
+        if (!browseStartDate || (browseStartDate && browseEndDate)) {
+          browseStartDate = clicked;
+          browseEndDate = '';
+          const pEl = $('#heroPickupDisplay');
+          if (pEl) pEl.textContent = formatHeroDate(browseStartDate);
+          const dEl = $('#heroDropoffDisplay');
+          if (dEl) dEl.textContent = 'mm/dd/yyyy';
+          renderHeroCalendar();
+        } else if (clicked > browseStartDate) {
+          browseEndDate = clicked;
+          popover.style.display = 'none';
+          pBox?.classList.remove('active');
+          dBox?.classList.remove('active');
+          renderBrowse(view);
+          toast(`Dates selected: ${formatHeroDate(browseStartDate)} to ${formatHeroDate(browseEndDate)}`, 'success');
+        } else {
+          browseStartDate = clicked;
+          browseEndDate = '';
+          const pEl = $('#heroPickupDisplay');
+          if (pEl) pEl.textContent = formatHeroDate(browseStartDate);
+          renderHeroCalendar();
+        }
+      });
+    });
+
+    popover.addEventListener('mouseleave', () => {
+      dayCells.forEach(c => {
+        const d = c.dataset.date;
+        if (d !== browseStartDate && d !== browseEndDate && !(browseStartDate && browseEndDate && d > browseStartDate && d < browseEndDate)) {
+          c.classList.remove('cal-day-hover-in-range');
+          const t = c.dataset.tier;
+          if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
+          else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
+          else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
+          c.style.borderRadius = '8px';
+        }
+      });
     });
   }
-  if (sEnd) {
-    sEnd.addEventListener('change', () => {
-      browseEndDate = sEnd.value;
-    });
+
+  function openHeroCalendar(activeBox) {
+    if (!popover) return;
+    renderHeroCalendar();
+    popover.style.display = 'block';
+    if (activeBox === 'pickup') {
+      pBox?.classList.add('active');
+      dBox?.classList.remove('active');
+    } else {
+      dBox?.classList.add('active');
+      pBox?.classList.remove('active');
+    }
   }
+
+  pBox?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (popover && popover.style.display === 'block' && pBox.classList.contains('active')) {
+      popover.style.display = 'none';
+      pBox.classList.remove('active');
+    } else {
+      openHeroCalendar('pickup');
+    }
+  });
+
+  dBox?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (popover && popover.style.display === 'block' && dBox.classList.contains('active')) {
+      popover.style.display = 'none';
+      dBox.classList.remove('active');
+    } else {
+      openHeroCalendar('dropoff');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (popover && popover.style.display === 'block') {
+      if (!popover.contains(e.target) && !pBox?.contains(e.target) && !dBox?.contains(e.target)) {
+        popover.style.display = 'none';
+        pBox?.classList.remove('active');
+        dBox?.classList.remove('active');
+      }
+    }
+  });
+
   if (sCat) {
     sCat.addEventListener('change', () => {
       browseFilter = sCat.value;
     });
   }
+
   if (sBtn) {
     sBtn.addEventListener('click', () => {
-      browseStartDate = sStart ? sStart.value : '';
-      browseEndDate = sEnd ? sEnd.value : '';
       browseFilter = sCat ? sCat.value : 'all';
       if (browseStartDate && browseEndDate && browseEndDate < browseStartDate) {
         toast('Drop-out date must be on or after Pick-up date.', 'error');
@@ -495,7 +754,7 @@ export function vehicleCardHTML(v) {
           </span>
         </div>
         <button type="button" class="btn btn-primary vehicle-book-pill-btn" data-book-btn="${v.id}">
-          Book Now
+          View Deal
         </button>
       </div>
     </div>

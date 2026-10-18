@@ -20,7 +20,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   state.drivers = drivers;
 
   // Merge both Supabase and local demo bookings so all reserved/paid bookings accurately block the calendar
-  const localList = getLocalBookings().filter(b => 
+  const localList = getLocalBookings().filter(b =>
     (Number(b.vehicle_id) === Number(v.id) || Number(b.vehicles?.id) === Number(v.id)) &&
     ['pending', 'approved', 'active', 'reserved', 'completed'].includes(b.status) &&
     (b.end_date >= todayStr || !b.end_date)
@@ -137,11 +137,47 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       <h4 style="margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#0f172a;">
         1. Select Rental Dates
       </h4>
-      <div id="calWidgetContainer"></div>
-      <div class="detail-grid" style="margin-bottom:12px;">
-        <div class="field"><label>Pick-up Date</label><input type="date" id="bStart" min="${todayStr}" /></div>
-        <div class="field"><label>Drop-out Date</label><input type="date" id="bEnd" min="${todayStr}" /></div>
+      
+      <!-- Hertz / Booking.com Style Interactive Date Bar -->
+      <div class="cal-booking-inputs-bar">
+        <div class="cal-input-card active" id="calCardPickup" title="Click to choose Pick-up Date">
+          <div class="cal-input-header">
+            <i class="fa-regular fa-calendar-check"></i>
+            <span>Pick-up Date</span>
+          </div>
+          <div class="cal-input-main">
+            <span class="cal-date-text" id="calPickupText">Select Date</span>
+            <span class="cal-time-badge">Noon</span>
+          </div>
+        </div>
+
+        <div class="cal-input-divider">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+
+        <div class="cal-input-card" id="calCardReturn" title="Click to choose Return Date">
+          <div class="cal-input-header">
+            <i class="fa-regular fa-calendar-xmark"></i>
+            <span>Return Date</span>
+          </div>
+          <div class="cal-input-main">
+            <span class="cal-date-text" id="calReturnText">Select Date</span>
+            <span class="cal-time-badge">Noon</span>
+          </div>
+        </div>
+
+        <div class="cal-summary-pill" id="calTripSummary">
+          <span class="cal-summary-days" id="calTripDays">Select Dates</span>
+        </div>
       </div>
+
+      <!-- Preserved hidden inputs so all existing forms, validation and handlers work seamlessly -->
+      <div style="display:none;">
+        <input type="date" id="bStart" min="${todayStr}" />
+        <input type="date" id="bEnd" min="${todayStr}" />
+      </div>
+
+      <div id="calWidgetContainer"></div>
       <div id="availabilityMsg" class="muted" style="margin-bottom:12px;"></div>
 
       <div class="divider"></div>
@@ -243,12 +279,12 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="payOptionToggles">
           <div class="pay-tier-btn active" id="payOptFull">
             <div class="tier-label">Pay in Full (100%)</div>
-            <div class="tier-amount" id="payFullAmount">₱0.00</div>
+            <div class="tier-amount" id="payFullAmount">0.00</div>
             <div class="tier-sub">Instant zero-balance reservation</div>
           </div>
           <div class="pay-tier-btn" id="payOptDown">
             <div class="tier-label">Reserve (20% Down)</div>
-            <div class="tier-amount" id="payDownAmount">₱0.00</div>
+            <div class="tier-amount" id="payDownAmount">0.00</div>
             <div class="tier-sub">Remaining balance upon vehicle pickup</div>
           </div>
         </div>
@@ -352,81 +388,219 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   let calViewYear = new Date().getFullYear();
   let calViewMonth = new Date().getMonth();
 
+  function formatShortDate(iso) {
+    if (!iso) return 'Select Date';
+    try {
+      const d = new Date(iso + 'T00:00:00');
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return `${dayNames[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
+    } catch (e) {
+      return iso;
+    }
+  }
+
   function renderInteractiveCalendar() {
     const calContainer = $('#calWidgetContainer');
     if (!calContainer) return;
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
-    const firstDayIndex = new Date(calViewYear, calViewMonth, 1).getDay();
-
     const selectedStartVal = start.value;
     const selectedEndVal = end.value;
 
-    let daysHTML = '';
-    for (let i = 0; i < firstDayIndex; i++) {
-      daysHTML += `<div class="cal-day cal-day-past"></div>`;
+    // Update Top Date Bar
+    const pickupText = $('#calPickupText');
+    const returnText = $('#calReturnText');
+    const tripDaysEl = $('#calTripDays');
+    const cardPickup = $('#calCardPickup');
+    const cardReturn = $('#calCardReturn');
+
+    if (pickupText) pickupText.textContent = selectedStartVal ? formatShortDate(selectedStartVal) : 'Select Date';
+    if (returnText) returnText.textContent = selectedEndVal ? formatShortDate(selectedEndVal) : 'Select Date';
+
+    if (cardPickup && cardReturn) {
+      if (!selectedStartVal || (selectedStartVal && selectedEndVal)) {
+        cardPickup.classList.add('active');
+        cardReturn.classList.remove('active');
+      } else {
+        cardPickup.classList.remove('active');
+        cardReturn.classList.add('active');
+      }
     }
 
-    for (let d = 1; d <= daysInMonth; d++) {
-      const monthStr = String(calViewMonth + 1).padStart(2, '0');
-      const dayStr = String(d).padStart(2, '0');
-      const dateIso = `${calViewYear}-${monthStr}-${dayStr}`;
+    if (tripDaysEl) {
+      if (selectedStartVal && selectedEndVal) {
+        const days = Math.max(1, Math.round((new Date(selectedEndVal) - new Date(selectedStartVal)) / (1000 * 60 * 60 * 24)));
+        tripDaysEl.textContent = `${days} Day${days > 1 ? 's' : ''} Rental`;
+      } else if (selectedStartVal) {
+        tripDaysEl.textContent = 'Select return date';
+      } else {
+        tripDaysEl.textContent = 'Select dates';
+      }
+    }
 
-      const isPast = dateIso < todayStr;
-      const isBooked = allBookedIntervals && allBookedIntervals.some(b => dateIso >= b.start_date && dateIso <= b.end_date);
-      const isStart = selectedStartVal === dateIso;
-      const isEnd = selectedEndVal === dateIso;
-      const isInRange = selectedStartVal && selectedEndVal && dateIso > selectedStartVal && dateIso < selectedEndVal;
+    // Pricing tiers based on average vehicle rates across categories
+    const baseRate = rate;
+    const weekendMultiplier = 1.35;
+    const fridayMultiplier = 1.15;
+    const tierLow = baseRate;
+    const tierMid = Math.round(baseRate * fridayMultiplier);
+    const tierHigh = Math.round(baseRate * weekendMultiplier);
 
-      let dayClass = 'cal-day-available';
-      if (isPast) dayClass = 'cal-day-past';
-      else if (isBooked) dayClass = 'cal-day-booked';
+    function getPriceTier(dateIso) {
+      const dayOfWeek = new Date(dateIso + 'T00:00:00').getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) return { tier: 'high', price: tierHigh };
+      if (dayOfWeek === 5) return { tier: 'mid', price: tierMid };
+      return { tier: 'low', price: tierLow };
+    }
 
-      if (isStart || isEnd) dayClass += ' cal-day-selected';
-      else if (isInRange) dayClass += ' cal-day-in-range';
+    function buildMonthHTML(year, month, panelId) {
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstDayIndex = new Date(year, month, 1).getDay();
 
-      daysHTML += `
-        <div class="cal-day ${dayClass}" data-date="${dateIso}" ${isPast || isBooked ? `style="pointer-events:none;" title="${isBooked ? 'Booked (Unavailable)' : 'Past Date'}"` : ''}>
-          ${d}
+      let daysHTML = '';
+      for (let i = 0; i < firstDayIndex; i++) {
+        daysHTML += `<div class="cal-day cal-day-empty"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const monthStr = String(month + 1).padStart(2, '0');
+        const dayStr = String(d).padStart(2, '0');
+        const dateIso = `${year}-${monthStr}-${dayStr}`;
+
+        const isPast = dateIso < todayStr;
+        const isBooked = allBookedIntervals && allBookedIntervals.some(b => dateIso >= b.start_date && dateIso <= b.end_date);
+        const isStart = selectedStartVal === dateIso;
+        const isEnd = selectedEndVal === dateIso;
+        const isInRange = selectedStartVal && selectedEndVal && dateIso > selectedStartVal && dateIso < selectedEndVal;
+        const isToday = dateIso === todayStr;
+
+        const { tier, price } = getPriceTier(dateIso);
+
+        if (isPast) {
+          daysHTML += `<div class="cal-day cal-day-past" data-date="${dateIso}">${d}</div>`;
+        } else if (isBooked) {
+          daysHTML += `<div class="cal-day cal-day-booked" data-date="${dateIso}" title="Booked (Unavailable)">${d}</div>`;
+        } else {
+          let dayClass = `cal-day-price cal-day-price-${tier}`;
+          if (isStart && isEnd) dayClass += ' cal-day-selected cal-day-single';
+          else if (isStart) dayClass += ' cal-day-selected cal-day-start';
+          else if (isEnd) dayClass += ' cal-day-selected cal-day-end';
+          else if (isInRange) dayClass += ' cal-day-in-range';
+          if (isToday) dayClass += ' cal-day-today';
+
+          daysHTML += `
+            <div class="cal-day ${dayClass}" data-date="${dateIso}" title="${monthNames[month]} ${d}, ${year} - ₱${price.toLocaleString()}/day">
+              ${d}
+            </div>
+          `;
+        }
+      }
+
+      return `
+        <div class="cal-dual-panel" id="${panelId}">
+          <div class="cal-weekdays">
+            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+          </div>
+          <div class="cal-days-grid">${daysHTML}</div>
         </div>
       `;
     }
 
+    // Calculate left and right month
+    const leftYear = calViewYear;
+    const leftMonth = calViewMonth;
+    let rightMonth = calViewMonth + 1;
+    let rightYear = calViewYear;
+    if (rightMonth > 11) { rightMonth = 0; rightYear++; }
+
+    // Check if prev button should be disabled (cannot navigate before current month)
+    const now = new Date();
+    const isPrevDisabled = (leftYear < now.getFullYear()) || (leftYear === now.getFullYear() && leftMonth <= now.getMonth());
+
     calContainer.innerHTML = `
-      <div class="custom-calendar">
-        <div class="cal-header">
-          <button type="button" class="cal-nav-btn" id="calPrevMonth" title="Previous Month" aria-label="Previous Month"><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="cal-month-title">${monthNames[calViewMonth]} ${calViewYear}</div>
+      <div class="custom-calendar cal-dual-layout">
+        <div class="cal-dual-header">
+          <button type="button" class="cal-nav-btn" id="calPrevMonth" title="Previous Month" aria-label="Previous Month"${isPrevDisabled ? ' disabled style="opacity:0.3;cursor:not-allowed;"' : ''}><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="cal-panel-title cal-panel-title-left">${monthNames[leftMonth]} ${leftYear}</div>
+          <div class="cal-panel-title cal-panel-title-right">${monthNames[rightMonth]} ${rightYear}</div>
           <button type="button" class="cal-nav-btn" id="calNextMonth" title="Next Month" aria-label="Next Month"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <div class="cal-weekdays">
-          <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+        <div class="cal-dual-months">
+          ${buildMonthHTML(leftYear, leftMonth, 'calPanelLeft')}
+          ${buildMonthHTML(rightYear, rightMonth, 'calPanelRight')}
         </div>
-        <div class="cal-days-grid">${daysHTML}</div>
-        <div class="cal-legend">
-          <div><span class="cal-legend-dot" style="background:#10b981;"></span> Available for Rent</div>
-          <div><span class="cal-legend-dot" style="background:#ef4444;"></span> Booked (Disabled)</div>
-          <div><span class="cal-legend-dot" style="background:var(--accent);"></span> Selected</div>
+        <div class="cal-price-legend">
+          <div class="cal-price-legend-item">
+            <span class="cal-legend-pill cal-pill-low">₱${tierLow.toLocaleString()}+</span>
+          </div>
+          <div class="cal-price-legend-item">
+            <span class="cal-legend-pill cal-pill-mid">₱${tierMid.toLocaleString()}+</span>
+          </div>
+          <div class="cal-price-legend-item">
+            <span class="cal-legend-pill cal-pill-high">₱${tierHigh.toLocaleString()}+</span>
+          </div>
+          <span class="cal-legend-note">Based on average prices of all cars.</span>
         </div>
       </div>
     `;
 
-    $('#calPrevMonth').addEventListener('click', (e) => {
+    // Month Navigation Events
+    $('#calPrevMonth')?.addEventListener('click', (e) => {
       e.preventDefault();
+      if (isPrevDisabled) return;
       calViewMonth--;
       if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
       renderInteractiveCalendar();
     });
 
-    $('#calNextMonth').addEventListener('click', (e) => {
+    $('#calNextMonth')?.addEventListener('click', (e) => {
       e.preventDefault();
       calViewMonth++;
       if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
       renderInteractiveCalendar();
     });
 
-    calContainer.querySelectorAll('.cal-day-available').forEach(cell => {
+    // Top Card Click Handlers
+    $('#calCardPickup')?.addEventListener('click', () => {
+      start.value = '';
+      end.value = '';
+      renderInteractiveCalendar();
+    });
+
+    $('#calCardReturn')?.addEventListener('click', () => {
+      if (start.value) {
+        end.value = '';
+        renderInteractiveCalendar();
+      }
+    });
+
+    // Hover Range Preview Effect & Date Selection
+    const priceCells = calContainer.querySelectorAll('.cal-day-price');
+    priceCells.forEach(cell => {
+      cell.addEventListener('mouseenter', () => {
+        if (start.value && !end.value) {
+          const hoveredDate = cell.dataset.date;
+          if (hoveredDate > start.value) {
+            priceCells.forEach(c => {
+              const d = c.dataset.date;
+              if (d > start.value && d <= hoveredDate) {
+                c.classList.add('cal-day-hover-in-range');
+                c.style.backgroundColor = '#273549';
+                c.style.color = '#ffffff';
+                c.style.borderRadius = '0';
+              } else if (d > start.value) {
+                c.classList.remove('cal-day-hover-in-range');
+                const t = c.dataset.tier;
+                if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
+                else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
+                else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
+                c.style.borderRadius = '8px';
+              }
+            });
+          }
+        }
+      });
+
       cell.addEventListener('click', () => {
         const clickedDate = cell.dataset.date;
         if (!start.value || (start.value && end.value)) {
@@ -449,6 +623,20 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         }
         renderInteractiveCalendar();
         checkAvailability();
+      });
+    });
+
+    calContainer.addEventListener('mouseleave', () => {
+      priceCells.forEach(c => {
+        const d = c.dataset.date;
+        if (d !== start.value && d !== end.value && !(start.value && end.value && d > start.value && d < end.value)) {
+          c.classList.remove('cal-day-hover-in-range');
+          const t = c.dataset.tier;
+          if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
+          else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
+          else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
+          c.style.borderRadius = '8px';
+        }
       });
     });
   }
@@ -606,7 +794,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
               Driver Service
               <div style="font-size:0.75rem;color:#64748b;">Self-Drive (Customer Driving)</div>
             </span>
-            <span style="font-weight:600;color:#64748b;">₱0.00</span>
+            <span style="font-weight:600;color:#64748b;">0.00</span>
           </div>
         `}
 
@@ -631,7 +819,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             Refundable Security Deposit
             <div style="font-size:0.75rem;color:#d97706;font-weight:600;">Payable upon pickup · 100% refundable upon safe return</div>
           </span>
-          <span style="font-weight:600;color:#475569;">₱3,000.00 <span style="font-size:0.72rem;color:#94a3b8;">(deposit)</span></span>
+          <span style="font-weight:600;color:#475569;">3,000.00 <span style="font-size:0.72rem;color:#94a3b8;">(deposit)</span></span>
         </div>
 
         <div class="price-item total-row">
@@ -747,9 +935,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
           phone: rPhone,
           license_number: rLicense,
           address: rAddress
-        }).eq('id', state.user.id).catch(() => {});
+        }).eq('id', state.user.id).catch(() => { });
       }
-    } catch (e) {}
+    } catch (e) { }
 
     const contactNote = `Contact: ${rName} (${rPhone || 'No phone'})${rLicense ? ` | Lic: ${rLicense}` : ''}${rAddress ? ` | Meetup: ${rAddress}` : ''}`;
     const fullNotes = contactNote;
@@ -837,7 +1025,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       await supabase.from('driver_assignments').insert({
         booking_id: newBooking?.id ?? null,
         driver_id: Number(calculatedBookingData.dId),
-      }).then(() => {}).catch(() => {});
+      }).then(() => { }).catch(() => { });
     }
 
     closeModal();

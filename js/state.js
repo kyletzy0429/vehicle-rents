@@ -156,7 +156,7 @@ export const DEFAULT_SETTINGS = {
     mobile: '+63 917 123 4567',
     email: 'vehicleretal.ph',
     address: '123 PPC MAIN BRANCH VENUE',
-    currency: '₱ (PHP)',
+    currency: 'PHP',
     hours: '8:00 AM - 8:00 PM Daily',
   },
   policy: {
@@ -208,6 +208,9 @@ export function getSystemSettings() {
     if (!company.email || company.email === 'vehiclerental@gmail.com' || company.email === 'support@rentflow.ph') {
       company.email = 'vehicleretal.ph';
     }
+    if (company.currency && /[\u20B1]/.test(company.currency)) {
+      company.currency = company.currency.replace(/[\u20B1]\s*/g, '').replace(/[()]/g, '').trim() || 'PHP';
+    }
 
     return {
       ...DEFAULT_SETTINGS,
@@ -238,6 +241,7 @@ export const PORTAL_TABS = {
   ],
   staff: [
     { id: 'dashboard', label: 'Operations Dashboard' },
+    { id: 'scanner', label: 'QR Scanner' },
     { id: 'requests', label: 'Booking Requests' },
     { id: 'active', label: 'Active Rentals' },
     { id: 'returns', label: 'Returns' },

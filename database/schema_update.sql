@@ -119,10 +119,10 @@ CREATE POLICY "Allow write access on promo_codes" ON public.promo_codes FOR ALL 
 
 INSERT INTO public.promo_codes (code, discount_type, value, description, min_amount, is_active, is_single_use, usage_count)
 VALUES
-  ('SAVE500', 'fixed', 500, '₱500 Flat Discount on Vehicle Rental', 1000, true, false, 14),
+  ('SAVE500', 'fixed', 500, '500 Flat Discount on Vehicle Rental', 1000, true, false, 14),
   ('RENTFLOW10', 'percent', 10, '10% Discount on Base Vehicle Rental', 0, true, false, 28),
   ('WEEKEND20', 'percent', 20, '20% Weekend Promo Discount', 2000, true, false, 9),
-  ('VIP1000', 'fixed', 1000, '₱1,000 Flat Discount on VIP & SUV Bookings', 3000, true, false, 5),
+  ('VIP1000', 'fixed', 1000, '1,000 Flat Discount on VIP & SUV Bookings', 3000, true, false, 5),
   ('SUMMER2026', 'percent', 15, '15% Seasonal Summer Promo', 1500, true, false, 18)
 ON CONFLICT (code) DO NOTHING;
 

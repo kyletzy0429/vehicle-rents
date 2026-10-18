@@ -309,6 +309,7 @@ export function customerBookingRow(b) {
     `;
   } else if (b.status === 'active' || b.status === 'completed') {
     actions = `
+      ${b.status === 'active' ? `<button type="button" class="btn btn-secondary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')"><i class="fa-solid fa-clock-rotate-left"></i> Extend Rental</button>` : ''}
       ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)"><i class="fa-solid fa-credit-card"></i> Pay Balance (${fmtMoney(b.balance_due)})</button>` : ''}
       <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')"><i class="fa-solid fa-qrcode" style="margin-right:4px;"></i> Receipt & QR Pass</button>
       <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fef3c7;border:1px solid #fde68a;">Request Refund</button>

@@ -4,7 +4,7 @@ import { state, DEFAULT_SETTINGS, getSystemSettings, getLocalBookings } from './
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-export const fmtMoney = (n) => `₱${Number(n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export const fmtMoney = (n) => `${Number(n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const fmtDate = (d) => {
   if (!d) return "-";

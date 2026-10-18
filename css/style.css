@@ -1,7 +1,8 @@
-@import 'variables.css?v=2.0';
-@import 'base.css?v=2.0';
-@import 'components.css?v=2.0';
-@import 'portal.css?v=2.0';
-@import 'booking.css?v=2.0';
-@import 'admin.css?v=2.0';
-@import 'responsive.css?v=2.0';
+@import 'variables.css?v=5.0';
+@import 'base.css?v=5.0';
+@import 'components.css?v=5.0';
+@import 'portal.css?v=5.0';
+@import 'booking.css?v=5.0';
+@import 'admin.css?v=5.0';
+@import 'responsive.css?v=5.0';
+

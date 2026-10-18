@@ -9,6 +9,11 @@ import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRo
 import { renderCustomer } from './customer.js?v=2.6';
 import { renderStaff, renderAdmin } from './admin.js?v=2.6';
 import { initRealtimeSync } from './realtime.js';
+import { openRentalExtensionModal } from './rental-extension.js';
+
+if (typeof window !== 'undefined') {
+  window.openRentalExtensionModal = openRentalExtensionModal;
+}
 
 export function renderRoleSwitcherHTML(currentRole) {
   const roleLabels = {
@@ -184,6 +189,13 @@ export function openUserMenuModal() {
           </div>
         </button>
 
+        <button class="btn btn-ghost" id="staffGoScanner" style="justify-content:flex-start;padding:12px 14px;border:1px solid rgba(124,58,237,0.3);background:rgba(124,58,237,0.04);border-radius:10px;text-align:left;">
+          <div>
+            <div style="font-weight:700;color:var(--accent);font-size:0.9rem;"><i class="fa-solid fa-qrcode" style="margin-right:6px;"></i> Venue QR Pass Scanner</div>
+            <div style="font-size:0.75rem;color:#64748b;">Instant camera scanner &amp; pass verification</div>
+          </div>
+        </button>
+
         <button class="btn btn-ghost" id="staffGoRequests" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Booking Requests &amp; Approvals</div>
@@ -281,6 +293,8 @@ export function openUserMenuModal() {
   // Staff shortcuts
   const sDsh = $('#staffGoDashboard');
   if (sDsh) sDsh.addEventListener('click', () => { closeModal(); state.tab = 'dashboard'; renderShell(); });
+  const sScn = $('#staffGoScanner');
+  if (sScn) sScn.addEventListener('click', () => { closeModal(); state.tab = 'scanner'; renderShell(); });
   const sReq = $('#staffGoRequests');
   if (sReq) sReq.addEventListener('click', () => { closeModal(); state.tab = 'requests'; renderShell(); });
   const sAct = $('#staffGoActive');
@@ -314,7 +328,7 @@ export function openPricingModal() {
     <div style="line-height:1.6;color:var(--text-mid);font-size:0.88rem;">
       <div style="margin-bottom:14px;background:var(--bg-subtle);padding:14px;border-radius:12px;border:1px solid var(--glass-border);">
         <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:4px;">Security Deposit &amp; Fuel Policy</h4>
-        <p>Standard security deposit of ₱${pol.deposit || 3000} is fully refundable upon return in good condition. Vehicles are provided full-to-full.</p>
+        <p>Standard security deposit of ${Number(pol.deposit || 3000).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is fully refundable upon return in good condition. Vehicles are provided full-to-full.</p>
       </div>
       <div style="margin-bottom:14px;background:var(--bg-subtle);padding:14px;border-radius:12px;border:1px solid var(--glass-border);">
         <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:4px;">Flexible Down Payment Options</h4>

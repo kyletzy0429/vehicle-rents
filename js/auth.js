@@ -188,9 +188,9 @@ export function renderLandingPage() {
                     <span><i class="fa-solid fa-users"></i> Max ${v.seats} ${v.seats > 2 ? 'passengers' : 'riders'}</span>
                     <span><i class="fa-solid fa-bolt"></i> Realtime Sync</span>
                   </div>
-                  <div class="lp-fleet-price">₱${v.rate.toLocaleString()}.00 <span>/ day</span></div>
+                  <div class="lp-fleet-price">${v.rate.toLocaleString()}.00 <span>/ day</span></div>
                   <p class="lp-fleet-desc">${v.desc}</p>
-                  <button type="button" class="lp-btn-booknow" data-lp-book>Book Now</button>
+                  <button type="button" class="lp-btn-booknow" data-lp-book>View Deal</button>
                 </div>
               </div>
             `).join('')}
@@ -344,7 +344,7 @@ export function renderLandingPage() {
     });
   }
 
-  // Book Now buttons on fleet cards → go to auth
+  // View Deal buttons on fleet cards → go to auth
   $$('[data-lp-book]').forEach(btn => {
     btn.addEventListener('click', () => renderAuth());
   });
