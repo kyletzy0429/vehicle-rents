@@ -62,6 +62,99 @@ export function renderLandingPage() {
     { name: 'Yamaha NMAX 155 ABS', cat: 'Motorcycle', seats: 2, img: 'images/nmax.webp', rate: 500, desc: '155cc Automatic Maxi Scooter with Variable Valve Actuation and ABS.' },
   ];
 
+  const reviewsData = [
+    {
+      category: 'suv airport',
+      name: 'Aira Apolinar',
+      initials: 'AA',
+      avatarBg: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+      role: 'Verified Renter',
+      location: 'NAIA T3 VIP Handover',
+      score: '5.0',
+      time: '3d ago',
+      vehicleIcon: 'fa-car-side',
+      vehicle: 'Toyota Fortuner 2.8 V',
+      cat: 'SUV',
+      text: 'Super smooth ng booking process! Pagka-landing namin sa NAIA Terminal 3, naka-park na agad ang Fortuner sa VIP bay with instant digital key access. Mababait at very professional ang staff. Napakalinis ng sasakyan, amoy showroom bago pa!',
+      chips: ['✨ Spotless Clean', '✈️ NAIA T3 VIP Bay', '⚡ Contactless Key Handover']
+    },
+    {
+      category: 'suv luxury',
+      name: 'Engr. David Chen',
+      initials: 'DC',
+      avatarBg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+      role: 'Verified Renter',
+      location: 'Makati to Tagaytay Escapade',
+      score: '5.0',
+      time: '5d ago',
+      vehicleIcon: 'fa-car-side',
+      vehicle: 'Ford Ranger Raptor 4x4',
+      cat: 'Pickup',
+      text: 'Immaculate vehicle condition. The Raptor’s FOX Racing shocks handled the steep Tagaytay ridge climbs effortlessly. Extending our trip by two days via the portal took less than two minutes without calling anyone. Truly a world-class platform!',
+      chips: ['⛰️ 4x4 Tagaytay Ridge', '🔄 Instant Trip Extension', '🛡️ Comprehensive Cover']
+    },
+    {
+      category: 'city luxury',
+      name: 'Atty. Sophia Martinez',
+      initials: 'SM',
+      avatarBg: 'linear-gradient(135deg, #10b981, #047857)',
+      role: 'Verified Renter',
+      location: 'BGC Financial District',
+      score: '5.0',
+      time: '1w ago',
+      vehicleIcon: 'fa-car-side',
+      vehicle: 'Toyota Vios 1.5 G CVT',
+      cat: 'Sedan',
+      text: 'Effortless rental experience. The real-time availability engine meant zero waiting for manual phone confirmations. Official digital receipt and rental agreement were generated immediately. Outstanding standard for corporate mobility.',
+      chips: ['💼 Corporate Rental', '⚡ Instant Agreement Sync', '⛽ High Efficiency']
+    },
+    {
+      category: 'suv airport',
+      name: 'Alexander Wright',
+      initials: 'AW',
+      avatarBg: 'linear-gradient(135deg, #f59e0b, #d97706)',
+      role: 'Verified Renter',
+      location: 'Family Holiday / Clark & Subic',
+      score: '5.0',
+      time: '10d ago',
+      vehicleIcon: 'fa-car-side',
+      vehicle: 'Toyota Innova 2.8 E',
+      cat: 'MPV',
+      text: 'Booked the 8-seater Innova for our extended family trip. Plenty of legroom and luggage space. The vehicle was thoroughly disinfected and had GPS tracking enabled. Best rental platform in the Philippines by far.',
+      chips: ['👨‍👩‍👧‍👦 Family Vacation', '💺 8-Seater Comfort', '📍 Live GPS Enabled']
+    },
+    {
+      category: 'suv city',
+      name: 'Elena & Mark Vance',
+      initials: 'EV',
+      avatarBg: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+      role: 'Verified Renter',
+      location: 'Quezon City to Batangas Coast',
+      score: '5.0',
+      time: '2w ago',
+      vehicleIcon: 'fa-car-side',
+      vehicle: 'Mitsubishi Xpander GLS',
+      cat: 'Crossover',
+      text: 'Modern, reliable, and super fast! The live updates for reservation and extension kept us completely stress-free during our weekend roadtrip. Staff even checked in via chat to make sure our ride was smooth.',
+      chips: ['🌊 Batangas Roadtrip', '📱 Live SMS/Chat Sync', '⭐ 5-Star Hospitality']
+    },
+    {
+      category: 'city',
+      name: 'Capt. Roberto Cruz',
+      initials: 'RC',
+      avatarBg: 'linear-gradient(135deg, #06b6d4, #0284c7)',
+      role: 'Verified Renter',
+      location: 'Pasay City Express Commute',
+      score: '5.0',
+      time: '2w ago',
+      vehicleIcon: 'fa-motorcycle',
+      vehicle: 'Yamaha NMAX 155 ABS',
+      cat: 'Motorcycle',
+      text: 'Needed a nimble commuter while my primary car was in maintenance. The NMAX was delivered to my condo lobby in 30 minutes flat with sanitized helmets and full documentation. Absolutely top tier convenience!',
+      chips: ['⚡ 30-Min Rapid Delivery', '🛵 Premium Maxi Scooter', '🪖 Sanitized Gear Included']
+    }
+  ];
+
   $('#app').innerHTML = `
     <div class="landing-page" data-theme="${isDark ? 'dark' : ''}">
 
@@ -238,47 +331,119 @@ export function renderLandingPage() {
       <!-- ═══ REVIEWS ═══ -->
       <section class="lp-section lp-section-reviews" id="lp-reviews">
         <div class="lp-section-inner">
-          <div class="lp-section-tag">GUEST EXPERIENCES</div>
-          <h2 class="lp-section-title">What Our Customers Say</h2>
-          <p class="lp-section-desc">Real reviews from verified renters.</p>
+          <div class="lp-section-tag"><i class="fa-solid fa-crown" style="color:#f59e0b;margin-right:6px;"></i> VERIFIED GUEST EXPERIENCES</div>
+          <h2 class="lp-section-title">Loved by Drivers Across the Philippines</h2>
+          <p class="lp-section-desc">Experience effortless vehicle rentals with guaranteed cloud-synced availability, immaculate vehicles, and 24/7 concierge assistance.</p>
 
-          <div class="lp-reviews-grid">
-            <div class="lp-review-card">
-              <div class="lp-review-head"><span class="lp-stars">★★★★★</span><span class="lp-review-badge"><i class="fa-solid fa-comment"></i> GENERAL</span></div>
-              <p class="lp-review-text">"Ganda ng place at mababait ang staffs! Super smooth ng booking process, walang hassle."</p>
-              <div class="lp-reviewer">Aira Apolinar</div>
-              <div class="lp-review-role">Verified Guest</div>
-              <div class="lp-review-ago">18d ago</div>
+          <!-- Aggregate Trust Bar -->
+          <div class="lp-reviews-trust-bar">
+            <div class="lp-trust-main-score">
+              <div class="lp-trust-score-num">4.96</div>
+              <div class="lp-trust-score-meta">
+                <div class="lp-trust-stars">
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                  <i class="fa-solid fa-star"></i>
+                </div>
+                <div class="lp-trust-score-label">1,480+ Verified Trips</div>
+              </div>
             </div>
-            <div class="lp-review-card">
-              <div class="lp-review-head"><span class="lp-stars">★★★★☆</span><span class="lp-review-badge lp-badge-purple"><i class="fa-solid fa-car"></i> FLEET</span></div>
-              <p class="lp-review-text">"Great vehicle condition and wonderful customer service. The Fortuner was immaculate. Will definitely book again next season."</p>
-              <div class="lp-reviewer">David Chen</div>
-              <div class="lp-review-role">Verified Guest</div>
-              <div class="lp-review-ago">19d ago</div>
-            </div>
-            <div class="lp-review-card">
-              <div class="lp-review-head"><span class="lp-stars">★★★★★</span><span class="lp-review-badge" style="border-color:#f59e0b;color:#f59e0b;"><i class="fa-solid fa-concierge-bell"></i> SERVICE</span></div>
-              <p class="lp-review-text">"The real-time reservation and instant vehicle availability made booking effortless. Stunning fleet and exceptional staff!"</p>
-              <div class="lp-reviewer">Sophia Martinez</div>
-              <div class="lp-review-role">Verified Guest</div>
-              <div class="lp-review-ago">20d ago</div>
-            </div>
-            <div class="lp-review-card">
-              <div class="lp-review-head"><span class="lp-stars">★★★★★</span><span class="lp-review-badge"><i class="fa-solid fa-car"></i> FLEET</span></div>
-              <p class="lp-review-text">"Flawless vehicle rental system. Everything from service requests to payment was smooth and instantaneous."</p>
-              <div class="lp-reviewer">Alexander Wright</div>
-              <div class="lp-review-role">Verified Guest</div>
-              <div class="lp-review-ago">21d ago</div>
-            </div>
-            <div class="lp-review-card">
-              <div class="lp-review-head"><span class="lp-stars">★★★★★</span><span class="lp-review-badge"><i class="fa-solid fa-comment"></i> GENERAL</span></div>
-              <p class="lp-review-text">"Modern, elegant, and super fast! The live updates for reservations and dispatching kept us feeling pampered throughout."</p>
-              <div class="lp-reviewer">Elena &amp; Mark Vance</div>
-              <div class="lp-review-role">Verified Guest</div>
-              <div class="lp-review-ago">22d ago</div>
+
+            <div class="lp-trust-divider"></div>
+
+            <div class="lp-trust-metrics">
+              <div class="lp-trust-metric-item">
+                <div class="lp-metric-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="lp-metric-info">
+                  <span class="lp-metric-val">99.8%</span>
+                  <span class="lp-metric-lbl">Showroom Cleanliness</span>
+                </div>
+              </div>
+              <div class="lp-trust-metric-item">
+                <div class="lp-metric-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="lp-metric-info">
+                  <span class="lp-metric-val">99.4%</span>
+                  <span class="lp-metric-lbl">Punctual Handover</span>
+                </div>
+              </div>
+              <div class="lp-trust-metric-item">
+                <div class="lp-metric-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="lp-metric-info">
+                  <span class="lp-metric-val">100%</span>
+                  <span class="lp-metric-lbl">Guaranteed Fleet Sync</span>
+                </div>
+              </div>
+              <div class="lp-trust-metric-item">
+                <div class="lp-metric-icon"><i class="fa-solid fa-headset"></i></div>
+                <div class="lp-metric-info">
+                  <span class="lp-metric-val">24/7</span>
+                  <span class="lp-metric-lbl">Roadside Concierge</span>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Category Filter Tabs -->
+          <div class="lp-reviews-filters" role="tablist">
+            <button type="button" class="lp-review-filter-btn active" data-filter="all"><i class="fa-solid fa-layer-group"></i> All Reviews (${reviewsData.length})</button>
+            <button type="button" class="lp-review-filter-btn" data-filter="suv"><i class="fa-solid fa-truck-monster"></i> SUVs &amp; 4x4</button>
+            <button type="button" class="lp-review-filter-btn" data-filter="luxury"><i class="fa-solid fa-gem"></i> VIP &amp; Executive</button>
+            <button type="button" class="lp-review-filter-btn" data-filter="city"><i class="fa-solid fa-city"></i> Sedans &amp; City</button>
+            <button type="button" class="lp-review-filter-btn" data-filter="airport"><i class="fa-solid fa-plane-arrival"></i> Airport Delivery</button>
+          </div>
+
+          <!-- Reviews Grid -->
+          <div class="lp-reviews-grid">
+            ${reviewsData.map(r => `
+              <div class="lp-review-card" data-category="${r.category}">
+                <i class="fa-solid fa-quote-right lp-quote-watermark"></i>
+                <div class="lp-review-card-head">
+                  <div class="lp-reviewer-profile">
+                    <div class="lp-avatar-wrap" style="background:${r.avatarBg};">
+                      ${r.initials}
+                      <span class="lp-avatar-verified" title="Verified Renter"><i class="fa-solid fa-check"></i></span>
+                    </div>
+                    <div class="lp-reviewer-meta">
+                      <div class="lp-reviewer-name">${r.name}</div>
+                      <div class="lp-reviewer-location"><i class="fa-solid fa-location-dot" style="color:var(--accent);font-size:0.68rem;"></i> ${r.location}</div>
+                    </div>
+                  </div>
+                  <div class="lp-review-card-rating">
+                    <span class="lp-score-badge"><i class="fa-solid fa-star"></i> ${r.score}</span>
+                    <div class="lp-review-time-ago">${r.time}</div>
+                  </div>
+                </div>
+
+                <div class="lp-review-vehicle-pill">
+                  <i class="fa-solid ${r.vehicleIcon}"></i>
+                  <span>Rented: <strong>${r.vehicle}</strong></span>
+                </div>
+
+                <p class="lp-review-quote">"${r.text}"</p>
+
+                <div class="lp-review-chip-list">
+                  ${r.chips.map(c => `<span class="lp-review-chip">${c}</span>`).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Bottom CTA -->
+          <div class="lp-reviews-bottom-cta">
+            <div class="lp-cta-text">
+              <div class="lp-cta-pill"><i class="fa-solid fa-shield-check"></i> 100% RISK-FREE RESERVATION</div>
+              <h3>Ready to Experience First-Class Driving?</h3>
+              <p>Book online in under 60 seconds with live instant confirmation and flexible rental extensions.</p>
+            </div>
+            <div class="lp-cta-action">
+              <a href="#lp-fleet" class="lp-btn-reserve-cta" id="lpReviewBookNow">
+                <i class="fa-solid fa-car"></i> Explore Available Fleet <i class="fa-solid fa-arrow-right" style="font-size:0.85rem;margin-left:4px;"></i>
+              </a>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -361,6 +526,42 @@ export function renderLandingPage() {
   if (mobileBtn && navLinks) {
     mobileBtn.addEventListener('click', () => {
       navLinks.classList.toggle('lp-mobile-open');
+    });
+  }
+
+  // Filter tabs for reviews
+  const filterBtns = $$('.lp-review-filter-btn');
+  const reviewCards = $$('.lp-review-card');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const targetFilter = btn.getAttribute('data-filter') || 'all';
+      reviewCards.forEach(card => {
+        const cats = card.getAttribute('data-category') || '';
+        if (targetFilter === 'all' || cats.includes(targetFilter)) {
+          card.style.display = 'flex';
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(8px)';
+          requestAnimationFrame(() => {
+            card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          });
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Review Book Now CTA button
+  const reviewBookBtn = $('#lpReviewBookNow');
+  if (reviewBookBtn) {
+    reviewBookBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const fleetSec = document.querySelector('#lp-fleet');
+      if (fleetSec) fleetSec.scrollIntoView({ behavior: 'smooth' });
     });
   }
 
