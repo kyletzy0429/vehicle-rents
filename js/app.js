@@ -5,7 +5,7 @@ import {
   getTheme, toggleTheme, applyTheme,
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
-import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole } from './auth.js';
+import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole, checkCustomerVerificationStatus } from './auth.js';
 import { renderCustomer } from './customer.js?v=2.6';
 import { renderStaff, renderAdmin } from './admin.js?v=2.6';
 import { initRealtimeSync } from './realtime.js';
@@ -150,7 +150,7 @@ export function openUserMenuModal() {
         <button class="btn btn-ghost" id="adminGoUsers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Roles &amp; Permissions</div>
-            <div style="font-size:0.75rem;color:#64748b;">Manage Administrator, Operations Manager, and Guest access</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage Administrator and Staff access</div>
           </div>
         </button>
       </div>
@@ -166,7 +166,7 @@ export function openUserMenuModal() {
           <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(5,150,105,0.25);">${initials}</div>
           <div>
             <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Sarah Jane Villanueva'}</h3>
-            <span style="font-size:0.78rem;color:#059669;font-weight:700;">Operations Staff / Manager</span>
+            <span style="font-size:0.78rem;color:#059669;font-weight:700;">Operations Staff</span>
           </div>
         </div>
         <div class="modal-close" id="mClose">Close</div>
@@ -245,6 +245,13 @@ export function openUserMenuModal() {
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
 
+        <button class="btn btn-ghost" id="umAccount" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
+          <div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-circle-user" style="color:var(--accent);margin-right:6px;"></i> My Account &amp; Profile</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage personal details, contact info, and driver's license</div>
+          </div>
+        </button>
+
         <button class="btn btn-ghost" id="umBookings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Reservations &amp; Rentals</div>
@@ -303,6 +310,8 @@ export function openUserMenuModal() {
   if (sRet) sRet.addEventListener('click', () => { closeModal(); state.tab = 'returns'; renderShell(); });
 
   // Customer shortcuts
+  const aAcc = $('#umAccount');
+  if (aAcc) aAcc.addEventListener('click', () => { closeModal(); state.tab = 'account'; renderShell(); });
   const bBtn = $('#umBookings');
   if (bBtn) bBtn.addEventListener('click', () => { closeModal(); state.tab = 'bookings'; renderShell(); });
   const fBtn = $('#umFavorites');
@@ -369,10 +378,10 @@ export function renderShell() {
               <i class="fa-solid fa-bars"></i>
             </button>
 
-            <div class="brand-logo-badge">VR</div>
+            <div class="brand-logo-badge"><i class="fa-solid fa-car-side"></i></div>
 
             <div style="cursor:pointer;" id="brandHomeBtn">
-              <div class="brand-title">Vehicle Rentals</div>
+              <div class="brand-title">Vehicle Rental Management System</div>
               <div class="brand-portal-sub">GUEST PORTAL</div>
             </div>
 
@@ -383,13 +392,17 @@ export function renderShell() {
                   <i class="fa-solid fa-magnifying-glass"></i>
                   <span>Search Vehicles</span>
                 </button>
+                <button type="button" class="g-menu-item ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span>My Bookings</span>
+                </button>
                 <button type="button" class="g-menu-item ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
                   <i class="fa-regular fa-heart"></i>
                   <span>My Favorites</span>
                 </button>
-                <button type="button" class="g-menu-item ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
-                  <i class="fa-solid fa-calendar-check"></i>
-                  <span>My Bookings</span>
+                <button type="button" class="g-menu-item ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
+                  <i class="fa-solid fa-circle-user"></i>
+                  <span>My Account</span>
                 </button>
                 <button type="button" class="g-menu-item" id="gMenuPricing">
                   <i class="fa-solid fa-tag"></i>
@@ -410,6 +423,22 @@ export function renderShell() {
               </div>
             </div>
           </div>
+
+          <!-- Customer Header Center Navigation -->
+          <nav class="portal-header-nav" id="portalHeaderNav" aria-label="Customer Navigation">
+            <button type="button" class="portal-nav-link ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
+              <i class="fa-solid fa-magnifying-glass"></i> Browse Fleet
+            </button>
+            <button type="button" class="portal-nav-link ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
+              <i class="fa-solid fa-calendar-check"></i> My Bookings
+            </button>
+            <button type="button" class="portal-nav-link ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
+              <i class="fa-regular fa-heart"></i> Favorites
+            </button>
+            <button type="button" class="portal-nav-link ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
+              <i class="fa-regular fa-user"></i> My Account
+            </button>
+          </nav>
 
           <div class="portal-header-right">
             <div class="lang-select-pill" title="Language: English">
@@ -460,7 +489,7 @@ export function renderShell() {
       });
     }
 
-    $$('.g-menu-item[data-nav]').forEach(item => {
+    $$('.g-menu-item[data-nav], .portal-nav-link[data-nav]').forEach(item => {
       item.addEventListener('click', () => {
         if (gDropdown) gDropdown.classList.add('hidden');
         state.tab = item.dataset.nav;
@@ -499,9 +528,12 @@ export function renderShell() {
     <div class="app-shell">
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebarMenu">
-        <div class="sidebar-brand" style="display:flex;align-items:center;">
+        <div class="sidebar-brand" style="display:flex;align-items:center;gap:10px;">
+          <div class="brand-logo-badge" style="width:34px;height:34px;min-width:34px;font-size:0.95rem;">
+            <i class="fa-solid fa-car-side"></i>
+          </div>
           <div style="flex:1;">
-            <div style="font-weight:800;font-size:0.92rem;line-height:1.2;color:#0f172a;letter-spacing:-0.01em;">Vehicle Rental Management System</div>
+            <div style="font-weight:800;font-size:0.88rem;line-height:1.2;color:#0f172a;letter-spacing:-0.01em;">Vehicle Rental Management System</div>
             <div style="font-size:0.7rem;color:#64748b;font-weight:600;margin-top:2px;">${roleTitle} Portal</div>
           </div>
           <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close Menu" aria-label="Close Menu">

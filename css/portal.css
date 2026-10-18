@@ -37,6 +37,73 @@
   margin-left: auto;
 }
 
+/* Customer Portal Header Navigation Tabs */
+.portal-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .portal-header-nav {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: #334155;
+}
+
+.portal-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.portal-nav-link:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .portal-nav-link {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .portal-nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.portal-nav-link.active {
+  background: #ffffff;
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .portal-nav-link.active {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+}
+
+@media (max-width: 900px) {
+  .portal-header-nav {
+    display: none !important;
+  }
+}
+
 /* Minimalist squircle hamburger menu button */
 .guest-menu-btn {
   width: 38px;
@@ -84,19 +151,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: -0.02em;
+  font-size: 1.15rem;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
   flex-shrink: 0;
 }
 
 .brand-title {
   font-weight: 800;
-  font-size: 0.96rem;
+  font-size: 0.92rem;
   line-height: 1.15;
   color: var(--text-hi);
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .brand-portal-sub {
@@ -3977,4 +4043,518 @@
   background: rgba(30, 41, 59, 0.5);
   border-color: rgba(71, 85, 105, 0.7);
 }
+
+/* ==========================================================================
+   Apple Pay & Visa Secure Styles
+   ========================================================================== */
+.btn-apple-pay {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.btn-apple-pay:hover {
+  background: #1f1f1f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.btn-apple-pay:active {
+  transform: scale(0.98);
+}
+
+.visa-card-box {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+.visa-chip {
+  width: 38px;
+  height: 28px;
+  background: linear-gradient(135deg, #fef08a, #ca8a04);
+  border-radius: 6px;
+  border: 1px solid #eab308;
+  margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   Car Suggestions / Recommendations Widget
+   ========================================================================== */
+.car-suggestions-section {
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.suggestions-pill-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+.suggestion-pill-btn {
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-mid);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.suggestion-pill-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-hi);
+}
+.suggestion-pill-btn.active {
+  background: var(--text-hi);
+  color: var(--bg-dark);
+  border-color: var(--text-hi);
+}
+[data-theme="dark"] .suggestion-pill-btn.active {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #f8fafc;
+}
+.suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.suggestion-card {
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: border-color 0.15s ease;
+  cursor: pointer;
+}
+.suggestion-card:hover {
+  border-color: #94a3b8;
+}
+.suggestion-card-thumb {
+  width: 90px;
+  height: 65px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   RBAC Permissions Matrix
+   ========================================================================== */
+.rbac-matrix-card {
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.rbac-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.rbac-table th {
+  background: var(--accent-glow);
+  color: var(--text-hi);
+  padding: 14px 18px;
+  font-weight: 800;
+  border-bottom: 1px solid var(--glass-border);
+  text-align: left;
+}
+.rbac-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--glass-border);
+  vertical-align: middle;
+}
+.rbac-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+.rbac-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.rbac-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: .25s;
+  border-radius: 24px;
+}
+.rbac-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .25s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.rbac-switch input:checked + .rbac-slider {
+  background-color: var(--accent);
+}
+.rbac-switch input:checked + .rbac-slider:before {
+  transform: translateX(22px);
+}
+
+/* ==========================================================================
+   Customer Bookings Aesthetic Redesign
+   ========================================================================== */
+
+.booking-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.booking-tab-btn {
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.booking-tab-btn:hover {
+  border-color: #cbd5e1;
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+.booking-tab-btn.active {
+  background: var(--accent, #7c3aed);
+  border-color: var(--accent, #7c3aed);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.booking-tab-badge {
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+}
+
+.booking-tab-btn.active .booking-tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.customer-booking-card {
+  padding: 18px 22px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.customer-booking-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.booking-card-body {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+  min-width: 290px;
+}
+
+.booking-thumb-box {
+  width: 108px;
+  height: 76px;
+  min-width: 108px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.booking-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.customer-booking-card:hover .booking-thumb-img {
+  transform: scale(1.05);
+}
+
+.booking-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.booking-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.booking-card-title {
+  font-size: 1.04rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.booking-plate-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #475569;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.booking-card-dates-price {
+  font-size: 0.84rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.booking-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.booking-dates i {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.booking-dot-sep {
+  color: #cbd5e1;
+}
+
+.booking-price-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.booking-total-txt strong {
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.94rem;
+}
+
+.booking-deposit-txt {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.booking-meta-pill-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.booking-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.booking-meta-pill i {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.booking-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.btn-outline-danger {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.12);
+}
+
+/* Dark Mode Support for Booking Cards */
+[data-theme="dark"] .booking-tab-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .booking-tab-btn:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .booking-tab-btn.active {
+  background: var(--accent, #7c3aed);
+  border-color: var(--accent, #7c3aed);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .booking-tab-badge {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .customer-booking-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .customer-booking-card:hover {
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .booking-thumb-box {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .booking-card-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .booking-plate-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .booking-dates {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .booking-total-txt strong {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .booking-meta-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .btn-outline-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+[data-theme="dark"] .btn-outline-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .return-today-alert-card {
+  background: rgba(225, 29, 72, 0.12) !important;
+  border-color: rgba(225, 29, 72, 0.35) !important;
+  border-left-color: #e11d48 !important;
+}
+
+[data-theme="dark"] .return-today-alert-card span,
+[data-theme="dark"] .return-today-alert-card div {
+  color: #fecdd3 !important;
+}
+
+
 

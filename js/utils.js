@@ -140,6 +140,35 @@ export function getRelativeTime(dateInput) {
 export function buildCustomerNotif(b) {
   const vName = b.vehicles?.name || 'Vehicle';
   const shortId = `BK-${String(b.id).slice(-8).toUpperCase()}`;
+
+  // Automated Vehicle Return Day Checks
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const endStr = (b.end_date || '').slice(0, 10);
+
+  if (['active', 'approved'].includes(b.status) && endStr) {
+    if (endStr === todayStr) {
+      return {
+        id: `return-today-${b.id}`,
+        title: `🚨 VEHICLE RETURN DAY TODAY`,
+        time: 'Due by 12:00 PM',
+        desc: `Your ${vName} (${shortId}) is scheduled for return today! Please ensure fuel matches pickup level. Need more time? Request a rental extension instantly.`,
+        read: false,
+        isReturnAlert: true,
+        bookingId: b.id
+      };
+    } else if (endStr < todayStr) {
+      return {
+        id: `return-overdue-${b.id}`,
+        title: `⚠️ OVERDUE RETURN NOTICE`,
+        time: 'Immediate Action Required',
+        desc: `Your ${vName} (${shortId}) return date was ${fmtDate(endStr)}. Please return vehicle or request extension to avoid late penalty charges.`,
+        read: false,
+        isOverdue: true,
+        bookingId: b.id
+      };
+    }
+  }
+
   const statusMap = {
     'approved': { title: 'Booking Approved', desc: `Your reservation for ${vName} (${shortId}) has been approved by staff. Please prepare for pickup.` },
     'pending': { title: 'Booking Request Submitted', desc: `Your reservation for ${vName} (${shortId}) is pending staff review.` },
@@ -296,17 +325,24 @@ export async function openNotificationsModal() {
   const readBorder = isDark ? '#334155' : '#e2e8f0';
 
   const notifsHtml = notifs.length > 0 ? notifs.map(n => `
-    <div style="background:${n.read ? readBg : unreadBg};border:1px solid ${n.read ? readBorder : unreadBorder};border-radius:10px;padding:12px 14px;transition:all 0.2s ease;">
+    <div style="background:${n.read ? readBg : (n.isReturnAlert || n.isOverdue ? (isDark ? 'rgba(239,68,68,0.18)' : '#fef2f2') : unreadBg)};border:1px solid ${n.read ? readBorder : (n.isReturnAlert || n.isOverdue ? '#ef4444' : unreadBorder)};border-radius:10px;padding:12px 14px;transition:all 0.2s ease;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;">
-        <span style="font-weight:700;font-size:0.88rem;color:var(--text-hi);">${n.title}</span>
+        <span style="font-weight:700;font-size:0.88rem;color:${n.isReturnAlert || n.isOverdue ? '#dc2626' : 'var(--text-hi)'};">${n.title}</span>
         <span style="font-size:0.72rem;color:var(--text-mid);flex-shrink:0;">${n.time}</span>
       </div>
-      <p style="font-size:0.8rem;color:var(--text-mid);margin:0;line-height:1.4;">${n.desc}</p>
+      <p style="font-size:0.8rem;color:var(--text-mid);margin:0 0 6px 0;line-height:1.4;">${n.desc}</p>
+      ${(n.isReturnAlert || n.isOverdue) ? `
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.closeModal && window.closeModal(); window.openRentalExtensionModal && window.openRentalExtensionModal('${n.bookingId}');" style="padding:4px 10px;font-size:0.75rem;">
+            <i class="fa-solid fa-clock-rotate-left"></i> Extend Rental
+          </button>
+        </div>
+      ` : ''}
     </div>
   `).join('') : `
     <div style="text-align:center;padding:30px 10px;">
       <p style="font-size:0.9rem;font-weight:600;color:var(--text-hi);margin:0;">No notifications yet</p>
-      <p style="font-size:0.8rem;color:var(--text-mid);margin-top:6px;">When you make a reservation or your booking is updated, alerts will show here.</p>
+      <p style="font-size:0.8rem;color:var(--text-mid);margin-top:6px;">When you make a reservation or your vehicle return day arrives, alerts will show here.</p>
     </div>
   `;
 
@@ -576,8 +612,209 @@ export function showBookingAlertPopup(b) {
   });
 }
 
-// Make accessible on window for direct testing
+// ---------------------------------------------------------------------------
+// Digital Verified Renter ID & Secure Pass
+// ---------------------------------------------------------------------------
+export function openRenterIdModal(profileData = null) {
+  const p = profileData || state.profile || {};
+  const renterName = p.full_name || 'Mark Lester Ramos';
+  const renterPhone = p.phone || '0917 582 9140';
+  const renterAddress = p.address || 'Puerto Princesa City, Palawan';
+  const licenseNum = p.license_number || 'N02-19-482019';
+  const licenseExpiry = p.license_expiry || '2028-10-18';
+  const renterIdCode = `RNT-${String(p.id || '882049').slice(0, 8).toUpperCase()}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=PHILIPPINES-RENTER-PASS-${renterIdCode}-${encodeURIComponent(renterName)}`;
+
+  openModal(`
+    <div class="renter-id-modal-wrap">
+      <div class="modal-head" style="margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:1.2rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid fa-id-badge" style="color:var(--accent);"></i> Digital Verified Renter ID Pass
+          </h3>
+          <span style="font-size:0.78rem;color:var(--text-mid);">Official Contactless Pass for Express Vehicle Handover</span>
+        </div>
+        <div class="modal-close" id="mClose">Close</div>
+      </div>
+
+      <!-- Holographic Digital ID Card -->
+      <div class="renter-id-card-visual" style="background:linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #7c3aed 100%);color:#fff;border-radius:18px;padding:22px;box-shadow:0 12px 30px rgba(124,58,237,0.35);position:relative;overflow:hidden;margin-bottom:18px;border:1px solid rgba(255,255,255,0.2);">
+        <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,0.08);border-radius:50%;pointer-events:none;"></div>
+        
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+              <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <div>
+              <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;opacity:0.8;">REPUBLIC OF THE PHILIPPINES</div>
+              <div style="font-size:0.85rem;font-weight:800;letter-spacing:0.05em;">VERIFIED RENTER PASS</div>
+            </div>
+          </div>
+          <span style="background:rgba(16,185,129,0.25);border:1px solid #10b981;color:#6ee7b7;font-size:0.68rem;padding:4px 8px;border-radius:20px;font-weight:700;display:flex;align-items:center;gap:4px;">
+            <i class="fa-solid fa-circle-check"></i> LTO VERIFIED
+          </span>
+        </div>
+
+        <div style="display:flex;gap:16px;align-items:center;">
+          <div style="width:70px;height:70px;border-radius:14px;background:#ffffff;padding:4px;flex-shrink:0;box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+            <img src="${qrUrl}" alt="Renter QR" style="width:100%;height:100%;object-fit:contain;" />
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:1.1rem;font-weight:800;margin-bottom:2px;letter-spacing:0.02em;">${renterName}</div>
+            <div style="font-size:0.75rem;opacity:0.9;margin-bottom:4px;"><i class="fa-solid fa-phone" style="font-size:0.65rem;"></i> ${renterPhone}</div>
+            <div style="font-size:0.72rem;opacity:0.8;"><i class="fa-solid fa-location-dot" style="font-size:0.65rem;"></i> ${renterAddress}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15);">
+          <div>
+            <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase;">Driver's License No.</div>
+            <div style="font-size:0.85rem;font-weight:700;font-family:monospace;letter-spacing:0.05em;">${licenseNum}</div>
+          </div>
+          <div>
+            <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase;">Valid Thru</div>
+            <div style="font-size:0.85rem;font-weight:700;">${licenseExpiry}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase;">Renter Pass ID</div>
+            <div style="font-size:0.85rem;font-weight:800;color:#fde047;letter-spacing:0.05em;">${renterIdCode}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Details -->
+      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <i class="fa-solid fa-fingerprint" style="color:#059669;font-size:1.1rem;"></i>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--text-hi);">Secure 256-Bit Encrypted Authentication</span>
+        </div>
+        <p style="margin:0;font-size:0.78rem;color:var(--text-mid);line-height:1.5;">
+          Present this digital QR pass during pickup for zero-wait validation. Staff will verify your identity with a single scan without photocopying physical IDs.
+        </p>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-ghost btn-block" id="printRenterIdBtn" style="border:1px solid var(--glass-border);">
+          <i class="fa-solid fa-print"></i> Print / Save Pass
+        </button>
+        <button type="button" class="btn btn-primary btn-block" onclick="window.closeModal && window.closeModal();">
+          <i class="fa-solid fa-check"></i> Done
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('#mClose')?.addEventListener('click', closeModal);
+  $('#printRenterIdBtn')?.addEventListener('click', () => {
+    window.print();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Damage Policy & Fair Wear Protection Modal
+// ---------------------------------------------------------------------------
+export function openDamagePolicyModal() {
+  openModal(`
+    <div class="damage-policy-modal-wrap" style="max-height:80vh;overflow-y:auto;padding-right:4px;">
+      <div class="modal-head" style="margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid fa-shield-halved" style="color:#059669;"></i> Damage Policy &amp; Fair Wear Coverage
+          </h3>
+          <span style="font-size:0.78rem;color:var(--text-mid);">Clear, fair, and transparent guidelines for vehicle care and incident protection.</span>
+        </div>
+        <div class="modal-close" id="mClose">Close</div>
+      </div>
+
+      <!-- Trust Assurance Banner -->
+      <div style="background:linear-gradient(135deg, rgba(5,150,105,0.1), rgba(16,185,129,0.05));border:1px solid #10b981;border-radius:12px;padding:14px 16px;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#047857;margin-bottom:4px;font-size:0.9rem;">
+          <i class="fa-solid fa-circle-check"></i> Zero Surprise Damage Guarantee
+        </div>
+        <p style="margin:0;font-size:0.8rem;color:#065f46;line-height:1.45;">
+          All rentals include standard basic liability protection. Pre-existing marks are digitally documented before handover so you are never charged for prior wear.
+        </p>
+      </div>
+
+      <!-- Fair Wear vs Damage Schedule -->
+      <h4 style="font-size:0.95rem;font-weight:800;color:var(--text-hi);margin-bottom:10px;">
+        1. Fair Wear &amp; Tear (₱0 Covered by Rental)
+      </h4>
+      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:0.8rem;line-height:1.6;color:var(--text-mid);">
+        <div><i class="fa-solid fa-check" style="color:#059669;margin-right:8px;"></i> Surface hairline scratches under 2 inches (5cm) that can be buffed.</div>
+        <div><i class="fa-solid fa-check" style="color:#059669;margin-right:8px;"></i> Tiny lower bumper stone chips under 3mm from highway driving.</div>
+        <div><i class="fa-solid fa-check" style="color:#059669;margin-right:8px;"></i> Normal exterior dust and light rain splatters.</div>
+        <div><i class="fa-solid fa-check" style="color:#059669;margin-right:8px;"></i> Routine brake dust and tire tread wear.</div>
+      </div>
+
+      <h4 style="font-size:0.95rem;font-weight:800;color:var(--text-hi);margin-bottom:10px;">
+        2. Billable Damage Rates Schedule
+      </h4>
+      <div style="border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;margin-bottom:18px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;text-align:left;">
+          <thead style="background:var(--accent-glow);color:var(--text-hi);">
+            <tr>
+              <th style="padding:10px 14px;">Incident / Component</th>
+              <th style="padding:10px 14px;">Assessment Standard</th>
+              <th style="padding:10px 14px;text-align:right;">Standard Cost</th>
+            </tr>
+          </thead>
+          <tbody style="color:var(--text-mid);">
+            <tr style="border-top:1px solid var(--glass-border);">
+              <td style="padding:10px 14px;font-weight:700;color:var(--text-hi);">Minor Panel Scratch</td>
+              <td style="padding:10px 14px;">Scratch through base coat requiring repainting</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:700;color:#dc2626;">₱1,500 - ₱2,500</td>
+            </tr>
+            <tr style="border-top:1px solid var(--glass-border);">
+              <td style="padding:10px 14px;font-weight:700;color:var(--text-hi);">Panel Dent / Ding</td>
+              <td style="padding:10px 14px;">Door ding or bumper dent requiring PDR repair</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:700;color:#dc2626;">₱3,500</td>
+            </tr>
+            <tr style="border-top:1px solid var(--glass-border);">
+              <td style="padding:10px 14px;font-weight:700;color:var(--text-hi);">Windshield Chip / Crack</td>
+              <td style="padding:10px 14px;">Bullseye or star chip requiring resin fill or glass replace</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:700;color:#dc2626;">₱2,500 (Deductible cap)</td>
+            </tr>
+            <tr style="border-top:1px solid var(--glass-border);">
+              <td style="padding:10px 14px;font-weight:700;color:var(--text-hi);">Interior Deep Stain / Odor</td>
+              <td style="padding:10px 14px;">Seat stains, cigarette smoke, or heavy mud</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:700;color:#dc2626;">₱1,200 detailing</td>
+            </tr>
+            <tr style="border-top:1px solid var(--glass-border);">
+              <td style="padding:10px 14px;font-weight:700;color:var(--text-hi);">Lost Smart Key / Fob</td>
+              <td style="padding:10px 14px;">OEM key fob replacement &amp; immobilizer re-pairing</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:700;color:#dc2626;">₱4,000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4 style="font-size:0.95rem;font-weight:800;color:var(--text-hi);margin-bottom:10px;">
+        3. Fair Inspection &amp; Claim Process
+      </h4>
+      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:0.8rem;line-height:1.6;color:var(--text-mid);">
+        <div><strong>1. Handover Check:</strong> Staff documents vehicle condition photos before pickup.</div>
+        <div><strong>2. Return Review:</strong> Joint walk-around inspection logged right on the Staff Return Portal.</div>
+        <div><strong>3. Transparent Invoicing:</strong> If any new damage is recorded, an itemized assessment receipt is issued with deductible coverage applied.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-primary btn-block" onclick="window.closeModal && window.closeModal();">
+          <i class="fa-solid fa-check"></i> I Understand &amp; Agree to Policy
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('#mClose')?.addEventListener('click', closeModal);
+}
+
+// Global window registration
 if (typeof window !== 'undefined') {
   window.showBookingAlertPopup = showBookingAlertPopup;
+  window.openDamagePolicyModal = openDamagePolicyModal;
+  window.openRenterIdModal = openRenterIdModal;
 }
+
 

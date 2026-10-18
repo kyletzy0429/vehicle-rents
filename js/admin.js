@@ -1,5 +1,12 @@
 import { supabase } from './config.js';
-import { state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings, getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS, getVehicleOverrides, saveVehicleOverride } from './state.js';
+import {
+  state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings,
+  getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS,
+  getVehicleOverrides, saveVehicleOverride,
+  getLocalDamages, saveLocalDamage, updateDamageStatus,
+  getLocalCustomFees, saveLocalCustomFee, updateCustomFeeStatus,
+  getRBACPermissions, saveRBACPermissions, RBAC_DEFINITIONS, hasPermission
+} from './state.js';
 import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, closeModal, emptyState, getRoleDisplayName, applyTheme } from './utils.js';
 import { getExactVehicleImage, getVehicleDailyRate, setVehicleCustomRate, getVehicleCategoryName, loadVehicles, loadCategories, PH_CATEGORIES } from './vehicles.js';
 import { openRefundVoucherModal } from './customer.js';
@@ -18,6 +25,7 @@ export async function renderStaff(tab, view) {
   if (tab === 'requests') return renderStaffRequests(view);
   if (tab === 'active') return renderStaffActive(view);
   if (tab === 'returns') return renderStaffReturns(view);
+  if (tab === 'damages') return renderStaffDamages(view);
   if (tab === 'refunds') return renderStaffRefunds(view);
   if (tab === 'history') return renderStaffHistory(view);
 }
@@ -282,8 +290,9 @@ export async function renderStaffDashboard(view) {
     btn.disabled = true;
     updateLocalBookingStatus(id, 'approved');
     broadcastBookingStatusChange(id, 'approved');
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
-      await supabase.from('bookings').update({ status: 'approved', reviewed_by: state.user.id }).eq('id', id);
+      await supabase.from('bookings').update({ status: 'approved', reviewed_by: currentUserId }).eq('id', id);
     } catch (e) {}
     toast('Booking approved right from Operations Dashboard!', 'success');
     renderStaffDashboard(view);
@@ -295,8 +304,9 @@ export async function renderStaffDashboard(view) {
     if (reason === null) return;
     updateLocalBookingStatus(id, 'rejected', { review_notes: reason });
     broadcastBookingStatusChange(id, 'rejected', { reason });
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
-      await supabase.from('bookings').update({ status: 'rejected', reviewed_by: state.user.id, review_notes: reason }).eq('id', id);
+      await supabase.from('bookings').update({ status: 'rejected', reviewed_by: currentUserId, review_notes: reason }).eq('id', id);
     } catch (e) {}
     toast('Booking rejected.', 'info');
     renderStaffDashboard(view);
@@ -440,6 +450,7 @@ export async function fetchMergedProfiles() {
 }
 
 export async function renderStaffRefunds(view) {
+  const canDisburse = hasPermission('canDisburseRefunds');
   const allBookings = await fetchMergedBookings();
   const bookings = allBookings.filter(b =>
     ['refund_requested', 'refunded'].includes(b.status) ||
@@ -466,7 +477,7 @@ export async function renderStaffRefunds(view) {
             <span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>
             <div class="item-actions">
               ${b.status === 'refund_requested' ? `
-                <button class="btn btn-primary btn-sm" data-disburse-id="${b.id}">Disburse Refund</button>
+                <button class="btn btn-primary btn-sm" data-disburse-id="${b.id}" ${!canDisburse ? 'disabled title="Requires canDisburseRefunds RBAC permission"' : ''}>Disburse Refund</button>
               ` : `
                 <button class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}">Voucher</button>
               `}
@@ -489,7 +500,7 @@ export async function renderStaffRefunds(view) {
     try {
       await supabase.from('bookings').update({
         status: 'refunded',
-        reviewed_by: state.user.id,
+        reviewed_by: state.user?.id || '10f2d761-ab31-4490-944d-456af33759ba',
       }).eq('id', id);
     } catch (e) {
       console.warn('DB disburse notice:', e);
@@ -524,6 +535,8 @@ export function getBookingCustomerPhone(b) {
 }
 
 export async function renderStaffRequests(view) {
+  const canApprove = hasPermission('canApproveBookings');
+  const canReject = hasPermission('canRejectBookings');
   const bookings = await fetchMergedBookings(b => b.status === 'pending');
 
   view.innerHTML = `
@@ -544,8 +557,8 @@ export async function renderStaffRequests(view) {
             </div>
             <span class="badge badge-pending">pending</span>
             <div class="item-actions">
-              <button class="btn btn-primary btn-sm" data-approve="${b.id}">Approve</button>
-              <button class="btn btn-danger btn-sm" data-reject="${b.id}">Reject</button>
+              <button class="btn btn-primary btn-sm" data-approve="${b.id}" ${!canApprove ? 'disabled title="Requires canApproveBookings RBAC permission"' : ''}>Approve</button>
+              <button class="btn btn-danger btn-sm" data-reject="${b.id}" ${!canReject ? 'disabled title="Requires canRejectBookings RBAC permission"' : ''}>Reject</button>
             </div>
           </div>
         `;
@@ -561,9 +574,10 @@ export async function renderStaffRequests(view) {
     updateLocalBookingStatus(id, 'approved');
     broadcastBookingStatusChange(id, 'approved');
 
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
       await supabase.from('bookings').update({
-        status: 'approved', reviewed_by: state.user.id, review_notes: null,
+        status: 'approved', reviewed_by: currentUserId, review_notes: null,
       }).eq('id', id);
     } catch (e) {
       console.warn('DB approve notice:', e);
@@ -581,9 +595,10 @@ export async function renderStaffRequests(view) {
     updateLocalBookingStatus(id, 'rejected', { review_notes: reason });
     broadcastBookingStatusChange(id, 'rejected', { reason });
 
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
       await supabase.from('bookings').update({
-        status: 'rejected', reviewed_by: state.user.id, review_notes: reason,
+        status: 'rejected', reviewed_by: currentUserId, review_notes: reason,
       }).eq('id', id);
     } catch (e) {
       console.warn('DB reject notice:', e);
@@ -722,29 +737,342 @@ export async function openStaffPaymentModal(bookingId) {
   });
 }
 
-export async function renderStaffReturns(view) {
-  const bookings = await fetchMergedBookings(b => b.status === 'active');
+export async function renderStaffReturns(view, activeSubTab = 'returns') {
+  const canRecord = hasPermission('canRecordDamage');
+  const canAddFees = hasPermission('canAddCustomFees');
+  const canInspect = hasPermission('canInspectReturns');
+
+  const activeBookings = await fetchMergedBookings(b => b.status === 'active');
+  const damages = getLocalDamages();
+  const customFees = getLocalCustomFees();
+  const allBookings = await fetchMergedBookings();
+
+  const totalDamageBilled = damages.reduce((acc, d) => acc + (Number(d.amount_due) || 0), 0);
+  const totalDeductibleProtected = damages.reduce((acc, d) => acc + (Number(d.deductible_coverage) || 0), 0);
+  const totalFeesBilled = customFees.reduce((acc, f) => acc + (Number(f.amount) || 0), 0);
 
   view.innerHTML = `
     <div class="view">
-      <div class="section-head"><div><h2>Return Process</h2><p>Inspect returned vehicles, record damage, and finalize the rental.</p></div></div>
-      <div class="row-list">
-        ${bookings.length ? bookings.map(b => `
-          <div class="glass item-row">
-            <div class="item-main">
-              <div class="item-title">${b.vehicles?.name || 'Vehicle'} <span class="muted">(${b.vehicles?.plate_number || 'N/A'})</span></div>
-              <div class="item-sub">${getBookingCustomerName(b)} · Due back ${fmtDate(b.end_date)}</div>
-            </div>
-            <div class="item-actions"><button class="btn btn-primary btn-sm" data-return="${b.id}">Process Return</button></div>
-          </div>
-        `).join('') : emptyState('', 'No vehicles currently out for rental.')}
+      <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+        <div>
+          <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-rotate-left" style="color:var(--accent);"></i> Returns, Damage &amp; Fee Management
+          </h2>
+          <p style="color:var(--text-mid);font-size:0.85rem;margin:4px 0 0 0;">
+            Inspect returned vehicles, complete return handovers, record damage pay assessments, and bill extra fees.
+          </p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary btn-sm" id="btnRecordDamage" ${!canRecord ? 'disabled title="Requires canRecordDamage RBAC permission"' : ''} style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-car-burst"></i> Record Damage Pay
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnAddCustomFee" ${!canAddFees ? 'disabled title="Requires canAddCustomFees RBAC permission"' : ''} style="border:1px solid #cbd5e1;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-receipt"></i> Add Additional Fee
+          </button>
+        </div>
+      </div>
+
+      ${(!canRecord && !canAddFees) ? `
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;color:#991b1b;font-size:0.85rem;">
+          <i class="fa-solid fa-shield-halved" style="font-size:1.1rem;"></i>
+          <div><strong>RBAC Permission Notice:</strong> Your account role has view-only access to recording damage or fees. Inspecting returns requires canInspectReturns permission.</div>
+        </div>
+      ` : ''}
+
+      <!-- Metric Stats Bar -->
+      <div class="grid grid-stats" style="margin-bottom:24px;">
+        <div class="glass stat-card" style="border-left:4px solid var(--accent);">
+          <div class="stat-label">Active Rentals to Return</div>
+          <div class="stat-value" style="color:var(--accent);">${activeBookings.length}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Vehicles out on rental</div>
+        </div>
+        <div class="glass stat-card" style="border-left:4px solid #ef4444;">
+          <div class="stat-label">Total Damage Billed</div>
+          <div class="stat-value" style="color:#dc2626;">₱${fmtMoney(totalDamageBilled)}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">${damages.length} Incidents recorded</div>
+        </div>
+        <div class="glass stat-card" style="border-left:4px solid #10b981;">
+          <div class="stat-label">Deductible Protected</div>
+          <div class="stat-value" style="color:#059669;">₱${fmtMoney(totalDeductibleProtected)}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Covered under Zero-Surprise policy</div>
+        </div>
+        <div class="glass stat-card" style="border-left:4px solid #3b82f6;">
+          <div class="stat-label">Additional Surcharges</div>
+          <div class="stat-value" style="color:#2563eb;">₱${fmtMoney(totalFeesBilled)}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">${customFees.length} Extra fees billed</div>
+        </div>
+      </div>
+
+      <!-- Tab Switcher for Returns vs Damage vs Custom Fees -->
+      <div class="pill-row" style="margin-bottom:20px;">
+        <div class="pill ${activeSubTab === 'returns' ? 'active' : ''}" id="pillTabReturns" style="cursor:pointer;">
+          <i class="fa-solid fa-key"></i> Active Returns &amp; Inspections (${activeBookings.length})
+        </div>
+        <div class="pill ${activeSubTab === 'damages' ? 'active' : ''}" id="pillTabDamages" style="cursor:pointer;">
+          <i class="fa-solid fa-car-burst"></i> Damage Assessments (${damages.length})
+        </div>
+        <div class="pill ${activeSubTab === 'fees' ? 'active' : ''}" id="pillTabFees" style="cursor:pointer;">
+          <i class="fa-solid fa-receipt"></i> Additional Operational Fees (${customFees.length})
+        </div>
+      </div>
+
+      <!-- Section 1: Active Returns to Inspect -->
+      <div id="sectionReturnsList" style="display:${activeSubTab === 'returns' ? 'block' : 'none'};">
+        <div class="row-list">
+          ${activeBookings.length ? activeBookings.map(b => {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const isOverdue = (b.end_date || '').slice(0, 10) < todayStr;
+            const isDueToday = (b.end_date || '').slice(0, 10) === todayStr;
+            return `
+              <div class="glass item-row" style="padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:280px;">
+                  <div style="width:88px;height:64px;border-radius:10px;overflow:hidden;background:#f8fafc;border:1px solid #e2e8f0;flex-shrink:0;">
+                    <img src="${getExactVehicleImage(b.vehicles || {})}" style="width:100%;height:100%;object-fit:cover;" />
+                  </div>
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+                      <strong style="font-size:1.02rem;color:var(--text-hi);">${b.vehicles?.name || 'Vehicle'}</strong>
+                      <span style="font-family:monospace;font-size:0.75rem;padding:2px 7px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;color:#475569;font-weight:600;">
+                        ${maskPlate(b.vehicles?.plate_number || 'N/A')}
+                      </span>
+                      ${isOverdue 
+                        ? '<span class="badge badge-rejected" style="font-size:0.7rem;"><i class="fa-solid fa-triangle-exclamation"></i> OVERDUE RETURN</span>' 
+                        : isDueToday 
+                        ? '<span class="badge badge-pending" style="font-size:0.7rem;"><i class="fa-solid fa-clock"></i> DUE TODAY</span>' 
+                        : '<span class="badge badge-available" style="font-size:0.7rem;"><i class="fa-solid fa-car"></i> ON RENTAL</span>'
+                      }
+                    </div>
+                    <div style="font-size:0.83rem;color:var(--text-mid);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                      <span><i class="fa-solid fa-user" style="margin-right:4px;color:#94a3b8;"></i>${getBookingCustomerName(b)}</span>
+                      <span style="color:#cbd5e1;">&bull;</span>
+                      <span><i class="fa-regular fa-calendar-days" style="margin-right:4px;color:#94a3b8;"></i>Due: <strong>${fmtDate(b.end_date)}</strong></span>
+                      <span style="color:#cbd5e1;">&bull;</span>
+                      <span>Total: <strong>₱${fmtMoney(b.total_amount)}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="item-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-primary btn-sm" data-return="${b.id}" style="display:flex;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-clipboard-check"></i> Inspect &amp; Process Return
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-sm data-quick-damage" data-id="${b.id}" style="border:1px solid #fecaca;color:#dc2626;display:flex;align-items:center;gap:5px;">
+                    <i class="fa-solid fa-car-burst"></i> Damage
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-sm data-quick-fee" data-id="${b.id}" style="border:1px solid #cbd5e1;display:flex;align-items:center;gap:5px;">
+                    <i class="fa-solid fa-plus"></i> Fee
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('') : emptyState('', 'No vehicles currently out for rental — all active rentals have been returned.')}
+        </div>
+      </div>
+
+      <!-- Section 2: Damage Assessments Section -->
+      <div id="sectionDamagesList" style="display:${activeSubTab === 'damages' ? 'block' : 'none'};">
+        <div class="glass" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Vehicle &amp; Customer</th>
+                <th>Damage Component &amp; Severity</th>
+                <th>Repair Estimate</th>
+                <th>Deductible Covered</th>
+                <th>Amount Due</th>
+                <th>Payment Option</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${damages.length ? damages.map(d => `
+                <tr>
+                  <td>
+                    <span style="font-weight:700;font-family:monospace;font-size:0.85rem;color:var(--text-hi);">${d.id}</span>
+                    <div style="font-size:0.7rem;color:var(--text-mid);">${fmtDate(d.created_at)}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight:700;color:var(--text-hi);">${d.vehicle_name || 'Vehicle'}</div>
+                    <div style="font-size:0.75rem;color:var(--text-mid);">
+                      ${d.plate_number ? `<span style="font-family:monospace;font-weight:700;">${maskPlate(d.plate_number)}</span> · ` : ''}${d.customer_name || 'Customer'}
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span class="badge ${d.severity === 'severe' ? 'badge-rejected' : d.severity === 'moderate' ? 'badge-pending' : 'badge-approved'}" style="text-transform:capitalize;font-size:0.68rem;">
+                        ${d.severity || 'Minor'}
+                      </span>
+                      <strong style="font-size:0.82rem;color:var(--text-hi);">${d.component || 'General Body'}</strong>
+                    </div>
+                    <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;max-width:240px;line-height:1.3;">
+                      ${d.description || 'Assessed upon vehicle inspection.'}
+                    </div>
+                  </td>
+                  <td style="font-size:0.85rem;color:var(--text-mid);">₱${fmtMoney(d.repair_cost || 0)}</td>
+                  <td style="font-size:0.85rem;color:#059669;font-weight:600;">-₱${fmtMoney(d.deductible_coverage || 0)}</td>
+                  <td>
+                    <strong style="font-size:0.95rem;color:#dc2626;">₱${fmtMoney(d.amount_due || 0)}</strong>
+                  </td>
+                  <td>
+                    <span style="font-size:0.8rem;background:var(--accent-glow);color:var(--accent);padding:3px 8px;border-radius:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+                      ${d.payment_method === 'Apple Pay' ? '<i class=\"fa-brands fa-apple\"></i> Apple Pay' : d.payment_method === 'Visa Card' ? '<i class=\"fa-brands fa-cc-visa\"></i> Visa' : d.payment_method || 'GCash'}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge badge-${d.status === 'paid' ? 'available' : d.status === 'waived' ? 'maintenance' : 'rejected'}" style="text-transform:capitalize;">
+                      ${d.status || 'billed'}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:6px;">
+                      ${d.status !== 'paid' ? `
+                        <button type="button" class="btn btn-primary btn-sm btn-mark-damage-paid" data-id="${d.id}" style="padding:3px 8px;font-size:0.72rem;" title="Mark as Paid">
+                          Mark Paid
+                        </button>
+                      ` : ''}
+                      <button type="button" class="btn btn-ghost btn-sm btn-print-damage-slip" data-id="${d.id}" style="padding:3px 8px;font-size:0.72rem;border:1px solid #cbd5e1;" title="Print Assessment Slip">
+                        <i class="fa-solid fa-receipt"></i> Slip
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('') : `<tr><td colspan="9" class="center muted" style="padding:28px;">No damage assessments recorded yet.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 3: Custom Operational Fees List -->
+      <div id="sectionFeesList" style="display:${activeSubTab === 'fees' ? 'block' : 'none'};">
+        <div class="glass" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Fee ID</th>
+                <th>Booking &amp; Customer</th>
+                <th>Fee Type &amp; Notes</th>
+                <th>Amount</th>
+                <th>Payment Option</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${customFees.length ? customFees.map(f => `
+                <tr>
+                  <td>
+                    <span style="font-weight:700;font-family:monospace;font-size:0.85rem;color:var(--text-hi);">${f.id}</span>
+                    <div style="font-size:0.7rem;color:var(--text-mid);">${fmtDate(f.created_at)}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight:700;color:var(--text-hi);">${f.vehicle_name || 'Vehicle'}</div>
+                    <div style="font-size:0.75rem;color:var(--text-mid);">${f.customer_name || 'Customer'} · #${f.booking_id || 'N/A'}</div>
+                  </td>
+                  <td>
+                    <strong style="font-size:0.82rem;color:var(--text-hi);">${f.fee_label || f.category}</strong>
+                    <div style="font-size:0.72rem;color:var(--text-mid);">${f.notes || 'Additional fee applied'}</div>
+                  </td>
+                  <td>
+                    <strong style="font-size:0.95rem;color:var(--accent);">₱${fmtMoney(f.amount || 0)}</strong>
+                  </td>
+                  <td>
+                    <span style="font-size:0.8rem;background:var(--accent-glow);color:var(--accent);padding:3px 8px;border-radius:12px;font-weight:700;">
+                      ${f.payment_method || 'Card / GCash'}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge badge-${f.status === 'paid' ? 'available' : 'rejected'}" style="text-transform:capitalize;">
+                      ${f.status || 'billed'}
+                    </span>
+                  </td>
+                  <td>
+                    ${f.status !== 'paid' ? `
+                      <button type="button" class="btn btn-primary btn-sm btn-mark-fee-paid" data-id="${f.id}" style="padding:3px 8px;font-size:0.72rem;">
+                        Mark Paid
+                      </button>
+                    ` : '<span style="font-size:0.75rem;color:#059669;font-weight:700;"><i class=\"fa-solid fa-check\"></i> Settled</span>'}
+                  </td>
+                </tr>
+              `).join('') : `<tr><td colspan="7" class="center muted" style="padding:28px;">No custom operational fees billed.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
-  $$('[data-return]').forEach(btn => btn.addEventListener('click', () => openReturnModal(btn.dataset.return)));
+
+  // Bind Subtab Switching
+  const pillReturns = $('#pillTabReturns');
+  const pillDamages = $('#pillTabDamages');
+  const pillFees = $('#pillTabFees');
+  const secReturns = $('#sectionReturnsList');
+  const secDamages = $('#sectionDamagesList');
+  const secFees = $('#sectionFeesList');
+
+  pillReturns?.addEventListener('click', () => {
+    pillReturns.classList.add('active');
+    pillDamages?.classList.remove('active');
+    pillFees?.classList.remove('active');
+    if (secReturns) secReturns.style.display = 'block';
+    if (secDamages) secDamages.style.display = 'none';
+    if (secFees) secFees.style.display = 'none';
+  });
+
+  pillDamages?.addEventListener('click', () => {
+    pillDamages.classList.add('active');
+    pillReturns?.classList.remove('active');
+    pillFees?.classList.remove('active');
+    if (secReturns) secReturns.style.display = 'none';
+    if (secDamages) secDamages.style.display = 'block';
+    if (secFees) secFees.style.display = 'none';
+  });
+
+  pillFees?.addEventListener('click', () => {
+    pillFees.classList.add('active');
+    pillReturns?.classList.remove('active');
+    pillDamages?.classList.remove('active');
+    if (secReturns) secReturns.style.display = 'none';
+    if (secDamages) secDamages.style.display = 'none';
+    if (secFees) secFees.style.display = 'block';
+  });
+
+  // Action Buttons
+  $('#btnRecordDamage')?.addEventListener('click', () => openRecordDamageModal(allBookings, view));
+  $('#btnAddCustomFee')?.addEventListener('click', () => openAddCustomFeeModal(allBookings, view));
+
+  // Active returns listeners
+  $$('[data-return]', view).forEach(btn => btn.addEventListener('click', () => openReturnModal(btn.dataset.return)));
+  $$('.data-quick-damage', view).forEach(btn => btn.addEventListener('click', () => openRecordDamageModal(allBookings, view, btn.dataset.id)));
+  $$('.data-quick-fee', view).forEach(btn => btn.addEventListener('click', () => openAddCustomFeeModal(allBookings, view, btn.dataset.id)));
+
+  // Mark Paid & Slip
+  $$('.btn-mark-damage-paid', view).forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.id;
+    updateDamageStatus(id, 'paid');
+    toast(`Damage payment for #${id} confirmed and marked as Paid!`, 'success');
+    renderStaffReturns(view, 'damages');
+  }));
+
+  $$('.btn-mark-fee-paid', view).forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.id;
+    updateCustomFeeStatus(id, 'paid');
+    toast(`Fee payment for #${id} confirmed and settled!`, 'success');
+    renderStaffReturns(view, 'fees');
+  }));
+
+  $$('.btn-print-damage-slip', view).forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.id;
+    const item = damages.find(d => d.id === id);
+    if (item) openDamageAssessmentSlipModal(item);
+  }));
 }
 
 export async function openReturnModal(bookingId) {
+  if (!hasPermission('canInspectReturns')) {
+    toast('Your account lacks canInspectReturns permission to process vehicle returns.', 'error');
+    return;
+  }
   let b = null;
   try {
     const { data } = await supabase.from('bookings').select('*, vehicles(name)').eq('id', bookingId).single();
@@ -795,13 +1123,34 @@ export async function openReturnModal(bookingId) {
         condition_notes: $('#condNotes').value,
         has_damage: hasDamage,
         additional_charges: charges,
-        inspected_by: state.user.id,
+        inspected_by: state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578',
       });
 
       if (charges > 0) {
         await supabase.from('payments').insert({
           booking_id: bookingId, amount: charges, method: 'card', status: 'successful',
           paid_at: new Date().toISOString(),
+        });
+      }
+
+      if (hasDamage && charges > 0) {
+        saveLocalDamage({
+          id: `DMG-${Date.now().toString().slice(-4)}`,
+          booking_id: String(bookingId),
+          vehicle_name: b.vehicles?.name || 'Vehicle',
+          plate_number: b.vehicles?.plate_number || '',
+          customer_name: b.profiles?.full_name || 'Customer',
+          customer_phone: b.profiles?.phone || '',
+          component: 'Return Inspection Finding',
+          severity: charges > 3000 ? 'severe' : charges > 1500 ? 'moderate' : 'minor',
+          description: $('#condNotes').value || 'Damage assessed during vehicle return inspection.',
+          repair_cost: charges + 1000,
+          deductible_coverage: 1000,
+          amount_due: charges,
+          payment_method: 'Card / Checkout',
+          status: 'paid',
+          assessed_by: state.profile?.full_name || 'Staff Inspector',
+          created_at: new Date().toISOString()
         });
       }
 
@@ -863,6 +1212,603 @@ export async function renderStaffHistory(view) {
       </div>
     </div>
   `;
+}
+
+// ---------------------------------------------------------------------------
+// Staff Damage Pay & Custom Fee Management
+// ---------------------------------------------------------------------------
+export async function renderStaffDamages(view) {
+  return renderStaffReturns(view, 'damages');
+}
+
+export function openRecordDamageModal(allBookings, view, preSelectedBookingId = '') {
+  const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved'].includes(b.status));
+
+  openModal(`
+    <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
+      <div class="modal-head" style="margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid fa-car-burst" style="color:#ef4444;"></i> Record Vehicle Damage Pay
+          </h3>
+          <span style="font-size:0.78rem;color:var(--text-mid);">Assess incident, apply fair-wear deductible coverage, and issue invoice.</span>
+        </div>
+        <div class="modal-close" id="mClose">Close</div>
+      </div>
+
+      <div class="field">
+        <label>Select Rental Booking</label>
+        <select id="dmgBookingSelect" style="font-size:0.85rem;">
+          <option value="">-- Choose active or recent rental --</option>
+          ${activeAndCompleted.map(b => `
+            <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} data-vname="${b.vehicles?.name || 'Vehicle'}" data-vplate="${b.vehicles?.plate_number || ''}" data-cname="${b.profiles?.full_name || 'Customer'}" data-cphone="${b.profiles?.phone || ''}">
+              #${b.id} - ${b.vehicles?.name || 'Vehicle'} (${b.vehicles?.plate_number || 'No plate'}) · ${b.profiles?.full_name || 'Customer'}
+            </option>
+          `).join('')}
+        </select>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Vehicle Model</label>
+          <input type="text" id="dmgVehicleName" placeholder="e.g. Toyota Fortuner 2.8 V" required />
+        </div>
+        <div class="field">
+          <label>Plate Number</label>
+          <input type="text" id="dmgPlateNumber" placeholder="e.g. NBD-8842" />
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Customer Name</label>
+          <input type="text" id="dmgCustomerName" placeholder="Customer Name" required />
+        </div>
+        <div class="field">
+          <label>Contact Phone</label>
+          <input type="text" id="dmgCustomerPhone" placeholder="0917 xxx xxxx" />
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Damage Component</label>
+          <select id="dmgComponent">
+            <option value="Front Bumper & Lip" data-cost="2500">Front Bumper &amp; Lip</option>
+            <option value="Rear Bumper & Sensors" data-cost="2500">Rear Bumper &amp; Sensors</option>
+            <option value="Door Panel Dent / Ding" data-cost="3500">Door Panel Dent / Ding</option>
+            <option value="Windshield Chip / Crack" data-cost="2500">Windshield Chip / Crack (Deductible Capped)</option>
+            <option value="Side Mirror Housing / Glass" data-cost="1800">Side Mirror Housing / Glass</option>
+            <option value="Alloy Wheels / Tire Scuff" data-cost="1500">Alloy Wheels / Tire Scuff</option>
+            <option value="Headlight / Taillight Assembly" data-cost="4500">Headlight / Taillight Assembly</option>
+            <option value="Interior Stain / Steam Detailing" data-cost="1200">Interior Deep Stain / Detailing</option>
+            <option value="Lost Key Fob / Immobilizer" data-cost="4000">Lost Key Fob / Remote</option>
+            <option value="Custom Body Damage" data-cost="3000">Other Custom Body Damage</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Severity Level</label>
+          <select id="dmgSeverity">
+            <option value="minor" data-mult="1.0">Minor (Surface mark / spot repair)</option>
+            <option value="moderate" data-mult="1.4">Moderate (Deep scratch / small dent)</option>
+            <option value="severe" data-mult="2.0">Severe (Cracked component / replace)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Incident &amp; Inspection Description</label>
+        <textarea id="dmgDescription" rows="2" placeholder="Describe the damage location, depth, and inspection findings..."></textarea>
+      </div>
+
+      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:0.82rem;font-weight:800;color:var(--text-hi);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-calculator" style="color:var(--accent);"></i> Damage Pay &amp; Deductible Breakdown
+        </div>
+        <div class="detail-grid" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;">
+            <label style="font-size:0.75rem;">Gross Repair Cost (₱)</label>
+            <input type="number" id="dmgRepairCost" value="2500" min="0" step="50" style="font-weight:700;" />
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:0.75rem;">Deductible Policy Coverage (₱)</label>
+            <input type="number" id="dmgDeductible" value="1000" min="0" step="50" style="font-weight:700;color:#059669;" />
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px dashed var(--glass-border);">
+          <span style="font-size:0.85rem;font-weight:800;color:var(--text-hi);">Customer Amount Due:</span>
+          <strong id="dmgAmountDueDisplay" style="font-size:1.25rem;color:#dc2626;">₱1,500.00</strong>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Payment Method</label>
+          <select id="dmgPaymentMethod">
+            <option value="GCash">GCash QR</option>
+            <option value="Visa Card">Visa Card (3D Secure)</option>
+            <option value="Apple Pay">Apple Pay</option>
+            <option value="Cash">Cash on Handover</option>
+            <option value="Bank Transfer">Bank QR Ph / Transfer</option>
+            <option value="Mastercard">Mastercard</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Payment Status</label>
+          <select id="dmgStatus">
+            <option value="billed">Billed (Unpaid / On Invoice)</option>
+            <option value="paid" selected>Paid &amp; Settled Immediately</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button type="button" class="btn btn-ghost btn-block" onclick="window.closeModal && window.closeModal();">Cancel</button>
+        <button type="button" class="btn btn-primary btn-block" id="btnSaveDamageRecord">
+          <i class="fa-solid fa-check"></i> Confirm &amp; Save Damage Pay
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('#mClose')?.addEventListener('click', closeModal);
+
+  const bSelect = $('#dmgBookingSelect');
+  const vNameInp = $('#dmgVehicleName');
+  const vPlateInp = $('#dmgPlateNumber');
+  const cNameInp = $('#dmgCustomerName');
+  const cPhoneInp = $('#dmgCustomerPhone');
+  const compSelect = $('#dmgComponent');
+  const sevSelect = $('#dmgSeverity');
+  const repairCostInp = $('#dmgRepairCost');
+  const deductibleInp = $('#dmgDeductible');
+  const amtDueDisp = $('#dmgAmountDueDisplay');
+
+  function recalc() {
+    const cost = Number(repairCostInp.value || 0);
+    const ded = Number(deductibleInp.value || 0);
+    const net = Math.max(0, cost - ded);
+    amtDueDisp.textContent = fmtMoney(net);
+    return net;
+  }
+
+  bSelect?.addEventListener('change', () => {
+    const opt = bSelect.options[bSelect.selectedIndex];
+    if (opt && opt.value) {
+      vNameInp.value = opt.dataset.vname || '';
+      vPlateInp.value = opt.dataset.vplate || '';
+      cNameInp.value = opt.dataset.cname || '';
+      cPhoneInp.value = opt.dataset.cphone || '';
+    }
+  });
+
+  if (preSelectedBookingId && bSelect) {
+    bSelect.dispatchEvent(new Event('change'));
+  }
+
+  compSelect?.addEventListener('change', () => {
+    const baseCost = Number(compSelect.options[compSelect.selectedIndex]?.dataset.cost || 2500);
+    const mult = Number(sevSelect.options[sevSelect.selectedIndex]?.dataset.mult || 1.0);
+    repairCostInp.value = Math.round(baseCost * mult);
+    recalc();
+  });
+
+  sevSelect?.addEventListener('change', () => {
+    const baseCost = Number(compSelect.options[compSelect.selectedIndex]?.dataset.cost || 2500);
+    const mult = Number(sevSelect.options[sevSelect.selectedIndex]?.dataset.mult || 1.0);
+    repairCostInp.value = Math.round(baseCost * mult);
+    recalc();
+  });
+
+  repairCostInp?.addEventListener('input', recalc);
+  deductibleInp?.addEventListener('input', recalc);
+
+  $('#btnSaveDamageRecord')?.addEventListener('click', () => {
+    const vName = vNameInp.value.trim() || 'Vehicle';
+    const cName = cNameInp.value.trim() || 'Customer';
+    const netDue = recalc();
+
+    const record = {
+      id: `DMG-${Date.now().toString().slice(-4)}`,
+      booking_id: bSelect.value || '1',
+      vehicle_name: vName,
+      plate_number: vPlateInp.value.trim(),
+      customer_name: cName,
+      customer_phone: cPhoneInp.value.trim(),
+      component: compSelect.value,
+      severity: sevSelect.value,
+      description: $('#dmgDescription').value.trim() || 'Damage assessed and billed per Zero-Surprise policy.',
+      repair_cost: Number(repairCostInp.value || 0),
+      deductible_coverage: Number(deductibleInp.value || 0),
+      amount_due: netDue,
+      payment_method: $('#dmgPaymentMethod').value,
+      status: $('#dmgStatus').value,
+      assessed_by: state.profile?.full_name || 'Sarah Villanueva (Staff)',
+      created_at: new Date().toISOString()
+    };
+
+    saveLocalDamage(record);
+    toast(`Damage Assessment #${record.id} recorded (${fmtMoney(netDue)} billed via ${record.payment_method})!`, 'success');
+    closeModal();
+    renderStaffDamages(view);
+  });
+}
+
+export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = '') {
+  const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved'].includes(b.status));
+
+  openModal(`
+    <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
+      <div class="modal-head" style="margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Add Additional Operational Fee
+          </h3>
+          <span style="font-size:0.78rem;color:var(--text-mid);">Attach late fees, fuel shortage, expressway tolls, or detailing surcharges.</span>
+        </div>
+        <div class="modal-close" id="mClose">Close</div>
+      </div>
+
+      <div class="field">
+        <label>Select Rental Booking</label>
+        <select id="feeBookingSelect" style="font-size:0.85rem;">
+          <option value="">-- Choose active or recent rental --</option>
+          ${activeAndCompleted.map(b => `
+            <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} data-vname="${b.vehicles?.name || 'Vehicle'}" data-cname="${b.profiles?.full_name || 'Customer'}">
+              #${b.id} - ${b.vehicles?.name || 'Vehicle'} · ${b.profiles?.full_name || 'Customer'}
+            </option>
+          `).join('')}
+        </select>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Customer Name</label>
+          <input type="text" id="feeCustomerName" placeholder="Customer Name" required />
+        </div>
+        <div class="field">
+          <label>Vehicle Name</label>
+          <input type="text" id="feeVehicleName" placeholder="Vehicle Name" required />
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Fee Category</label>
+          <select id="feeCategorySelect">
+            <option value="late_return" data-amount="1000" data-label="Late Return Penalty (2 hrs)">Late Return Penalty (₱500/hr)</option>
+            <option value="fuel_surcharge" data-amount="650" data-label="Fuel Tank Shortage Top-Up">Fuel Shortage Surcharge</option>
+            <option value="excess_km" data-amount="750" data-label="Excess Mileage Surcharge">Excess Mileage (₱15/km over limit)</option>
+            <option value="cleaning_fee" data-amount="1200" data-label="Heavy Mud &amp; Interior Detailing">Cleaning &amp; Detailing Fee</option>
+            <option value="toll_violation" data-amount="500" data-label="Expressway RFID Toll &amp; Traffic">Expressway RFID / Toll Surcharge</option>
+            <option value="remote_delivery" data-amount="1000" data-label="Remote Airport / Meetup Fee">Remote Delivery &amp; Retrieval</option>
+            <option value="custom" data-amount="500" data-label="Other Operational Surcharge">Other Custom Fee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fee Amount (₱)</label>
+          <input type="number" id="feeAmount" value="1000" min="0" step="50" required style="font-weight:700;color:var(--accent);" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Reason &amp; Operational Notes</label>
+        <textarea id="feeNotes" rows="2" placeholder="e.g. Returned 2 hours past agreed cutoff time due to expressway traffic delay..."></textarea>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field">
+          <label>Payment Method Option</label>
+          <select id="feePaymentMethod">
+            <option value="Apple Pay">Apple Pay</option>
+            <option value="Visa Card" selected>Visa Card</option>
+            <option value="GCash">GCash QR</option>
+            <option value="Cash">Cash on Handover</option>
+            <option value="Bank Transfer">Bank Transfer / QR Ph</option>
+            <option value="Mastercard">Mastercard</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Settlement Status</label>
+          <select id="feeStatus">
+            <option value="paid" selected>Paid &amp; Settled Immediately</option>
+            <option value="billed">Billed (Pending Customer Payment)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button type="button" class="btn btn-ghost btn-block" onclick="window.closeModal && window.closeModal();">Cancel</button>
+        <button type="button" class="btn btn-primary btn-block" id="btnSaveFeeRecord">
+          <i class="fa-solid fa-check"></i> Add Fee to Rental
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('#mClose')?.addEventListener('click', closeModal);
+
+  const bSelect = $('#feeBookingSelect');
+  const cNameInp = $('#feeCustomerName');
+  const vNameInp = $('#feeVehicleName');
+  const catSelect = $('#feeCategorySelect');
+  const amtInp = $('#feeAmount');
+
+  bSelect?.addEventListener('change', () => {
+    const opt = bSelect.options[bSelect.selectedIndex];
+    if (opt && opt.value) {
+      cNameInp.value = opt.dataset.cname || '';
+      vNameInp.value = opt.dataset.vname || '';
+    }
+  });
+
+  if (preSelectedBookingId && bSelect) {
+    bSelect.dispatchEvent(new Event('change'));
+  }
+
+  catSelect?.addEventListener('change', () => {
+    const opt = catSelect.options[catSelect.selectedIndex];
+    if (opt && opt.dataset.amount) {
+      amtInp.value = opt.dataset.amount;
+    }
+  });
+
+  $('#btnSaveFeeRecord')?.addEventListener('click', () => {
+    const amt = Number(amtInp.value || 0);
+    const catOpt = catSelect.options[catSelect.selectedIndex];
+
+    const fee = {
+      id: `FEE-${Date.now().toString().slice(-4)}`,
+      booking_id: bSelect.value || '1',
+      vehicle_name: vNameInp.value.trim() || 'Vehicle',
+      customer_name: cNameInp.value.trim() || 'Customer',
+      fee_type: catSelect.value,
+      fee_label: catOpt?.dataset.label || catSelect.value,
+      amount: amt,
+      payment_method: $('#feePaymentMethod').value,
+      notes: $('#feeNotes').value.trim() || 'Additional fee attached to rental.',
+      status: $('#feeStatus').value,
+      assessed_by: state.profile?.full_name || 'Sarah Villanueva (Staff)',
+      created_at: new Date().toISOString()
+    };
+
+    saveLocalCustomFee(fee);
+    toast(`Fee #${fee.id} for ${fmtMoney(amt)} recorded via ${fee.payment_method}!`, 'success');
+    closeModal();
+    renderStaffDamages(view);
+  });
+}
+
+export function openDamageAssessmentSlipModal(record) {
+  openModal(`
+    <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
+      <div class="modal-head" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="brand-logo-badge" style="width:34px;height:34px;font-size:0.85rem;"><i class="fa-solid fa-car-side"></i></div>
+          <div>
+            <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin:0;">Vehicle Damage Assessment Slip</h3>
+            <span style="font-size:0.75rem;color:var(--text-mid);">Official Incident Assessment &amp; Deductible Statement</span>
+          </div>
+        </div>
+        <div class="modal-close" id="mClose">Close</div>
+      </div>
+
+      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:16px;margin-bottom:14px;font-size:0.82rem;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--glass-border);">
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-mid);text-transform:uppercase;">ASSESSMENT VOUCHER</div>
+            <strong style="font-family:monospace;font-size:1rem;color:var(--text-hi);">${record.id}</strong>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.7rem;color:var(--text-mid);text-transform:uppercase;">DATE &amp; TIME</div>
+            <div style="font-weight:600;color:var(--text-hi);">${fmtDate(record.created_at)}</div>
+          </div>
+        </div>
+
+        <div class="detail-grid" style="margin-bottom:12px;">
+          <div>
+            <span style="color:var(--text-mid);font-size:0.75rem;">Vehicle:</span>
+            <div style="font-weight:700;color:var(--text-hi);">${record.vehicle_name}</div>
+            ${record.plate_number ? `<span style="font-family:monospace;font-size:0.78rem;background:var(--accent-glow);padding:1px 6px;border-radius:4px;">${record.plate_number}</span>` : ''}
+          </div>
+          <div>
+            <span style="color:var(--text-mid);font-size:0.75rem;">Customer:</span>
+            <div style="font-weight:700;color:var(--text-hi);">${record.customer_name}</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">${record.customer_phone || 'No phone'}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px;background:var(--bg-dark);padding:10px 12px;border-radius:8px;">
+          <div style="font-size:0.72rem;color:var(--text-mid);text-transform:uppercase;font-weight:700;margin-bottom:4px;">DAMAGE FINDINGS</div>
+          <div style="font-weight:700;color:#dc2626;font-size:0.88rem;">${record.component} (${record.severity?.toUpperCase() || 'MINOR'})</div>
+          <p style="margin:4px 0 0 0;font-size:0.78rem;color:var(--text-mid);line-height:1.4;">${record.description}</p>
+        </div>
+
+        <div style="border-top:1px dashed var(--glass-border);padding-top:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;color:var(--text-mid);">
+            <span>Gross Repair Estimate:</span>
+            <span>${fmtMoney(record.repair_cost)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;color:#059669;">
+            <span>Zero-Surprise Deductible Coverage:</span>
+            <span>-${fmtMoney(record.deductible_coverage)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--glass-border);font-weight:800;font-size:1.05rem;">
+            <span style="color:var(--text-hi);">Net Customer Due:</span>
+            <span style="color:#dc2626;">${fmtMoney(record.amount_due)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--accent-glow);border-radius:10px;margin-bottom:16px;">
+        <div>
+          <span style="font-size:0.72rem;color:var(--text-mid);display:block;">SETTLEMENT METHOD</span>
+          <strong style="color:var(--accent);font-size:0.85rem;">${record.payment_method} · <span style="text-transform:uppercase;">${record.status}</span></strong>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:0.72rem;color:var(--text-mid);display:block;">ASSESSED BY</span>
+          <span style="font-size:0.8rem;font-weight:700;color:var(--text-hi);">${record.assessed_by || 'Operations Staff'}</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-ghost btn-block" onclick="window.print();" style="border:1px solid var(--glass-border);">
+          <i class="fa-solid fa-print"></i> Print Slip
+        </button>
+        <button type="button" class="btn btn-primary btn-block" onclick="window.closeModal && window.closeModal();">
+          <i class="fa-solid fa-check"></i> Close
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('#mClose')?.addEventListener('click', closeModal);
+}
+
+// ---------------------------------------------------------------------------
+// Admin Role-Based Access Control (RBAC) Permissions Matrix
+// ---------------------------------------------------------------------------
+export async function renderAdminRBAC(view) {
+  const currentPerms = getRBACPermissions();
+  const staffPerms = { ...currentPerms.staff };
+  const adminPerms = { ...currentPerms.admin };
+
+  const grantedCount = Object.values(staffPerms).filter(Boolean).length;
+
+  view.innerHTML = `
+    <div class="view">
+      <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+        <div>
+          <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-user-shield" style="color:var(--accent);"></i> Role-Based Access Control (RBAC)
+          </h2>
+          <p style="color:var(--text-mid);font-size:0.85rem;margin:4px 0 0 0;">
+            Define granular permission privileges separating Staff and Admin portals for secure operations.
+          </p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnResetRBAC" style="border:1px solid #cbd5e1;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSaveRBAC" style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Permissions Matrix
+          </button>
+        </div>
+      </div>
+
+      <!-- Role Capability Overview Cards -->
+      <div class="grid grid-3" style="margin-bottom:24px;">
+        <div class="glass stat-card" style="border-top:3px solid var(--accent);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:36px;height:36px;background:var(--accent-glow);color:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;color:var(--text-hi);font-size:0.95rem;">Administrator</div>
+              <div style="font-size:0.72rem;color:var(--text-mid);">Superuser &amp; System Owner</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-mid);line-height:1.4;">
+            Unrestricted access to fleet management, price tier adjustments, RBAC permissions, and financial audit logs.
+          </div>
+        </div>
+
+        <div class="glass stat-card" style="border-top:3px solid #3b82f6;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:36px;height:36px;background:#eff6ff;color:#2563eb;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;color:var(--text-hi);font-size:0.95rem;">Staff &amp; Operations</div>
+              <div style="font-size:0.72rem;color:var(--text-mid);">${grantedCount} Active Capabilities</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-mid);line-height:1.4;">
+            Vehicle handover, QR scanner pass check-in, return inspection, damage pay billing, and custom fee surcharges.
+          </div>
+        </div>
+
+        <div class="glass stat-card" style="border-top:3px solid #10b981;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:36px;height:36px;background:#ecfdf5;color:#059669;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;color:var(--text-hi);font-size:0.95rem;">Guest Renter</div>
+              <div style="font-size:0.72rem;color:var(--text-mid);">Self-Service Customer</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-mid);line-height:1.4;">
+            Browse fleet recommendations, Apple Pay / Visa checkout, view damage policy, digital Renter ID pass, and rental extension.
+          </div>
+        </div>
+      </div>
+
+      <!-- RBAC Permissions Matrix Table -->
+      <div class="rbac-matrix-card">
+        <table class="rbac-table">
+          <thead>
+            <tr>
+              <th style="width:45%;">Operational Capability &amp; Scope</th>
+              <th style="width:25%;text-align:center;">Staff / Operations Role</th>
+              <th style="width:30%;text-align:center;">Administrator Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${RBAC_DEFINITIONS.map(def => `
+              <tr>
+                <td>
+                  <div style="font-weight:700;color:var(--text-hi);font-size:0.88rem;">${def.label}</div>
+                  <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">${def.desc}</div>
+                </td>
+                <td style="text-align:center;">
+                  <label class="rbac-switch" title="Toggle ${def.label} for Staff">
+                    <input type="checkbox" class="rbac-staff-toggle" data-perm="${def.key}" ${staffPerms[def.key] ? 'checked' : ''} />
+                    <span class="rbac-slider"></span>
+                  </label>
+                </td>
+                <td style="text-align:center;">
+                  <label class="rbac-switch" title="Administrator permissions are permanently active">
+                    <input type="checkbox" class="rbac-admin-toggle" data-perm="${def.key}" checked disabled />
+                    <span class="rbac-slider" style="background-color:var(--accent);opacity:0.85;"></span>
+                  </label>
+                  <span style="font-size:0.7rem;color:var(--text-mid);margin-left:6px;font-weight:600;">Granted</span>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align:right;margin-top:14px;">
+        <button type="button" class="btn btn-primary" id="btnSaveRBACBottom" style="padding:10px 24px;">
+          <i class="fa-solid fa-check"></i> Apply &amp; Save RBAC Configuration
+        </button>
+      </div>
+    </div>
+  `;
+
+  function saveMatrix() {
+    const updatedStaff = {};
+    $$('.rbac-staff-toggle').forEach(chk => {
+      updatedStaff[chk.dataset.perm] = chk.checked;
+    });
+    saveRBACPermissions({
+      admin: adminPerms,
+      staff: updatedStaff
+    });
+    toast('RBAC permissions matrix successfully saved and active across all portals!', 'success');
+    renderAdminRBAC(view);
+  }
+
+  $('#btnSaveRBAC')?.addEventListener('click', saveMatrix);
+  $('#btnSaveRBACBottom')?.addEventListener('click', saveMatrix);
+
+  $('#btnResetRBAC')?.addEventListener('click', () => {
+    saveRBACPermissions(DEFAULT_PERMISSIONS);
+    toast('RBAC settings restored to default permissions.', 'info');
+    renderAdminRBAC(view);
+  });
 }
 
 export async function renderAdmin(tab, view) {
@@ -1001,11 +1947,12 @@ export async function renderAdminDashboard(view) {
 }
 
 export async function renderAdminVehicles(view) {
+  const canManageFleet = hasPermission('canManageFleet');
   view.innerHTML = `
     <div class="view">
       <div class="section-head">
         <div><h2>Manage Fleet &amp; Maintenance</h2><p>Add, edit, or track vehicle service history and fleet availability.</p></div>
-        <button class="btn btn-primary" id="addVehicleBtn">+ Add Vehicle</button>
+        <button class="btn btn-primary" id="addVehicleBtn" ${!canManageFleet ? 'disabled title="Requires canManageFleet RBAC permission"' : ''}>+ Add Vehicle</button>
       </div>
       <div class="grid grid-vehicles" id="adminVehicleGrid">
         ${state.vehicles.map(v => {
@@ -1649,8 +2596,9 @@ export async function renderAdminCustomers(view) {
       try {
         let { error } = await supabase.from('profiles').update(updated).eq('id', c.id);
         if (error) {
-          const standardPayload = { full_name: updated.full_name, phone: updated.phone };
-          await supabase.from('profiles').update(standardPayload).eq('id', c.id).catch(() => { });
+          try {
+            await supabase.from('profiles').update(standardPayload).eq('id', c.id);
+          } catch (e) { }
         }
       } catch (err) {}
 
@@ -1671,9 +2619,12 @@ let userRoleFilter = 'all';
 let userSearchQuery = '';
 
 export async function renderAdminUsers(view) {
-  const users = await fetchMergedProfiles();
+  const canManageUsers = hasPermission('canManageUsers');
+  const allUsers = await fetchMergedProfiles();
 
-  const customersCount = users.filter(u => u.role === 'customer').length;
+  // In System Roles: strictly Staff and Admin accounts only
+  const users = allUsers.filter(u => u.role === 'staff' || u.role === 'admin');
+
   const staffCount = users.filter(u => u.role === 'staff').length;
   const adminCount = users.filter(u => u.role === 'admin').length;
 
@@ -1681,9 +2632,9 @@ export async function renderAdminUsers(view) {
     const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
     const nameStr = (u.full_name || '').toLowerCase();
     const phoneStr = (u.phone || '').toLowerCase();
-    const licenseStr = (u.license_number || '').toLowerCase();
+    const emailStr = (u.email || '').toLowerCase();
     const searchLower = userSearchQuery.toLowerCase();
-    const matchesSearch = nameStr.includes(searchLower) || phoneStr.includes(searchLower) || licenseStr.includes(searchLower);
+    const matchesSearch = nameStr.includes(searchLower) || phoneStr.includes(searchLower) || emailStr.includes(searchLower);
     return matchesRole && matchesSearch;
   });
 
@@ -1691,22 +2642,21 @@ export async function renderAdminUsers(view) {
     <div class="view">
       <div class="section-head">
         <div>
-          <h2>Customers &amp; User Management</h2>
-          <p>View registered customers, inspect driver's licenses, and manage staff/admin access.</p>
+          <h2>System Roles &amp; Staff Access</h2>
+          <p>Manage internal operational staff, assign administrative privileges, and secure role credentials.</p>
         </div>
       </div>
 
       <div class="search-bar" style="margin-bottom:14px;">
         <div style="position:relative;flex:1;">
           <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;"></i>
-          <input type="text" id="userSearchInput" style="padding-left:40px;" placeholder="Search customers by name, phone, or license number…" value="${userSearchQuery}" />
+          <input type="text" id="userSearchInput" style="padding-left:40px;" placeholder="Search staff &amp; administrators by name, phone, or email…" value="${userSearchQuery}" />
         </div>
       </div>
 
       <div class="pill-row" id="userRolePills" style="margin-bottom:18px;">
-        <div class="pill ${userRoleFilter === 'all' ? 'active' : ''}" data-role="all">All Users (${users.length})</div>
-        <div class="pill ${userRoleFilter === 'customer' ? 'active' : ''}" data-role="customer">Guests (${customersCount})</div>
-        <div class="pill ${userRoleFilter === 'staff' ? 'active' : ''}" data-role="staff">Managers (${staffCount})</div>
+        <div class="pill ${userRoleFilter === 'all' ? 'active' : ''}" data-role="all">All Roles (${users.length})</div>
+        <div class="pill ${userRoleFilter === 'staff' ? 'active' : ''}" data-role="staff">Staff (${staffCount})</div>
         <div class="pill ${userRoleFilter === 'admin' ? 'active' : ''}" data-role="admin">Administrators (${adminCount})</div>
       </div>
 
@@ -1714,12 +2664,12 @@ export async function renderAdminUsers(view) {
         <table>
           <thead>
             <tr>
-              <th>Customer / User</th>
+              <th>Team Member</th>
               <th>Contact Phone</th>
-              <th>Driver's License</th>
-              <th>Address</th>
-              <th>Role</th>
-              <th>Joined</th>
+              <th>Email Address</th>
+              <th>Address / Station</th>
+              <th>System Role</th>
+              <th>Created</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -1727,33 +2677,21 @@ export async function renderAdminUsers(view) {
             ${filteredUsers.length ? filteredUsers.map(u => `
               <tr>
                 <td>
-                  <div style="font-weight:700;color:#0f172a;">${u.full_name}${u.id === state.user.id ? ' <span class="muted">(you)</span>' : ''}</div>
+                  <div style="font-weight:700;color:#0f172a;">${u.full_name}${u.id === state.user?.id ? ' <span class="muted">(you)</span>' : ''}</div>
                 </td>
                 <td>${u.phone ? `<span style="font-weight:600;">${u.phone}</span>` : '<span class="muted">—</span>'}</td>
-                <td>
-                  ${u.license_number ? `
-                    <div style="display:flex;align-items:center;gap:6px;">
-                      <span class="badge badge-completed" style="font-size:0.74rem;font-family:monospace;">${u.license_number}</span>
-                      ${u.license_id_url ? `
-                        <button class="btn btn-ghost btn-sm" data-view-id="${u.id}" style="padding:2px 8px;font-size:0.72rem;color:var(--accent);">
-                          View ID
-                        </button>
-                      ` : ''}
-                    </div>
-                  ` : '<span class="muted">—</span>'}
-                </td>
-                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;color:#475569;">${u.address ?? '—'}</td>
-                <td><span class="badge badge-${u.role === 'admin' ? 'approved' : u.role === 'staff' ? 'pending' : 'available'}">${getRoleDisplayName(u.role)}</span></td>
+                <td style="font-size:0.82rem;color:#475569;">${u.email ?? '—'}</td>
+                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;color:#475569;">${u.address ?? 'Main Branch Hub'}</td>
+                <td><span class="badge badge-${u.role === 'admin' ? 'approved' : 'pending'}">${u.role === 'admin' ? 'Administrator' : 'Staff'}</span></td>
                 <td style="font-size:0.8rem;color:#64748b;">${fmtDate(u.created_at)}</td>
                 <td>
-                  <select data-role-select="${u.id}" ${u.id === state.user.id ? 'disabled' : ''} style="font-size:0.8rem;padding:4px 8px;">
-                    <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>Guest</option>
-                    <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>Manager</option>
+                  <select data-role-select="${u.id}" ${(u.id === state.user?.id || !canManageUsers) ? 'disabled' : ''} style="font-size:0.8rem;padding:4px 8px;">
+                    <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>Staff</option>
                     <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrator</option>
                   </select>
                 </td>
               </tr>
-            `).join('') : `<tr><td colspan="7">${emptyState('', 'No users found matching your search.')}</td></tr>`}
+            `).join('') : `<tr><td colspan="7">${emptyState('', 'No staff or administrators found matching your search.')}</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -2099,7 +3037,9 @@ export async function openLogServiceModal(vehicleId) {
       targetV.status = vehicleNextStatus;
       if (targetV.plate_number) saveVehicleOverride(targetV.plate_number, { status: vehicleNextStatus });
     }
-    await supabase.from('vehicles').update({ status: vehicleNextStatus }).eq('id', vehicleId).catch(() => {});
+    try {
+      await supabase.from('vehicles').update({ status: vehicleNextStatus }).eq('id', vehicleId);
+    } catch (e) {}
 
     toast(`Work order logged for ${v.name}. Vehicle set to ${vehicleNextStatus.replace('_', ' ')}.`, 'success');
     closeModal();
@@ -2267,12 +3207,16 @@ export async function openServiceHistoryModal(vehicleId) {
         if (targetV.plate_number) saveVehicleOverride(targetV.plate_number, { status: 'available' });
       }
 
-      await supabase.from('service_history').update({
-        service_status: 'completed',
-        completion_date: new Date().toISOString()
-      }).eq('id', srvId).catch(() => {});
+      try {
+        await supabase.from('service_history').update({
+          service_status: 'completed',
+          completion_date: new Date().toISOString()
+        }).eq('id', srvId);
+      } catch (e) {}
 
-      await supabase.from('vehicles').update({ status: 'available', maintenance_days: null, maintenance_until: null }).eq('id', vehicleId).catch(() => {});
+      try {
+        await supabase.from('vehicles').update({ status: 'available', maintenance_days: null, maintenance_until: null }).eq('id', vehicleId);
+      } catch (e) {}
 
       toast('Service work order completed! Vehicle returned to Available fleet.', 'success');
       closeModal();
@@ -2290,6 +3234,7 @@ export async function renderAdminSettings(view) {
   const comp = currentSettings.company || DEFAULT_SETTINGS.company;
   const pol = currentSettings.policy || DEFAULT_SETTINGS.policy;
   const notif = currentSettings.notifications || DEFAULT_SETTINGS.notifications;
+  const appr = currentSettings.appearance || DEFAULT_SETTINGS.appearance || {};
 
   view.innerHTML = `
     <div class="view">

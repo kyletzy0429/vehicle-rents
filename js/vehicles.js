@@ -101,6 +101,57 @@ export const PH_CATEGORIES = [
   { name: 'Passenger Vans', daily_rate: 5000, description: '14-Seater full-size passenger vans for tours and group trips (Toyota HiAce Commuter Deluxe)' }
 ];
 
+export const CURATED_SUGGESTIONS = [
+  {
+    category: 'family',
+    categoryLabel: 'Family Trips',
+    badge: '8-Seater',
+    name: 'Toyota Innova 2.8 E Diesel AT',
+    img: 'images/innova.webp',
+    reason: 'Top choice for family vacations with strong dual rear AC and large luggage capacity.'
+  },
+  {
+    category: 'vip',
+    categoryLabel: 'Executive & VIP',
+    badge: '7-Seater SUV',
+    name: 'Toyota Fortuner 2.8 V 4x2 AT',
+    img: 'images/fortuner.webp',
+    reason: 'Executive presence, leather seats, and high ground clearance for VIP travel.'
+  },
+  {
+    category: 'eco',
+    categoryLabel: 'Fuel Savers',
+    badge: 'Eco Drive',
+    name: 'Toyota Vios 1.5 G CVT',
+    img: 'images/vios.webp',
+    reason: 'Best gas mileage in class. Smooth automatic CVT for city and daily business.'
+  },
+  {
+    category: 'adventure',
+    categoryLabel: 'Adventure & 4x4',
+    badge: '4x4 Off-Road',
+    name: 'Ford Ranger Raptor 2.0L Bi-Turbo',
+    img: 'images/raptor.webp',
+    reason: 'Bi-Turbo off-road beast designed for rough terrain, mountain passes, and heavy loads.'
+  },
+  {
+    category: 'family',
+    categoryLabel: 'Family & Groups',
+    badge: '14-Passenger Van',
+    name: 'Toyota HiAce Commuter Deluxe 2.8',
+    img: 'images/hiace.webp',
+    reason: 'Ideal for group tours, airport pick-up, and provincial excursions.'
+  },
+  {
+    category: 'solo',
+    categoryLabel: 'Solo Commute',
+    badge: 'Maxi Scooter',
+    name: 'Yamaha NMAX 155 ABS',
+    img: 'images/nmax.webp',
+    reason: 'Fast, fuel-efficient maxi scooter with dual ABS disc brakes and spacious under-seat box.'
+  }
+];
+
 export function getVehicleDailyRate(v) {
   if (!v) return 0;
 
@@ -420,6 +471,7 @@ export function renderBrowse(view) {
         </div>
       </div>
 
+
       <!-- Quick category filter pills -->
       <div class="pill-row" id="catPills" style="margin-bottom:24px;">
         <div class="pill ${browseFilter === 'all' ? 'active' : ''}" data-cat="all">All Fleet (${state.vehicles.length})</div>
@@ -715,6 +767,8 @@ export function renderBrowse(view) {
     e.stopPropagation();
     toggleFavorite(Number(btn.dataset.favid));
   }));
+
+
 }
 
 export function vehicleCardHTML(v) {

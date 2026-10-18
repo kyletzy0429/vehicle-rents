@@ -126,6 +126,19 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         </div>
       </div>
 
+      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-shield-halved" style="color:#059669;font-size:1.1rem;"></i>
+          <div>
+            <div style="font-size:0.8rem;color:#065f46;font-weight:700;">Standard Damage &amp; Fair Wear Coverage</div>
+            <div style="font-size:0.72rem;color:#047857;">Pre-existing marks verified · Zero surprise deductible cap</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnDetailDamagePolicy" style="padding:4px 10px;font-size:0.74rem;color:#059669;border:1px solid #6ee7b7;background:#fff;white-space:nowrap;">
+          View Policy
+        </button>
+      </div>
+
       <div style="display:flex;gap:10px;margin-top:14px;">
         <button type="button" class="btn btn-primary btn-block" id="btnGoStep2">
           Proceed to Schedule &amp; Driver
@@ -348,6 +361,10 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   $('#btnGoStep2').addEventListener('click', () => setStep(2));
   $('#btnBackStep1').addEventListener('click', () => setStep(1));
   $('#btnBackStep2').addEventListener('click', () => setStep(2));
+
+  $('#btnDetailDamagePolicy')?.addEventListener('click', () => {
+    import('./utils.js').then(({ openDamagePolicyModal }) => openDamagePolicyModal());
+  });
 
   const chargeType = $('#chargeType'), kmField = $('#kmField'), estKmInput = $('#estKm');
   chargeType.addEventListener('change', () => {
@@ -930,20 +947,23 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         address: rAddress
       }));
       if (state.user?.id) {
-        supabase.from('profiles').update({
-          full_name: rName,
-          phone: rPhone,
-          license_number: rLicense,
-          address: rAddress
-        }).eq('id', state.user.id).catch(() => { });
+        try {
+          supabase.from('profiles').update({
+            full_name: rName,
+            phone: rPhone,
+            license_number: rLicense,
+            address: rAddress
+          }).eq('id', state.user.id);
+        } catch (e) { }
       }
     } catch (e) { }
 
     const contactNote = `Contact: ${rName} (${rPhone || 'No phone'})${rLicense ? ` | Lic: ${rLicense}` : ''}${rAddress ? ` | Meetup: ${rAddress}` : ''}`;
     const fullNotes = contactNote;
 
+    const currentCustomerId = state.user?.id || '8bebdf37-d488-4e10-bb84-63a01c157c3a';
     const bookingPayload = {
-      customer_id: state.user.id,
+      customer_id: currentCustomerId,
       vehicle_id: v.id,
       start_date: start.value,
       end_date: end.value,
@@ -964,7 +984,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         console.warn('Full booking insert failed, retrying with baseline schema:', error.message);
         // Fallback in case schema_update.sql has not been run in Supabase yet
         const fallbackPayload = {
-          customer_id: state.user.id,
+          customer_id: currentCustomerId,
           vehicle_id: v.id,
           start_date: start.value,
           end_date: end.value,
@@ -981,8 +1001,8 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             downpayment_percent: selectedDownpaymentPct,
             paid_amount: 0,
             balance_due: finalAmount,
-            promo_code: appliedPromo ? appliedPromo.code : null,
-            discount_amount: appliedPromo ? appliedPromo.discount : 0,
+            promo_code: null,
+            discount_amount: 0,
             created_at: new Date().toISOString()
           };
         } else {

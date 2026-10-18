@@ -590,7 +590,7 @@ function openExtensionSuccessModal(b, v, extraDays, extraCharge, newEnd, newTota
         <button type="button" class="btn btn-secondary" onclick="window.print();">
           <i class="fa-solid fa-print"></i> Print Details
         </button>
-        <button type="button" class="btn btn-primary" id="btnDoneExtension" onclick="document.getElementById('modalOverlay')?.remove();">
+        <button type="button" class="btn btn-primary" id="btnDoneExtension" onclick="document.getElementById('activeModal')?.remove();">
           Done
         </button>
       </div>

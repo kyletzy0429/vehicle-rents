@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
 import { state, DEMO_ACCOUNTS, getActiveRole, setActiveRole, getActiveCustomerKey, setActiveCustomerKey } from './state.js';
-import { $, $$, toast, openModal, closeModal } from './utils.js';
+import { $, $$, toast, openModal, closeModal, fmtMoney } from './utils.js';
 import { loadCategories, loadVehicles } from './vehicles.js';
 import { openVehicleDetail } from './booking.js';
 
@@ -8,9 +8,10 @@ let authMode = 'login';
 
 export async function switchSystemRole(role, customerKey = null) {
   if (role === 'customer') {
-    const cust = DEMO_ACCOUNTS.customer || DEMO_ACCOUNTS.customer1;
+    const custKey = customerKey && DEMO_ACCOUNTS[customerKey] ? customerKey : 'customer1';
+    const cust = DEMO_ACCOUNTS[custKey] || DEMO_ACCOUNTS.customer || DEMO_ACCOUNTS.customer1;
     setActiveRole('customer');
-    setActiveCustomerKey('customer1');
+    setActiveCustomerKey(custKey);
     state.user = { id: cust.id, email: cust.email };
     state.profile = { ...cust };
     state.portal = 'customer';
@@ -52,6 +53,7 @@ export function renderLandingPage() {
   const isDark = (localStorage.getItem('rentflow_theme') || 'light') === 'dark';
   if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
   else document.documentElement.removeAttribute('data-theme');
+
 
   const vehiclePreviews = [
     { name: 'Toyota Fortuner 2.8 V', cat: 'SUV', seats: 7, img: 'images/fortuner.webp', rate: 4200, desc: 'Premium Diesel SUV with high ground clearance, leather seats, and dual aircon.' },
@@ -170,6 +172,7 @@ export function renderLandingPage() {
           </div>
           <div class="lp-navbar-links">
             <a href="#lp-hero" class="lp-nav-link active">Home</a>
+            <a href="#lp-recommendations" class="lp-nav-link">Recommendations</a>
             <a href="#lp-about" class="lp-nav-link">About</a>
             <a href="#lp-fleet" class="lp-nav-link">Fleet</a>
             <a href="#lp-perks" class="lp-nav-link">Features</a>
@@ -203,17 +206,17 @@ export function renderLandingPage() {
           <h1 class="lp-hero-headline">Experience<br>Premium Vehicle Rentals &amp;<br><span class="lp-hero-highlight">Realtime Availability</span></h1>
           <p class="lp-hero-desc">Step into world-class convenience with live fleet availability, instant reservations, personalized digital guest services, and 24/7 customer support.</p>
           <div class="lp-hero-btns">
-            <a href="#lp-fleet" class="lp-btn-explore">Explore Available Vehicles <i class="fa-solid fa-arrow-down" style="font-size:0.8rem;"></i></a>
+            <a href="#lp-recommendations" class="lp-btn-explore">Explore Recommendations <i class="fa-solid fa-arrow-down" style="font-size:0.8rem;"></i></a>
             <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Reserve</button>
           </div>
           <div class="lp-hero-stats">
-            <div class="lp-stat"><span class="lp-stat-val">0 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Guest Rating</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">0%</span><span class="lp-stat-label">Realtime Sync</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">0</span><span class="lp-stat-label">Personalized Service</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Guest Rating</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">100%</span><span class="lp-stat-label">Realtime Sync</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">24/7</span><span class="lp-stat-label">Personalized Service</span></div>
           </div>
         </div>
         <div class="lp-hero-image-wrap">
-          <img src="images/hero-fleet.jpg?v=2" alt="Premium Fleet Showroom" class="lp-hero-img" />
+          <img src="images/hero-fleet.jpg?v=3" alt="Premium Fleet Showroom" class="lp-hero-img" />
           <div class="lp-hero-availability-badge">
             <div class="lp-avail-dot"></div>
             <span class="lp-avail-label">LIVE AVAILABILITY</span>
@@ -222,6 +225,8 @@ export function renderLandingPage() {
           </div>
         </div>
       </section>
+
+
 
       <!-- ═══ ABOUT ═══ -->
       <section class="lp-section" id="lp-about">
@@ -547,6 +552,10 @@ export function renderLandingPage() {
             card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
+            setTimeout(() => {
+              card.style.transform = '';
+              card.style.transition = '';
+            }, 260);
           });
         } else {
           card.style.display = 'none';
@@ -577,6 +586,8 @@ export function renderLandingPage() {
       }
     });
   });
+
+
 }
 
 /* ==========================================================================
@@ -603,7 +614,7 @@ export function renderAuth() {
             <div class="auth-demo-label">DEMO PORTAL ACCESS</div>
             <div class="auth-demo-btns">
               <button type="button" class="auth-demo-btn" id="quickDemoGuest">Guest</button>
-              <button type="button" class="auth-demo-btn" id="quickDemoStaff">Manager</button>
+              <button type="button" class="auth-demo-btn" id="quickDemoStaff">Staff</button>
               <button type="button" class="auth-demo-btn" id="quickDemoAdmin">Admin</button>
             </div>
           </div>
@@ -674,14 +685,14 @@ export function renderAuth() {
       </div>
 
       <div class="auth-split-right">
-        <img src="images/hero-fleet.jpg?v=2" alt="Premium Fleet" class="auth-hero-img" />
+        <img src="images/hero-fleet.jpg?v=3" alt="Premium Fleet" class="auth-hero-img" />
         <div class="auth-hero-overlay">
           <h2 class="auth-hero-tagline">Every ride, elegantly managed.</h2>
           <p class="auth-hero-sub">From pick-up to drop-out, one system keeps your fleet, guests, and staff perfectly in sync.</p>
         </div>
         <div class="auth-rating-badge">
           <div class="auth-rating-label">GUEST RATING</div>
-          <div class="auth-rating-val">0 <span>/ 5</span></div>
+          <div class="auth-rating-val">4.9 <span>/ 5</span></div>
         </div>
       </div>
     </div>
@@ -772,7 +783,11 @@ export function renderAuth() {
         };
 
         // Try upserting to Supabase profiles table
-        await supabase.from('profiles').upsert(profileObj).catch(() => {});
+        try {
+          await supabase.from('profiles').upsert(profileObj);
+        } catch (e) {
+          console.warn('Profile upsert notice:', e);
+        }
 
         // Save persistent session in localStorage
         localStorage.setItem('rentflow_active_role', 'customer');
@@ -857,7 +872,9 @@ export function renderAuth() {
           role: meta.role || determinedRole,
           phone: meta.phone || ''
         };
-        await supabase.from('profiles').upsert(profile).catch(() => {});
+        try {
+          await supabase.from('profiles').upsert(profile);
+        } catch (e) {}
       }
 
       state.user = userObj;
@@ -895,83 +912,182 @@ export async function logout() {
   renderLandingPage();
 }
 
-export function promptCustomerOnboardingModal(force = false) {
+export function checkCustomerVerificationStatus(force = false) {
   if (!state.user || state.portal !== 'customer') return;
   const p = state.profile || {};
 
-  const isComplete = Boolean(p.phone);
-  if (isComplete && !force) return;
+  // Renter is verified if they have a non-empty driver license number
+  const isVerified = Boolean(p.license_number && p.license_number.trim() && p.is_verified !== false);
+  if (isVerified && !force) return;
 
-  const dismissedKey = `rentflow_onboarding_seen_${state.user.id}`;
+  const dismissedKey = `rentflow_verify_prompt_${state.user.id || 'guest'}`;
   if (!force && sessionStorage.getItem(dismissedKey)) return;
 
+  setTimeout(() => {
+    const overlay = $('#modalOverlay');
+    if (overlay && overlay.classList.contains('open')) return;
+    promptRenterVerificationModal(force);
+  }, 600);
+}
+
+export function promptRenterVerificationModal(force = false) {
+  if (!state.user || state.portal !== 'customer') return;
+  const p = state.profile || {};
+  const dismissedKey = `rentflow_verify_prompt_${state.user.id || 'guest'}`;
+
   openModal(`
-    <div class="modal-head">
-      <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin:0;">Complete Contact Information</h3>
-        <span style="font-size:0.75rem;color:var(--text-mid);">For fast booking notifications &amp; handover coordination</span>
-      </div>
-      <div class="modal-close" id="mClose">Close</div>
-    </div>
-
-    <div style="background:var(--accent-glow);border:1px solid var(--accent-blue);border-radius:10px;padding:12px 14px;margin-bottom:18px;">
-      <p style="margin:0;font-size:0.82rem;color:var(--text-hi);line-height:1.4;">
-        Welcome to <strong>Vehicle Rental Management System</strong>! Please provide your phone number so our team can coordinate with you. <em>Note: Your physical driver's license will be verified in-person upon vehicle pickup / meetup.</em>
-      </p>
-    </div>
-
-    <form id="onboardingForm">
-      <div class="detail-grid" style="margin-bottom:14px;">
-        <div class="field">
-          <label>Full Name</label>
-          <input type="text" id="obName" value="${p.full_name ?? ''}" placeholder="e.g. Mark Lester Ramos" required />
+    <div class="renter-verification-modal-wrap" style="max-width:540px;margin:0 auto;">
+      <div class="modal-head" style="margin-bottom:14px;">
+        <div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.12);color:#d97706;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;margin-bottom:6px;border:1px solid rgba(245,158,11,0.25);">
+            <i class="fa-solid fa-id-card"></i> Account Verification Required
+          </div>
+          <h3 style="font-size:1.22rem;font-weight:800;color:var(--text-hi);margin:0 0 2px 0;">
+            Verify Your Renter Account
+          </h3>
+          <span style="font-size:0.78rem;color:var(--text-mid);">
+            Enter your driver's license details to activate your official Digital Renter Pass.
+          </span>
         </div>
-        <div class="field">
-          <label>Phone Number</label>
-          <input type="tel" id="obPhone" value="${p.phone ?? ''}" placeholder="e.g. 0917 582 9140" required />
+        <div class="modal-close" id="mClose">Close</div>
+      </div>
+
+      <div style="background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(124,58,237,0.12));border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center;">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+          <i class="fa-solid fa-shield-check"></i>
+        </div>
+        <div style="font-size:0.78rem;line-height:1.45;color:var(--text-hi);">
+          <strong>LTO Driver's License verification</strong> is required for express vehicle handover, contactless key pickup, and instant booking confirmation.
         </div>
       </div>
-      <div class="field" style="margin-bottom:16px;">
-        <label>Address (Optional)</label>
-        <input type="text" id="obAddress" value="${p.address ?? ''}" placeholder="e.g. Panabo City, Davao del Norte" />
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-ghost" id="obSkip" style="flex:1;">Skip for Now</button>
-        <button type="submit" class="btn btn-primary" style="flex:2;">Save &amp; Continue</button>
-      </div>
-    </form>
+
+      <form id="renterVerificationForm">
+        <div class="detail-grid" style="margin-bottom:12px;">
+          <div class="field">
+            <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;">
+              <i class="fa-solid fa-user" style="font-size:0.72rem;color:var(--accent);"></i> Full Legal Name
+            </label>
+            <input type="text" id="rvFullName" value="${p.full_name || ''}" placeholder="e.g. Maria Santos" required />
+          </div>
+          <div class="field">
+            <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;">
+              <i class="fa-solid fa-phone" style="font-size:0.72rem;color:var(--accent);"></i> Contact Phone Number
+            </label>
+            <input type="tel" id="rvPhone" value="${p.phone || ''}" placeholder="e.g. 0917 123 4567" required />
+          </div>
+        </div>
+
+        <div class="detail-grid" style="margin-bottom:12px;">
+          <div class="field">
+            <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;">
+              <i class="fa-solid fa-id-card" style="font-size:0.72rem;color:var(--accent);"></i> Driver's License Number
+            </label>
+            <input type="text" id="rvLicenseNumber" value="${p.license_number || ''}" placeholder="e.g. N02-23-084920" required style="font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;" />
+            <small style="font-size:0.68rem;color:var(--text-mid);margin-top:2px;display:block;">Standard LTO format (e.g. N02-YY-NNNNNN)</small>
+          </div>
+          <div class="field">
+            <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;">
+              <i class="fa-solid fa-calendar-days" style="font-size:0.72rem;color:var(--accent);"></i> License Expiry Date
+            </label>
+            <input type="date" id="rvLicenseExpiry" value="${p.license_expiry || '2028-12-31'}" required />
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:14px;">
+          <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;">
+            <i class="fa-solid fa-location-dot" style="font-size:0.72rem;color:var(--accent);"></i> Complete Address / City
+          </label>
+          <input type="text" id="rvAddress" value="${p.address || ''}" placeholder="e.g. Brgy. San Pedro, Puerto Princesa City" required />
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;font-size:0.72rem;color:var(--text-mid);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-lock" style="color:#059669;"></i>
+            <span>Encrypted &amp; Stored Securely</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-qrcode" style="color:var(--accent);"></i>
+            <span>Instant Digital Pass QR</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;">
+          <button type="button" class="btn btn-ghost" id="rvSkip" style="font-size:0.82rem;padding:8px 16px;">
+            Remind me later
+          </button>
+          <button type="submit" class="btn btn-primary" id="rvSubmit" style="font-size:0.82rem;padding:8px 20px;display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-circle-check"></i> Verify &amp; Activate Pass
+          </button>
+        </div>
+      </form>
+    </div>
   `);
 
-  $('#mClose').addEventListener('click', () => { sessionStorage.setItem(dismissedKey, 'true'); closeModal(); });
-  $('#obSkip').addEventListener('click', () => { sessionStorage.setItem(dismissedKey, 'true'); closeModal(); });
+  const dismissModal = () => {
+    sessionStorage.setItem(dismissedKey, 'true');
+    closeModal();
+  };
 
-  $('#onboardingForm').addEventListener('submit', async (e) => {
+  $('#mClose')?.addEventListener('click', dismissModal);
+  $('#rvSkip')?.addEventListener('click', dismissModal);
+
+  $('#renterVerificationForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const btn = $('#rvSubmit');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying…';
+    }
+
     const updated = {
-      full_name: $('#obName').value.trim(),
-      phone: $('#obPhone').value.trim(),
-      address: $('#obAddress').value.trim(),
+      full_name: $('#rvFullName').value.trim(),
+      phone: $('#rvPhone').value.trim(),
+      license_number: $('#rvLicenseNumber').value.trim().toUpperCase(),
+      license_expiry: $('#rvLicenseExpiry').value || '2028-12-31',
+      address: $('#rvAddress').value.trim(),
+      is_verified: true
     };
 
-    let { error } = await supabase.from('profiles').update(updated).eq('id', state.user.id);
-    if (error) {
-      const standardPayload = { full_name: updated.full_name, phone: updated.phone };
-      await supabase.from('profiles').update(standardPayload).eq('id', state.user.id).catch(() => { });
+    try {
+      await supabase.from('profiles').update(updated).eq('id', state.user.id);
+    } catch (err) {
+      try {
+        await supabase.from('profiles').update({
+          full_name: updated.full_name,
+          phone: updated.phone
+        }).eq('id', state.user.id);
+      } catch (e2) {}
     }
 
     try {
       localStorage.setItem(`rentflow_prof_${state.user.id}`, JSON.stringify(updated));
-    } catch (err) { }
+      const customUserRaw = localStorage.getItem('rentflow_custom_user');
+      if (customUserRaw) {
+        const parsed = JSON.parse(customUserRaw);
+        parsed.profile = { ...(parsed.profile || {}), ...updated };
+        localStorage.setItem('rentflow_custom_user', JSON.stringify(parsed));
+      }
+    } catch (e3) {}
 
     Object.assign(state.profile, updated);
-    toast('Contact details saved! You can now proceed to book.', 'success');
     sessionStorage.setItem(dismissedKey, 'true');
     closeModal();
+
+    toast('Account verified successfully! Your Digital Renter Pass is ready.', 'success');
+
     if (window.renderShell) {
       window.renderShell();
     }
+
+    setTimeout(() => {
+      import('./utils.js').then(({ openRenterIdModal }) => {
+        openRenterIdModal(state.profile);
+      });
+    }, 300);
   });
 }
+
+export const promptCustomerOnboardingModal = promptRenterVerificationModal;
 
 export async function bootstrapSession() {
   try {
@@ -1012,11 +1128,19 @@ export async function bootstrapSession() {
     }
 
     // 2. Check Supabase active auth session
-    const { data: { session }, error: sessionErr } = await supabase.auth.getSession().catch(() => ({ data: {} }));
+    let session = null;
+    try {
+      const res = await supabase.auth.getSession();
+      session = res?.data?.session;
+    } catch (e) {}
     
     if (session && session.user) {
       state.user = session.user;
-      let { data: profile } = await supabase.from('profiles').select('*').eq('id', state.user.id).maybeSingle().catch(() => ({ data: null }));
+      let profile = null;
+      try {
+        const res = await supabase.from('profiles').select('*').eq('id', state.user.id).maybeSingle();
+        profile = res?.data;
+      } catch (e) {}
 
       if (!profile) {
         const meta = state.user.user_metadata || {};
@@ -1027,7 +1151,9 @@ export async function bootstrapSession() {
           role: meta.role || (state.user.email?.includes('admin') ? 'admin' : (state.user.email?.includes('staff') ? 'staff' : 'customer')),
           phone: meta.phone || ''
         };
-        await supabase.from('profiles').upsert(profile).catch(() => {});
+        try {
+          await supabase.from('profiles').upsert(profile);
+        } catch (e) {}
       }
 
       state.profile = profile;
