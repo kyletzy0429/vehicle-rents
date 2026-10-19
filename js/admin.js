@@ -334,7 +334,7 @@ export async function fetchMergedBookings(filterFn = null) {
       merged.push({
         ...lb,
         profiles: lb.profiles || {
-          full_name: lb.customer_name || 'Guest Customer',
+          full_name: lb.customer_name || 'Renter',
           phone: lb.customer_phone || ''
         },
         vehicles: lb.vehicles || state.vehicles?.find(v => v.id === lb.vehicle_id) || { name: 'Vehicle', plate_number: 'N/A' },
@@ -521,7 +521,7 @@ export function getBookingCustomerName(b) {
     const m = b.review_notes.match(/Contact:\s*([^|(]+)/);
     if (m && m[1]) return m[1].trim();
   }
-  return b.profiles?.full_name || 'Online Guest Customer';
+  return b.profiles?.full_name || 'Online Renter';
 }
 
 export function getBookingCustomerPhone(b) {
@@ -1583,12 +1583,9 @@ export function openDamageAssessmentSlipModal(record) {
   openModal(`
     <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
       <div class="modal-head" style="margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="brand-logo-badge" style="width:34px;height:34px;font-size:0.85rem;"><i class="fa-solid fa-car-side"></i></div>
-          <div>
-            <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin:0;">Vehicle Damage Assessment Slip</h3>
-            <span style="font-size:0.75rem;color:var(--text-mid);">Official Incident Assessment &amp; Deductible Statement</span>
-          </div>
+        <div>
+          <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin:0;">Vehicle Damage Assessment Slip</h3>
+          <span style="font-size:0.75rem;color:var(--text-mid);">Official Incident Assessment &amp; Deductible Statement</span>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
@@ -1734,7 +1731,7 @@ export async function renderAdminRBAC(view) {
               <i class="fa-solid fa-user"></i>
             </div>
             <div>
-              <div style="font-weight:800;color:var(--text-hi);font-size:0.95rem;">Guest Renter</div>
+              <div style="font-weight:800;color:var(--text-hi);font-size:0.95rem;">Renter</div>
               <div style="font-size:0.72rem;color:var(--text-mid);">Self-Service Customer</div>
             </div>
           </div>

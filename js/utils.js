@@ -85,7 +85,7 @@ export function getRoleDisplayName(role) {
   const r = (role || '').toLowerCase();
   if (r === 'admin') return 'Administrator';
   if (r === 'staff') return 'Staff Member';
-  return 'Customer';
+  return 'Renter';
 }
 
 export function getSystemAlerts() {
@@ -257,7 +257,7 @@ export async function fetchLiveNotifications() {
           merged.push({
             ...lb,
             vehicles: lb.vehicles || { name: 'Vehicle' },
-            profiles: lb.profiles || { full_name: lb.customer_name || 'Guest Customer' }
+            profiles: lb.profiles || { full_name: lb.customer_name || 'Renter' }
           });
         }
       }
@@ -448,7 +448,7 @@ export function showBookingAlertPopup(b) {
   const vImg = v.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400';
   const vPlate = v.plate_number ? maskPlate(v.plate_number) : '';
   const vCategory = v.category ? (v.category.charAt(0).toUpperCase() + v.category.slice(1)) : '';
-  const custName = b.customer_name || b.profiles?.full_name || 'Guest Customer';
+  const custName = b.customer_name || b.profiles?.full_name || 'Renter';
   const custPhone = b.customer_phone || b.profiles?.phone || '';
   const totalAmt = Number(b.total_amount || 0);
 

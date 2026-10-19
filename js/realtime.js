@@ -145,7 +145,7 @@ export async function triggerLiveBookingAlert(booking) {
     }
   }
 
-  const custName = hydrated.customer_name || hydrated.profiles?.full_name || 'Guest Customer';
+  const custName = hydrated.customer_name || hydrated.profiles?.full_name || 'Renter';
   const vehName = hydrated.vehicles?.name || 'Rental Vehicle';
 
   // 1. Play loud clear audio chime

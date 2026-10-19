@@ -126,18 +126,6 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         </div>
       </div>
 
-      <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <i class="fa-solid fa-shield-halved" style="color:#059669;font-size:1.1rem;"></i>
-          <div>
-            <div style="font-size:0.8rem;color:#065f46;font-weight:700;">Standard Damage &amp; Fair Wear Coverage</div>
-            <div style="font-size:0.72rem;color:#047857;">Pre-existing marks verified · Zero surprise deductible cap</div>
-          </div>
-        </div>
-        <button type="button" class="btn btn-ghost btn-sm" id="btnDetailDamagePolicy" style="padding:4px 10px;font-size:0.74rem;color:#059669;border:1px solid #6ee7b7;background:#fff;white-space:nowrap;">
-          View Policy
-        </button>
-      </div>
 
       <div style="display:flex;gap:10px;margin-top:14px;">
         <button type="button" class="btn btn-primary btn-block" id="btnGoStep2">
@@ -241,7 +229,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             <i class="fa-solid fa-user-pen"></i>
           </div>
           <div>
-            <h4 class="renter-fillup-title">Renter Information (Guest Details)</h4>
+            <h4 class="renter-fillup-title">Renter Information</h4>
             <span class="renter-fillup-sub">Pakilagay ang inyong impormasyon para sa opisyal na booking</span>
           </div>
         </div>

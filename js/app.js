@@ -5,7 +5,7 @@ import {
   getTheme, toggleTheme, applyTheme,
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
-import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole, checkCustomerVerificationStatus } from './auth.js';
+import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole, checkCustomerVerificationStatus, promptRenterVerificationModal } from './auth.js';
 import { renderCustomer } from './customer.js?v=2.6';
 import { renderStaff, renderAdmin } from './admin.js?v=2.6';
 import { initRealtimeSync } from './realtime.js';
@@ -17,7 +17,7 @@ if (typeof window !== 'undefined') {
 
 export function renderRoleSwitcherHTML(currentRole) {
   const roleLabels = {
-    customer: 'Guest',
+    customer: 'Renter',
     staff: 'Staff',
     admin: 'Admin'
   };
@@ -34,7 +34,7 @@ export function renderRoleSwitcherHTML(currentRole) {
         <div class="role-menu-heading">Switch Role</div>
         
         <div class="role-menu-item ${currentRole === 'customer' ? 'active' : ''}" data-role-choice="customer">
-          <span class="role-item-title">Guest</span>
+          <span class="role-item-title">Renter</span>
           ${currentRole === 'customer' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
         </div>
 
@@ -223,25 +223,26 @@ export function openUserMenuModal() {
       </div>
     `;
   } else {
-    // Customer (Guest)
+    // Customer (Renter)
+    const renterName = (p.full_name && p.full_name !== 'Guest Customer' && p.full_name !== 'User') ? p.full_name : 'Renter';
     modalContent = `
       <div class="modal-head">
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:46px;height:46px;border-radius:50%;background:var(--primary-gradient);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px var(--accent-glow);">${initials}</div>
           <div>
-            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Mark Lester Ramos'}</h3>
-            <span style="font-size:0.78rem;color:var(--accent);font-weight:700;">Verified Customer</span>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${renterName}</h3>
+            <span style="font-size:0.78rem;color:var(--accent);font-weight:700;">Verified Renter</span>
           </div>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'mark.ramos@gmail.com'}</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'renter@rentflow.ph'}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 582 9140'}</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Customer Menu</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Renter Menu</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
 
@@ -357,12 +358,64 @@ export function openPricingModal() {
   if (pd) pd.addEventListener('click', closeModal);
 }
 
+export function renderRenterNoticeHTML() {
+  if (state.portal !== 'customer') return '';
+  if (sessionStorage.getItem('rentflow_dismiss_reg_notif')) return '';
+
+  const p = state.profile || {};
+  const isCustomUser = Boolean(localStorage.getItem('rentflow_custom_user'));
+  const activeCustKey = localStorage.getItem('rentflow_active_customer_key');
+
+  // Check if renter is fully registered and verified
+  const hasLicense = Boolean(p.license_number && p.license_number.trim());
+  const isVerifiedRenter = Boolean(
+    hasLicense && p.is_verified !== false && activeCustKey !== 'customer2'
+  );
+
+  // If user is already a verified registered account, don't show
+  const isNewOrNonRegistered = !isCustomUser || !isVerifiedRenter || activeCustKey === 'customer2' || p.is_new_renter || !hasLicense;
+  if (!isNewOrNonRegistered) return '';
+
+  const isUnregistered = !isCustomUser && (!state.user || state.user.id === 'guest' || !state.user.email);
+  const title = isUnregistered ? 'Account Registration' : 'Renter Verification';
+  const desc = isUnregistered
+    ? 'Register your renter account to unlock instant approvals and express vehicle key pickup.'
+    : 'New renter? Complete your driver details to activate your official Digital Renter Pass.';
+  const btnText = isUnregistered ? 'Register Account' : 'Complete Profile';
+
+  return `
+    <div class="renter-toast-dock" id="renterToastDock" role="alert" aria-live="polite">
+      <div class="renter-toast-inner">
+        <div class="renter-toast-icon-wrap">
+          <i class="fa-solid fa-${isUnregistered ? 'user-plus' : 'id-card'}"></i>
+        </div>
+        <div class="renter-toast-content">
+          <div class="renter-toast-header">
+            <span class="renter-toast-tag">Notice</span>
+            <span class="renter-toast-title">${title}</span>
+          </div>
+          <p class="renter-toast-desc">${desc}</p>
+          <div class="renter-toast-actions">
+            <button type="button" class="renter-toast-cta" id="renterNoticeActionBtn">
+              ${btnText} <i class="fa-solid fa-arrow-right" style="font-size:0.65rem;margin-left:4px;"></i>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="renter-toast-dismiss" id="renterNoticeCloseBtn" title="Dismiss" aria-label="Dismiss">&times;</button>
+      </div>
+    </div>
+  `;
+}
+
 export function renderShell() {
   const tabs = PORTAL_TABS[state.portal] || [];
   if (!state.tab || !tabs.find(t => t.id === state.tab)) state.tab = tabs[0]?.id;
 
-  const initials = (state.profile?.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  const firstName = (state.profile?.full_name || 'User').split(' ')[0];
+  const rawName = state.profile?.full_name || '';
+  const isGeneric = !rawName || rawName === 'Guest Customer' || rawName === 'User' || rawName === 'Customer';
+  const displayName = isGeneric ? 'Renter' : rawName;
+  const initials = isGeneric ? 'R' : displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const firstName = isGeneric ? 'Renter' : displayName.split(' ')[0];
   const roleTitle = getRoleDisplayName(state.portal);
   const activeTabObj = tabs.find(t => t.id === state.tab);
 
@@ -378,11 +431,9 @@ export function renderShell() {
               <i class="fa-solid fa-bars"></i>
             </button>
 
-            <div class="brand-logo-badge"><i class="fa-solid fa-car-side"></i></div>
-
             <div style="cursor:pointer;" id="brandHomeBtn">
               <div class="brand-title">Vehicle Rental Management System</div>
-              <div class="brand-portal-sub">GUEST PORTAL</div>
+              <div class="brand-portal-sub">RENTER PORTAL</div>
             </div>
 
             <!-- Sleek Dropdown Menu (Screenshot 3 style) -->
@@ -416,8 +467,8 @@ export function renderShell() {
               <div class="g-menu-divider"></div>
               <div class="g-menu-user-row">
                 <div class="g-menu-user-info">
-                  <div class="g-menu-user-name">${state.profile?.full_name || 'Guest Customer'}</div>
-                  <div class="g-menu-user-sub">${state.user?.email || 'Customer Access'}</div>
+                  <div class="g-menu-user-name">${displayName}</div>
+                  <div class="g-menu-user-sub">${state.user?.email || 'Renter Access'}</div>
                 </div>
                 <button type="button" class="btn btn-ghost btn-sm" id="gMenuLogout" style="color:#ef4444;border-radius:99px;font-size:0.75rem;padding:4px 10px;">Sign out</button>
               </div>
@@ -457,7 +508,7 @@ export function renderShell() {
 
             ${renderRoleSwitcherHTML(state.portal)}
 
-            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${state.profile?.full_name || 'User'}">
+            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${displayName}">
               <div class="topbar-user-avatar">${initials}</div>
               <span class="topbar-user-name">${firstName}</span>
               <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
@@ -466,6 +517,7 @@ export function renderShell() {
         </header>
 
         <main id="mainView" class="customer-main-view"><div class="loading-spin"></div></main>
+        ${renderRenterNoticeHTML()}
       </div>
     `;
 
@@ -474,6 +526,34 @@ export function renderShell() {
     $('#topNotifBtn').addEventListener('click', openNotificationsModal);
     $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
     bindRoleSwitcherEvents();
+
+    const regActionBtn = $('#renterNoticeActionBtn');
+    if (regActionBtn) {
+      regActionBtn.addEventListener('click', () => {
+        const isCustomUser = Boolean(localStorage.getItem('rentflow_custom_user'));
+        const isUnregistered = !isCustomUser && (!state.user || state.user.id === 'guest' || !state.user.email);
+        if (isUnregistered) {
+          renderAuth('signup');
+        } else {
+          promptRenterVerificationModal(true);
+        }
+      });
+    }
+
+    const regCloseBtn = $('#renterNoticeCloseBtn');
+    if (regCloseBtn) {
+      regCloseBtn.addEventListener('click', () => {
+        sessionStorage.setItem('rentflow_dismiss_reg_notif', '1');
+        const dock = $('#renterToastDock');
+        if (dock) {
+          dock.style.transition = 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+          dock.style.opacity = '0';
+          dock.style.transform = 'translateY(16px) scale(0.95)';
+          dock.style.pointerEvents = 'none';
+          setTimeout(() => dock.remove(), 260);
+        }
+      });
+    }
 
     const gMenuBtn = $('#guestMenuBtn');
     const gDropdown = $('#guestDropdownMenu');
@@ -529,9 +609,6 @@ export function renderShell() {
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebarMenu">
         <div class="sidebar-brand" style="display:flex;align-items:center;gap:10px;">
-          <div class="brand-logo-badge" style="width:34px;height:34px;min-width:34px;font-size:0.95rem;">
-            <i class="fa-solid fa-car-side"></i>
-          </div>
           <div style="flex:1;">
             <div style="font-weight:800;font-size:0.88rem;line-height:1.2;color:#0f172a;letter-spacing:-0.01em;">Vehicle Rental Management System</div>
             <div style="font-size:0.7rem;color:#64748b;font-weight:600;margin-top:2px;">${roleTitle} Portal</div>

@@ -16,7 +16,7 @@ export async function switchSystemRole(role, customerKey = null) {
     state.profile = { ...cust };
     state.portal = 'customer';
     state.tab = 'browse';
-    toast(`Switched to Guest Portal`, 'info');
+    toast(`Switched to Renter Portal`, 'info');
   } else if (role === 'staff') {
     const st = DEMO_ACCOUNTS.staff;
     setActiveRole('staff');
@@ -164,7 +164,6 @@ export function renderLandingPage() {
       <nav class="lp-navbar">
         <div class="lp-navbar-inner">
           <div class="lp-navbar-brand">
-            <div class="lp-navbar-logo"><i class="fa-solid fa-car-side"></i></div>
             <div>
               <div class="lp-navbar-title">Vehicle Rental<br>Management System</div>
               <div class="lp-navbar-sub">Realtime Fleet System</div>
@@ -210,7 +209,7 @@ export function renderLandingPage() {
             <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Reserve</button>
           </div>
           <div class="lp-hero-stats">
-            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Guest Rating</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Renter Rating</span></div>
             <div class="lp-stat"><span class="lp-stat-val">100%</span><span class="lp-stat-label">Realtime Sync</span></div>
             <div class="lp-stat"><span class="lp-stat-val">24/7</span><span class="lp-stat-label">Personalized Service</span></div>
           </div>
@@ -336,7 +335,7 @@ export function renderLandingPage() {
       <!-- ═══ REVIEWS ═══ -->
       <section class="lp-section lp-section-reviews" id="lp-reviews">
         <div class="lp-section-inner">
-          <div class="lp-section-tag"><i class="fa-solid fa-crown" style="color:#f59e0b;margin-right:6px;"></i> VERIFIED GUEST EXPERIENCES</div>
+          <div class="lp-section-tag"><i class="fa-solid fa-crown" style="color:#f59e0b;margin-right:6px;"></i> VERIFIED RENTER EXPERIENCES</div>
           <h2 class="lp-section-title">Loved by Drivers Across the Philippines</h2>
           <p class="lp-section-desc">Experience effortless vehicle rentals with guaranteed cloud-synced availability, immaculate vehicles, and 24/7 concierge assistance.</p>
 
@@ -456,8 +455,7 @@ export function renderLandingPage() {
       <footer class="lp-footer">
         <div class="lp-footer-inner">
           <div class="lp-footer-brand">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-              <div class="lp-navbar-logo" style="width:42px;height:42px;font-size:1.1rem;"><i class="fa-solid fa-car-side"></i></div>
+            <div style="margin-bottom:12px;">
               <span style="font-size:1.1rem;font-weight:800;color:var(--text-hi);">Vehicle Rental Management System</span>
             </div>
             <p style="color:var(--text-mid);font-size:0.88rem;line-height:1.6;max-width:280px;">Where premium fleet meets cutting-edge real-time rental technology.</p>
@@ -468,12 +466,12 @@ export function renderLandingPage() {
             <a href="#lp-about">About &amp; Purpose</a>
             <a href="#lp-fleet">Fleet &amp; Pricing</a>
             <a href="#lp-perks">Features</a>
-            <a href="#lp-reviews">Guest Reviews</a>
+            <a href="#lp-reviews">Renter Reviews</a>
           </div>
           <div class="lp-footer-col">
             <h4>Services &amp; Legal</h4>
             <a href="#">Instant Booking</a>
-            <a href="#" id="lpFooterGuest">Guest Portal</a>
+            <a href="#" id="lpFooterGuest">Renter Portal</a>
             <a href="#" id="lpFooterStaff">Staff &amp; Admin Sign In</a>
             <a href="#">Privacy Policy</a>
             <a href="#">Terms of Service</a>
@@ -593,7 +591,8 @@ export function renderLandingPage() {
 /* ==========================================================================
    AUTH PAGE — Split layout (form left, image right)
    ========================================================================== */
-export function renderAuth() {
+export function renderAuth(initialMode = null) {
+  if (initialMode) authMode = initialMode;
   const isDark = (localStorage.getItem('rentflow_theme') || 'light') === 'dark';
   if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
   else document.documentElement.removeAttribute('data-theme');
@@ -613,7 +612,7 @@ export function renderAuth() {
           <div class="auth-demo-bar">
             <div class="auth-demo-label">DEMO PORTAL ACCESS</div>
             <div class="auth-demo-btns">
-              <button type="button" class="auth-demo-btn" id="quickDemoGuest">Guest</button>
+              <button type="button" class="auth-demo-btn" id="quickDemoGuest">Renter</button>
               <button type="button" class="auth-demo-btn" id="quickDemoStaff">Staff</button>
               <button type="button" class="auth-demo-btn" id="quickDemoAdmin">Admin</button>
             </div>
@@ -650,7 +649,7 @@ export function renderAuth() {
                 <label>Confirm password</label>
                 <input type="password" id="confirmPassword" placeholder="••••••••" minlength="6" required />
               </div>
-              <p style="font-size:0.78rem;color:var(--text-mid);margin:0 0 14px 0;">New accounts are registered as guests. Staff and admin accounts are promoted by an administrator.</p>
+              <p style="font-size:0.78rem;color:var(--text-mid);margin:0 0 14px 0;">New accounts are registered as renters. Staff and admin accounts are promoted by an administrator.</p>
             ` : `
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;cursor:pointer;margin:0;">
@@ -691,7 +690,7 @@ export function renderAuth() {
           <p class="auth-hero-sub">From pick-up to drop-out, one system keeps your fleet, guests, and staff perfectly in sync.</p>
         </div>
         <div class="auth-rating-badge">
-          <div class="auth-rating-label">GUEST RATING</div>
+          <div class="auth-rating-label">RENTER RATING</div>
           <div class="auth-rating-val">4.9 <span>/ 5</span></div>
         </div>
       </div>

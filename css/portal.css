@@ -140,20 +140,8 @@
   color: #38bdf8;
 }
 
-/* Brand Initials / Logo badge matching reference UI */
 .brand-logo-badge {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #9333ea, #7c3aed);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15rem;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
-  flex-shrink: 0;
+  display: none !important;
 }
 
 .brand-title {
@@ -2285,17 +2273,7 @@
 }
 
 .lp-navbar-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #9333ea, #7c3aed);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-  flex-shrink: 0;
+  display: none !important;
 }
 
 .lp-navbar-title {
@@ -4555,6 +4533,190 @@
 [data-theme="dark"] .return-today-alert-card div {
   color: #fecdd3 !important;
 }
+
+/* ── Bespoke Renter Registration Floating Notification (Non-codeviber, Luxury Minimal) ── */
+.renter-toast-dock {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1050;
+  max-width: 370px;
+  width: calc(100vw - 36px);
+  animation: renterDockSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+}
+
+@keyframes renterDockSlide {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.renter-toast-inner {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.12), 0 4px 14px -2px rgba(15, 23, 42, 0.05);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.renter-toast-inner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px -10px rgba(15, 23, 42, 0.16), 0 6px 18px -2px rgba(15, 23, 42, 0.07);
+}
+
+[data-theme="dark"] .renter-toast-inner {
+  background: rgba(24, 19, 41, 0.94);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.55), 0 4px 16px -2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .renter-toast-inner:hover {
+  box-shadow: 0 28px 56px -10px rgba(0, 0, 0, 0.65), 0 6px 20px -2px rgba(0, 0, 0, 0.35);
+}
+
+.renter-toast-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(99, 102, 241, 0.18) 100%);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+}
+
+[data-theme="dark"] .renter-toast-icon-wrap {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(124, 58, 237, 0.25) 100%);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.renter-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.renter-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.renter-toast-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent);
+  background: rgba(124, 58, 237, 0.08);
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .renter-toast-tag {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
+.renter-toast-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  letter-spacing: -0.2px;
+}
+
+.renter-toast-desc {
+  font-size: 0.78rem;
+  color: var(--text-mid);
+  line-height: 1.45;
+  margin: 0 0 12px 0;
+}
+
+.renter-toast-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.renter-toast-cta {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 7px 15px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+  font-family: inherit;
+}
+
+.renter-toast-cta:hover {
+  background: var(--primary-gradient-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.renter-toast-dismiss {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-low);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+  margin-top: -4px;
+  margin-right: -4px;
+  flex-shrink: 0;
+}
+
+.renter-toast-dismiss:hover {
+  color: var(--text-hi);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .renter-toast-dismiss:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+  .renter-toast-dock {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: 100%;
+  }
+}
+
 
 
 
