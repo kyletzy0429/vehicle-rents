@@ -613,102 +613,10 @@ export function showBookingAlertPopup(b) {
 }
 
 // ---------------------------------------------------------------------------
-// Digital Verified Renter ID & Secure Pass
+// Digital Verified Renter ID & Secure Pass (Removed)
 // ---------------------------------------------------------------------------
-export function openRenterIdModal(profileData = null) {
-  const p = profileData || state.profile || {};
-  const renterName = p.full_name || 'Mark Lester Ramos';
-  const renterPhone = p.phone || '0917 582 9140';
-  const renterAddress = p.address || 'Puerto Princesa City, Palawan';
-  const licenseNum = p.license_number || 'N02-19-482019';
-  const licenseExpiry = p.license_expiry || '2028-10-18';
-  const renterIdCode = `RNT-${String(p.id || '882049').slice(0, 8).toUpperCase()}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=PHILIPPINES-RENTER-PASS-${renterIdCode}-${encodeURIComponent(renterName)}`;
-
-  openModal(`
-    <div class="renter-id-modal-wrap">
-      <div class="modal-head" style="margin-bottom:14px;">
-        <div>
-          <h3 style="font-size:1.2rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
-            <i class="fa-solid fa-id-badge" style="color:var(--accent);"></i> Digital Verified Renter ID Pass
-          </h3>
-          <span style="font-size:0.78rem;color:var(--text-mid);">Official Contactless Pass for Express Vehicle Handover</span>
-        </div>
-        <div class="modal-close" id="mClose">Close</div>
-      </div>
-
-      <!-- Holographic Digital ID Card -->
-      <div class="renter-id-card-visual" style="background:linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #7c3aed 100%);color:#fff;border-radius:18px;padding:22px;box-shadow:0 12px 30px rgba(124,58,237,0.35);position:relative;overflow:hidden;margin-bottom:18px;border:1px solid rgba(255,255,255,0.2);">
-        <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,0.08);border-radius:50%;pointer-events:none;"></div>
-        
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
-              <i class="fa-solid fa-shield-check"></i>
-            </div>
-            <div>
-              <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;opacity:0.8;">REPUBLIC OF THE PHILIPPINES</div>
-              <div style="font-size:0.85rem;font-weight:800;letter-spacing:0.05em;">VERIFIED RENTER PASS</div>
-            </div>
-          </div>
-          <span style="background:rgba(16,185,129,0.25);border:1px solid #10b981;color:#6ee7b7;font-size:0.68rem;padding:4px 8px;border-radius:20px;font-weight:700;display:flex;align-items:center;gap:4px;">
-            <i class="fa-solid fa-circle-check"></i> LTO VERIFIED
-          </span>
-        </div>
-
-        <div style="display:flex;gap:16px;align-items:center;">
-          <div style="width:70px;height:70px;border-radius:14px;background:#ffffff;padding:4px;flex-shrink:0;box-shadow:0 4px 10px rgba(0,0,0,0.2);">
-            <img src="${qrUrl}" alt="Renter QR" style="width:100%;height:100%;object-fit:contain;" />
-          </div>
-          <div style="flex:1;">
-            <div style="font-size:1.1rem;font-weight:800;margin-bottom:2px;letter-spacing:0.02em;">${renterName}</div>
-            <div style="font-size:0.75rem;opacity:0.9;margin-bottom:4px;"><i class="fa-solid fa-phone" style="font-size:0.65rem;"></i> ${renterPhone}</div>
-            <div style="font-size:0.72rem;opacity:0.8;"><i class="fa-solid fa-location-dot" style="font-size:0.65rem;"></i> ${renterAddress}</div>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15);">
-          <div>
-            <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase;">Driver's License No.</div>
-            <div style="font-size:0.85rem;font-weight:700;font-family:monospace;letter-spacing:0.05em;">${licenseNum}</div>
-          </div>
-          <div>
-            <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase;">Valid Thru</div>
-            <div style="font-size:0.85rem;font-weight:700;">${licenseExpiry}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase;">Renter Pass ID</div>
-            <div style="font-size:0.85rem;font-weight:800;color:#fde047;letter-spacing:0.05em;">${renterIdCode}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Security Details -->
-      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <i class="fa-solid fa-fingerprint" style="color:#059669;font-size:1.1rem;"></i>
-          <span style="font-size:0.85rem;font-weight:700;color:var(--text-hi);">Secure 256-Bit Encrypted Authentication</span>
-        </div>
-        <p style="margin:0;font-size:0.78rem;color:var(--text-mid);line-height:1.5;">
-          Present this digital QR pass during pickup for zero-wait validation. Staff will verify your identity with a single scan without photocopying physical IDs.
-        </p>
-      </div>
-
-      <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-ghost btn-block" id="printRenterIdBtn" style="border:1px solid var(--glass-border);">
-          <i class="fa-solid fa-print"></i> Print / Save Pass
-        </button>
-        <button type="button" class="btn btn-primary btn-block" onclick="window.closeModal && window.closeModal();">
-          <i class="fa-solid fa-check"></i> Done
-        </button>
-      </div>
-    </div>
-  `);
-
-  $('#mClose')?.addEventListener('click', closeModal);
-  $('#printRenterIdBtn')?.addEventListener('click', () => {
-    window.print();
-  });
+export function openRenterIdModal() {
+  // Pass modal removed
 }
 
 // ---------------------------------------------------------------------------

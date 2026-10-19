@@ -380,7 +380,7 @@ export function renderRenterNoticeHTML() {
   const title = isUnregistered ? 'Account Registration' : 'Renter Verification';
   const desc = isUnregistered
     ? 'Register your renter account to unlock instant approvals and express vehicle key pickup.'
-    : 'New renter? Complete your driver details to activate your official Digital Renter Pass.';
+    : 'New renter? Complete your driver details to verify your account.';
   const btnText = isUnregistered ? 'Register Account' : 'Complete Profile';
 
   return `

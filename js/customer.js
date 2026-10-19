@@ -248,10 +248,6 @@ export async function renderMyBookings(view) {
           <h2>My Bookings &amp; Rentals</h2>
           <p>Track your requests, active rentals, receipts, and rental history.</p>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <button type="button" class="btn btn-primary btn-sm" id="btnBookingsRenterId">
-            <i class="fa-solid fa-id-badge"></i> Digital Renter Pass
-        </div>
       </div>
 
       ${returnDueBooking ? `
@@ -303,10 +299,6 @@ export async function renderMyBookings(view) {
       </div>
     </div>
   `;
-
-  $('#btnBookingsRenterId')?.addEventListener('click', () => {
-    import('./utils.js').then(({ openRenterIdModal }) => openRenterIdModal(state.profile));
-  });
 
 
   const filterBookings = (f) => {

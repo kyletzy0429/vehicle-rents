@@ -243,7 +243,7 @@ export function renderLandingPage() {
             <div class="lp-overview-card">
               <div class="lp-overview-icon"><i class="fa-solid fa-lock"></i></div>
               <h3 class="lp-overview-title">Secure Sign-In &amp; Data Use</h3>
-              <p class="lp-overview-text">We use secure authentication to verify guest identities and associate vehicle reservations with your user account. We access only your basic profile (name and email) to issue booking confirmations and digital passes.</p>
+              <p class="lp-overview-text">We use secure authentication to verify guest identities and associate vehicle reservations with your user account. We access only your basic profile (name and email) to issue booking confirmations and rental agreements.</p>
             </div>
             <div class="lp-overview-card">
               <div class="lp-overview-icon"><i class="fa-solid fa-bolt"></i></div>
@@ -945,7 +945,7 @@ export function promptRenterVerificationModal(force = false) {
             Verify Your Renter Account
           </h3>
           <span style="font-size:0.78rem;color:var(--text-mid);">
-            Enter your driver's license details to activate your official Digital Renter Pass.
+            Enter your driver's license details to complete your verified account.
           </span>
         </div>
         <div class="modal-close" id="mClose">Close</div>
@@ -1005,8 +1005,8 @@ export function promptRenterVerificationModal(force = false) {
             <span>Encrypted &amp; Stored Securely</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
-            <i class="fa-solid fa-qrcode" style="color:var(--accent);"></i>
-            <span>Instant Digital Pass QR</span>
+            <i class="fa-solid fa-circle-check" style="color:var(--accent);"></i>
+            <span>Express Vehicle Handover</span>
           </div>
         </div>
 
@@ -1015,7 +1015,7 @@ export function promptRenterVerificationModal(force = false) {
             Remind me later
           </button>
           <button type="submit" class="btn btn-primary" id="rvSubmit" style="font-size:0.82rem;padding:8px 20px;display:inline-flex;align-items:center;gap:6px;">
-            <i class="fa-solid fa-circle-check"></i> Verify &amp; Activate Pass
+            <i class="fa-solid fa-circle-check"></i> Complete Verification
           </button>
         </div>
       </form>
@@ -1072,17 +1072,11 @@ export function promptRenterVerificationModal(force = false) {
     sessionStorage.setItem(dismissedKey, 'true');
     closeModal();
 
-    toast('Account verified successfully! Your Digital Renter Pass is ready.', 'success');
+    toast('Account verified successfully!', 'success');
 
     if (window.renderShell) {
       window.renderShell();
     }
-
-    setTimeout(() => {
-      import('./utils.js').then(({ openRenterIdModal }) => {
-        openRenterIdModal(state.profile);
-      });
-    }, 300);
   });
 }
 
