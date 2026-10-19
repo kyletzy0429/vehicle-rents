@@ -16,7 +16,11 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     drivers.length ? Promise.resolve({ data: drivers }) : supabase.from('drivers').select('*').order('name'),
     supabase.from('bookings').select('start_date, end_date, status').eq('vehicle_id', v.id).in('status', ['pending', 'approved', 'active', 'reserved', 'completed']).gte('end_date', todayStr).order('start_date'),
   ]);
-  drivers = (fetchedDrivers || []).map(d => ({ ...d, daily_fee: Number(d.daily_fee || 0) < 500 ? 500 : Number(d.daily_fee) }));
+  drivers = (fetchedDrivers || []).map(d => ({
+    ...d,
+    daily_fee: Number(d.daily_fee || 0) < 500 ? 500 : Number(d.daily_fee),
+    license_type: (d.license_type || 'Professional').replace(/\s*heavy\s*/gi, ' ').trim() || 'Professional'
+  }));
   state.drivers = drivers;
 
   // Merge both Supabase and local demo bookings so all reserved/paid bookings accurately block the calendar
