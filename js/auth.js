@@ -67,93 +67,63 @@ export function renderLandingPage() {
   const reviewsData = [
     {
       category: 'suv airport',
-      name: 'Aira Apolinar',
-      initials: 'AA',
+      name: 'Mike Denver',
+      initials: 'MD',
       avatarBg: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
       role: 'Verified Renter',
-      location: 'NAIA T3 VIP Handover',
+      location: 'PPC, Palawan',
       score: '5.0',
       time: '3d ago',
       vehicleIcon: 'fa-car-side',
       vehicle: 'Toyota Fortuner 2.8 V',
       cat: 'SUV',
-      text: 'Super smooth ng booking process! Pagka-landing namin sa NAIA Terminal 3, naka-park na agad ang Fortuner sa VIP bay with instant digital key access. Mababait at very professional ang staff. Napakalinis ng sasakyan, amoy showroom bago pa!',
-      chips: ['✨ Spotless Clean', '✈️ NAIA T3 VIP Bay', '⚡ Contactless Key Handover']
+      text: 'Super smooth ng booking process! Pagka-landing namin sa PPC, naka-park na agad ang Fortuner sa arrival area with instant digital key access. Mababait at very professional ang staff. Napakalinis ng sasakyan, amoy showroom bago pa!',
+      chips: ['✨ Spotless Clean', '✈️ PPC Airport Handover', '⚡ Contactless Key Handover']
     },
     {
       category: 'suv luxury',
-      name: 'Engr. David Chen',
-      initials: 'DC',
+      name: 'JR Aplino',
+      initials: 'JA',
       avatarBg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
       role: 'Verified Renter',
-      location: 'Makati to Tagaytay Escapade',
+      location: 'PPC, Palawan',
       score: '5.0',
       time: '5d ago',
       vehicleIcon: 'fa-car-side',
       vehicle: 'Ford Ranger Raptor 4x4',
       cat: 'Pickup',
-      text: 'Immaculate vehicle condition. The Raptor’s FOX Racing shocks handled the steep Tagaytay ridge climbs effortlessly. Extending our trip by two days via the portal took less than two minutes without calling anyone. Truly a world-class platform!',
-      chips: ['⛰️ 4x4 Tagaytay Ridge', '🔄 Instant Trip Extension', '🛡️ Comprehensive Cover']
+      text: 'Immaculate vehicle condition. Kayang-kaya ng Raptor ang long drive galing PPC papuntang El Nido nang walang aberya. Extending our trip by two days via the portal took less than two minutes without calling anyone. Truly a world-class platform!',
+      chips: ['⛰️ 4x4 Palawan Roadtrip', '🔄 Instant Trip Extension', '🛡️ Comprehensive Cover']
     },
     {
       category: 'city luxury',
-      name: 'Atty. Sophia Martinez',
-      initials: 'SM',
+      name: 'Mark Vincent',
+      initials: 'MV',
       avatarBg: 'linear-gradient(135deg, #10b981, #047857)',
       role: 'Verified Renter',
-      location: 'BGC Financial District',
+      location: 'PPC Palawan',
       score: '5.0',
       time: '1w ago',
       vehicleIcon: 'fa-car-side',
       vehicle: 'Toyota Vios 1.5 G CVT',
       cat: 'Sedan',
-      text: 'Effortless rental experience. The real-time availability engine meant zero waiting for manual phone confirmations. Official digital receipt and rental agreement were generated immediately. Outstanding standard for corporate mobility.',
-      chips: ['💼 Corporate Rental', '⚡ Instant Agreement Sync', '⛽ High Efficiency']
+      text: 'Effortless rental experience. The real-time availability engine meant zero waiting for manual phone confirmations. Official digital receipt and rental agreement were generated immediately. Napakatipid pa sa gas para sa city driving dito sa PPC.',
+      chips: ['💼 City Rental PPC', '⚡ Instant Agreement Sync', '⛽ High Fuel Efficiency']
     },
     {
-      category: 'suv airport',
-      name: 'Alexander Wright',
-      initials: 'AW',
+      category: 'suv city airport',
+      name: 'Ryan',
+      initials: 'R',
       avatarBg: 'linear-gradient(135deg, #f59e0b, #d97706)',
       role: 'Verified Renter',
-      location: 'Family Holiday / Clark & Subic',
+      location: 'Palawan',
       score: '5.0',
-      time: '10d ago',
+      time: '1w ago',
       vehicleIcon: 'fa-car-side',
       vehicle: 'Toyota Innova 2.8 E',
       cat: 'MPV',
-      text: 'Booked the 8-seater Innova for our extended family trip. Plenty of legroom and luggage space. The vehicle was thoroughly disinfected and had GPS tracking enabled. Best rental platform in the Philippines by far.',
+      text: 'Booked the 8-seater Innova para sa family trip namin sa Puerto Princesa at mga pasyalan sa Palawan. Plenty of legroom and luggage space. The vehicle was thoroughly disinfected and had GPS tracking enabled. Best rental platform in Palawan by far.',
       chips: ['👨‍👩‍👧‍👦 Family Vacation', '💺 8-Seater Comfort', '📍 Live GPS Enabled']
-    },
-    {
-      category: 'suv city',
-      name: 'Elena & Mark Vance',
-      initials: 'EV',
-      avatarBg: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-      role: 'Verified Renter',
-      location: 'Quezon City to Batangas Coast',
-      score: '5.0',
-      time: '2w ago',
-      vehicleIcon: 'fa-car-side',
-      vehicle: 'Mitsubishi Xpander GLS',
-      cat: 'Crossover',
-      text: 'Modern, reliable, and super fast! The live updates for reservation and extension kept us completely stress-free during our weekend roadtrip. Staff even checked in via chat to make sure our ride was smooth.',
-      chips: ['🌊 Batangas Roadtrip', '📱 Live SMS/Chat Sync', '⭐ 5-Star Hospitality']
-    },
-    {
-      category: 'city',
-      name: 'Capt. Roberto Cruz',
-      initials: 'RC',
-      avatarBg: 'linear-gradient(135deg, #06b6d4, #0284c7)',
-      role: 'Verified Renter',
-      location: 'Pasay City Express Commute',
-      score: '5.0',
-      time: '2w ago',
-      vehicleIcon: 'fa-motorcycle',
-      vehicle: 'Yamaha NMAX 155 ABS',
-      cat: 'Motorcycle',
-      text: 'Needed a nimble commuter while my primary car was in maintenance. The NMAX was delivered to my condo lobby in 30 minutes flat with sanitized helmets and full documentation. Absolutely top tier convenience!',
-      chips: ['⚡ 30-Min Rapid Delivery', '🛵 Premium Maxi Scooter', '🪖 Sanitized Gear Included']
     }
   ];
 
@@ -478,7 +448,7 @@ export function renderLandingPage() {
           </div>
           <div class="lp-footer-col">
             <h4>Contact &amp; Location</h4>
-            <a href="#"><i class="fa-solid fa-location-dot" style="width:16px;"></i> Zone 5, Poblacion, Panabo City</a>
+            <a href="#"><i class="fa-solid fa-location-dot" style="width:16px;"></i> PPC, Palawan</a>
             <a href="#"><i class="fa-solid fa-phone" style="width:16px;"></i> +63 917 123 4567</a>
             <a href="#"><i class="fa-solid fa-envelope" style="width:16px;"></i> support@vehiclerental.ph</a>
           </div>

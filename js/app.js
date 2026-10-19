@@ -5,7 +5,7 @@ import {
   getTheme, toggleTheme, applyTheme,
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
-import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole, checkCustomerVerificationStatus, promptRenterVerificationModal } from './auth.js';
+import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole } from './auth.js';
 import { renderCustomer } from './customer.js?v=2.6';
 import { renderStaff, renderAdmin } from './admin.js?v=2.6';
 import { initRealtimeSync } from './realtime.js';
@@ -358,54 +358,7 @@ export function openPricingModal() {
   if (pd) pd.addEventListener('click', closeModal);
 }
 
-export function renderRenterNoticeHTML() {
-  if (state.portal !== 'customer') return '';
-  if (sessionStorage.getItem('rentflow_dismiss_reg_notif')) return '';
 
-  const p = state.profile || {};
-  const isCustomUser = Boolean(localStorage.getItem('rentflow_custom_user'));
-  const activeCustKey = localStorage.getItem('rentflow_active_customer_key');
-
-  // Check if renter is fully registered and verified
-  const hasLicense = Boolean(p.license_number && p.license_number.trim());
-  const isVerifiedRenter = Boolean(
-    hasLicense && p.is_verified !== false && activeCustKey !== 'customer2'
-  );
-
-  // If user is already a verified registered account, don't show
-  const isNewOrNonRegistered = !isCustomUser || !isVerifiedRenter || activeCustKey === 'customer2' || p.is_new_renter || !hasLicense;
-  if (!isNewOrNonRegistered) return '';
-
-  const isUnregistered = !isCustomUser && (!state.user || state.user.id === 'guest' || !state.user.email);
-  const title = isUnregistered ? 'Account Registration' : 'Renter Verification';
-  const desc = isUnregistered
-    ? 'Register your renter account to unlock instant approvals and express vehicle key pickup.'
-    : 'New renter? Complete your driver details to verify your account.';
-  const btnText = isUnregistered ? 'Register Account' : 'Complete Profile';
-
-  return `
-    <div class="renter-toast-dock" id="renterToastDock" role="alert" aria-live="polite">
-      <div class="renter-toast-inner">
-        <div class="renter-toast-icon-wrap">
-          <i class="fa-solid fa-${isUnregistered ? 'user-plus' : 'id-card'}"></i>
-        </div>
-        <div class="renter-toast-content">
-          <div class="renter-toast-header">
-            <span class="renter-toast-tag">Notice</span>
-            <span class="renter-toast-title">${title}</span>
-          </div>
-          <p class="renter-toast-desc">${desc}</p>
-          <div class="renter-toast-actions">
-            <button type="button" class="renter-toast-cta" id="renterNoticeActionBtn">
-              ${btnText} <i class="fa-solid fa-arrow-right" style="font-size:0.65rem;margin-left:4px;"></i>
-            </button>
-          </div>
-        </div>
-        <button type="button" class="renter-toast-dismiss" id="renterNoticeCloseBtn" title="Dismiss" aria-label="Dismiss">&times;</button>
-      </div>
-    </div>
-  `;
-}
 
 export function renderShell() {
   const tabs = PORTAL_TABS[state.portal] || [];
@@ -517,7 +470,6 @@ export function renderShell() {
         </header>
 
         <main id="mainView" class="customer-main-view"><div class="loading-spin"></div></main>
-        ${renderRenterNoticeHTML()}
       </div>
     `;
 
@@ -526,34 +478,6 @@ export function renderShell() {
     $('#topNotifBtn').addEventListener('click', openNotificationsModal);
     $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
     bindRoleSwitcherEvents();
-
-    const regActionBtn = $('#renterNoticeActionBtn');
-    if (regActionBtn) {
-      regActionBtn.addEventListener('click', () => {
-        const isCustomUser = Boolean(localStorage.getItem('rentflow_custom_user'));
-        const isUnregistered = !isCustomUser && (!state.user || state.user.id === 'guest' || !state.user.email);
-        if (isUnregistered) {
-          renderAuth('signup');
-        } else {
-          promptRenterVerificationModal(true);
-        }
-      });
-    }
-
-    const regCloseBtn = $('#renterNoticeCloseBtn');
-    if (regCloseBtn) {
-      regCloseBtn.addEventListener('click', () => {
-        sessionStorage.setItem('rentflow_dismiss_reg_notif', '1');
-        const dock = $('#renterToastDock');
-        if (dock) {
-          dock.style.transition = 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
-          dock.style.opacity = '0';
-          dock.style.transform = 'translateY(16px) scale(0.95)';
-          dock.style.pointerEvents = 'none';
-          setTimeout(() => dock.remove(), 260);
-        }
-      });
-    }
 
     const gMenuBtn = $('#guestMenuBtn');
     const gDropdown = $('#guestDropdownMenu');
