@@ -59,7 +59,7 @@ export function renderLandingPage() {
     { name: 'Toyota Fortuner 2.8 V', cat: 'SUV', seats: 7, img: 'images/fortuner.webp', rate: 4200, desc: 'Premium Diesel SUV with high ground clearance, leather seats, and dual aircon.' },
     { name: 'Toyota Vios 1.5 G CVT', cat: 'Sedan', seats: 5, img: 'images/vios.webp', rate: 2500, desc: 'Fuel-efficient subcompact sedan. Automatic transmission, ideal for city driving.' },
     { name: 'Toyota Innova 2.8 E', cat: 'MPV', seats: 8, img: 'images/innova.webp', rate: 3200, desc: 'Spacious 8-seater MPV with powerful 2.8L Diesel engine and dual AC.' },
-    { name: 'Ford Ranger Raptor', cat: 'Pickup', seats: 5, img: 'images/raptor.webp', rate: 4500, desc: 'FOX Racing shocks, 4x4 Off-road mode. Great for heavy loads and adventure.' },
+    { name: 'Ford Ranger Raptor', cat: 'Pickup', seats: 5, img: 'images/raptor.webp', rate: 4500, desc: 'Heavy-duty 4x4 pickup truck with high ground clearance for provincial trips.' },
     { name: 'Mitsubishi Xpander GLS', cat: 'Crossover', seats: 7, img: 'images/xpander.webp', rate: 3000, desc: 'Modern crossover MPV with spacious 3-row seating and flexible cargo space.' },
     { name: 'Yamaha NMAX 155 ABS', cat: 'Motorcycle', seats: 2, img: 'images/nmax.webp', rate: 500, desc: '155cc Automatic Maxi Scooter with Variable Valve Actuation and ABS.' },
   ];
@@ -182,7 +182,7 @@ export function renderLandingPage() {
             <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to View Deals</button>
           </div>
           <div class="lp-hero-stats">
-            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">99.4% Verified Rating</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">4.9 / 5</span><span class="lp-stat-label">Verified Customer Reviews</span></div>
             <div class="lp-stat"><span class="lp-stat-val">&lt;60s</span><span class="lp-stat-label">Instant Cloud Booking</span></div>
             <div class="lp-stat"><span class="lp-stat-val">24/7</span><span class="lp-stat-label">VIP Concierge Service</span></div>
           </div>
@@ -254,14 +254,14 @@ export function renderLandingPage() {
                 <div class="lp-fleet-body">
                   <h3 class="lp-fleet-name">${v.name}</h3>
                   <div class="vehicle-specs-row">
-                    <span class="v-spec-pill"><i class="fa-solid fa-users"></i> ${v.seats} Seats</span>
-                    <span class="v-spec-pill"><i class="fa-solid fa-bolt"></i> Live Sync</span>
-                    <span class="v-spec-pill"><i class="fa-solid fa-shield-halved"></i> Full Cover</span>
+                    <span class="v-spec-pill">${v.seats} Seats</span>
+                    <span class="v-spec-pill">${v.cat}</span>
+                    <span class="v-spec-pill">Insured</span>
                   </div>
                   <div class="lp-fleet-price">₱${v.rate.toLocaleString()}.00 <span>/ day</span></div>
                   <p class="lp-fleet-desc">${v.desc}</p>
                   <button type="button" class="lp-btn-booknow" data-lp-book>
-                    <span>View Deal</span> <i class="fa-solid fa-arrow-right"></i>
+                    <span>Rent Now</span>
                   </button>
                 </div>
               </div>

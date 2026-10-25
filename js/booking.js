@@ -100,7 +100,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       </div>
 
       <p class="muted" style="margin-bottom:14px;line-height:1.5;color:#475569;">
-        ${v.description ?? 'Comfortable, fuel-efficient, and well-maintained rental vehicle.'}
+        ${(v.description || '').replace(/FOX Racing shocks,?\s*/gi, '').replace(/\b\d+-Seater\s+(Pickup Truck|SUV|Sedan|MPV|Subcompact Sedan|Modern Crossover MPV|Economy Sedan|Hatchback|Full-size Passenger Van)\.?\s*/gi, '').trim() || 'Comfortable, fuel-efficient, and well-maintained rental vehicle.'}
       </p>
 
       <div class="detail-grid" style="margin-bottom:16px;background:#f8fafc;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;">

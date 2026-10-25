@@ -11,84 +11,84 @@ export const PH_POPULAR_VEHICLES = [
     plate_number: 'NBD-8842',
     status: 'available',
     image_url: 'images/fortuner.webp',
-    description: '7-Seater Premium Diesel SUV. High ground clearance, leather seats, dual aircon. Ideal for family trips across the Philippines.'
+    description: 'Midsize 7-seater diesel SUV with dual aircon and high ground clearance. Comfortable for family provincial trips.'
   },
   {
     name: 'Toyota Vios 1.5 G CVT',
     plate_number: 'NCO-2914',
     status: 'available',
     image_url: 'images/vios.webp',
-    description: '5-Seater Subcompact Sedan. Excellent fuel efficiency, automatic transmission. Best choice for city driving and errands.'
+    description: 'Fuel-efficient automatic sedan. Smooth and easy to drive for city travel and daily errands.'
   },
   {
     name: 'Toyota Innova 2.8 E Diesel AT',
     plate_number: 'DAR-4921',
     status: 'available',
     image_url: 'images/innova.webp',
-    description: '8-Seater MPV. Powerful 2.8L Diesel engine with dual AC. Spacious and reliable family vehicle.'
+    description: 'Spacious 8-seater diesel MPV with strong rear aircon and ample luggage space.'
   },
   {
     name: 'Mitsubishi Montero Sport GT 4x2',
     plate_number: 'NGF-7102',
     status: 'available',
     image_url: 'images/montero.webp',
-    description: '7-Seater SUV. 2.4L MIVEC Turbo Diesel engine, smooth 8-speed automatic, sunroof.'
+    description: 'Comfortable 7-seater turbo diesel SUV with leather seats for long-distance travel.'
   },
   {
     name: 'Ford Ranger Raptor 2.0L Bi-Turbo',
     plate_number: 'CBL-9481',
     status: 'available',
     image_url: 'images/raptor.webp',
-    description: '5-Seater Pickup Truck. FOX Racing shocks, 4x4 Off-road mode. Great for heavy loads and provincial roads.'
+    description: 'Heavy-duty 4x4 pickup truck with high ground clearance. Built for provincial roads and large cargo.'
   },
   {
     name: 'Mitsubishi Xpander GLS 1.5 AT',
     plate_number: 'NBF-3910',
     status: 'available',
     image_url: 'images/xpander.webp',
-    description: '7-Seater Modern Crossover MPV. Spacious 3-row seating, flexible cargo space, high ground clearance.'
+    description: 'Modern 7-seater MPV with foldable seats and comfortable ride for groups.'
   },
   {
     name: 'Mitsubishi Mirage G4 GLX AT',
     plate_number: 'NDB-5012',
     status: 'available',
     image_url: 'images/mirage.webp',
-    description: '5-Seater Economy Sedan. Highly fuel-efficient 1.2L engine. Compact and easy to drive in city traffic.'
+    description: 'Compact and economical sedan with low fuel consumption, easy to park in city traffic.'
   },
   {
     name: 'Toyota Wigo 1.0 G CVT',
     plate_number: 'NCL-1049',
     status: 'available',
     image_url: 'images/wigo.webp',
-    description: '5-Seater Hatchback. Compact city hatchback with agile handling and low gas consumption.'
+    description: 'Compact 5-door hatchback, great on gas with cold air conditioning for city trips.'
   },
   {
     name: 'Toyota HiAce Commuter Deluxe 2.8',
     plate_number: 'VAA-8012',
     status: 'available',
     image_url: 'images/hiace.webp',
-    description: '14-Seater Full-size Passenger Van. Front engine layout, strong rear AC. Ideal for group tours and outings.'
+    description: '14-passenger van with strong dual aircon, ideal for group tours and company transfers.'
   },
   {
     name: 'Yamaha NMAX 155 ABS (Motorcycle)',
     plate_number: '128-NMX',
     status: 'available',
     image_url: 'images/nmax.webp',
-    description: '155cc Automatic Maxi Scooter. Variable Valve Actuation (VVA), ABS front/rear, digital panel. Premium scooter.'
+    description: 'Automatic 155cc maxi scooter with ABS and large under-seat compartment.'
   },
   {
     name: 'Honda Click 125i (Motorcycle)',
     plate_number: '904-CLK',
     status: 'available',
     image_url: 'images/click.webp',
-    description: '125cc Automatic Scooter. Sporty design, combi-brake system, spacious under-seat storage box.'
+    description: 'Lightweight 125cc automatic scooter, very agile and economical for daily commute.'
   },
   {
     name: 'Honda ADV 160 (Motorcycle)',
     plate_number: '481-ADV',
     status: 'available',
     image_url: 'images/adv.webp',
-    description: '160cc Adventure Scooter. Long-travel suspension, HSTC torque control, adjustable windshield.'
+    description: 'Smooth 160cc adventure scooter with long-travel suspension for city and weekend rides.'
   }
 ];
 
@@ -783,6 +783,14 @@ export function vehicleCardHTML(v) {
   const seats = v.seats || (catName.toLowerCase().includes('motor') ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
   const trans = v.transmission || 'Automatic';
 
+  let cleanDesc = (v.description || '')
+    .replace(/FOX Racing shocks,?\s*/gi, '')
+    .replace(/\b\d+-Seater\s+(Pickup Truck|SUV|Sedan|MPV|Subcompact Sedan|Modern Crossover MPV|Economy Sedan|Hatchback|Full-size Passenger Van)\.?\s*/gi, '')
+    .trim();
+  if (!cleanDesc) {
+    cleanDesc = `${trans} · ${fuelType} · Well-maintained and fully insured.`;
+  }
+
   return `
     <div class="glass vehicle-card" data-id="${v.id}">
       <div class="vehicle-card-image-wrap">
@@ -794,20 +802,16 @@ export function vehicleCardHTML(v) {
       </div>
       <div class="vehicle-card-content">
         <h3 class="vehicle-card-name">${v.name}</h3>
-        <div class="vehicle-card-rating">
-          <span class="stars" style="color:#f59e0b;font-size:0.75rem;letter-spacing:1px;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
-          <span class="rating-count">(4.9/5 · Verified Rating)</span>
-        </div>
         
         <div class="vehicle-specs-row">
-          <span class="v-spec-pill"><i class="fa-solid fa-users"></i> ${seats} Seats</span>
-          <span class="v-spec-pill"><i class="fa-solid fa-gears"></i> ${trans}</span>
-          <span class="v-spec-pill"><i class="fa-solid fa-gas-pump"></i> ${fuelType}</span>
-          <span class="v-spec-pill"><i class="fa-solid fa-snowflake"></i> ${hasAC ? 'Dual AC' : 'Standard'}</span>
+          <span class="v-spec-pill">${seats} Seats</span>
+          <span class="v-spec-pill">${trans}</span>
+          <span class="v-spec-pill">${fuelType}</span>
+          <span class="v-spec-pill">${hasAC ? 'Aircon' : 'Non-AC'}</span>
         </div>
 
         <p class="vehicle-card-desc">
-          ${v.description || `${seats}-Seater · ${trans} · ${fuelType} · Fully insured and showroom-sanitized.`}
+          ${cleanDesc}
         </p>
 
         <div class="vehicle-card-price-row">
@@ -820,8 +824,7 @@ export function vehicleCardHTML(v) {
           </span>
         </div>
         <button type="button" class="btn btn-primary vehicle-book-pill-btn" data-book-btn="${v.id}">
-          <span>View Deal</span>
-          <i class="fa-solid fa-arrow-right"></i>
+          <span>Rent Now</span>
         </button>
       </div>
     </div>
