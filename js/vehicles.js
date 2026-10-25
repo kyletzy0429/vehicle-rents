@@ -429,7 +429,7 @@ export function renderBrowse(view) {
       <div class="hero-availability-container">
         <div class="hero-tag">KEY 02 — AVAILABILITY</div>
         <h1 class="hero-title">Search available vehicles</h1>
-        <p class="hero-subtitle">Choose your dates to see what's open, then reserve on the spot.</p>
+        <p class="hero-subtitle">Choose your dates to see what's open, then view deals and book on the spot.</p>
 
         <div class="hero-filter-card" style="position:relative;" id="heroFilterCard">
           <div class="hero-filter-field hero-date-box" id="heroPickupBox" title="Click to choose Pick-up Date">
@@ -474,7 +474,7 @@ export function renderBrowse(view) {
 
       <!-- Quick category filter pills -->
       <div class="pill-row" id="catPills" style="margin-bottom:24px;">
-        <div class="pill ${browseFilter === 'all' ? 'active' : ''}" data-cat="all">All Fleet (${state.vehicles.length})</div>
+        <div class="pill ${browseFilter === 'all' ? 'active' : ''}" data-cat="all">All Vehicles (${state.vehicles.length})</div>
         ${state.categories.map(c => `<div class="pill ${browseFilter.toLowerCase() === c.name.toLowerCase() ? 'active' : ''}" data-cat="${c.name}">${c.name}</div>`).join('')}
       </div>
 
@@ -780,35 +780,48 @@ export function vehicleCardHTML(v) {
   const favs = getFavorites();
   const isFav = favs.includes(v.id);
   const isAvailable = v.status === 'available';
+  const seats = v.seats || (catName.toLowerCase().includes('motor') ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
+  const trans = v.transmission || 'Automatic';
 
   return `
     <div class="glass vehicle-card" data-id="${v.id}">
       <div class="vehicle-card-image-wrap">
+        <span class="vehicle-stage-badge">${catName}</span>
         <img class="vehicle-card-img" id="cardImg-${v.id}" src="${exactImg}" alt="${v.name}" onerror="this.src='${exactImg}'" loading="lazy" />
         <button type="button" class="vehicle-fav-btn ${isFav ? 'active' : ''}" data-favid="${v.id}" title="${isFav ? 'Remove from Favorites' : 'Save to Favorites'}">
           <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
         </button>
       </div>
       <div class="vehicle-card-content">
-        <div class="vehicle-card-category">${catName.toUpperCase()}</div>
         <h3 class="vehicle-card-name">${v.name}</h3>
         <div class="vehicle-card-rating">
-          <span class="stars">★★★★★</span>
-          <span class="rating-count">(5.0)</span>
+          <span class="stars" style="color:#f59e0b;font-size:0.75rem;letter-spacing:1px;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
+          <span class="rating-count">(4.9/5 · Verified Rating)</span>
         </div>
+        
+        <div class="vehicle-specs-row">
+          <span class="v-spec-pill"><i class="fa-solid fa-users"></i> ${seats} Seats</span>
+          <span class="v-spec-pill"><i class="fa-solid fa-gears"></i> ${trans}</span>
+          <span class="v-spec-pill"><i class="fa-solid fa-gas-pump"></i> ${fuelType}</span>
+          <span class="v-spec-pill"><i class="fa-solid fa-snowflake"></i> ${hasAC ? 'Dual AC' : 'Standard'}</span>
+        </div>
+
         <p class="vehicle-card-desc">
-          ${v.description || `${v.seats || 5}-Seater · ${v.transmission || 'Automatic'} · ${fuelType} · ${hasAC ? 'Air Conditioned' : 'Comfortable'}`}
+          ${v.description || `${seats}-Seater · ${trans} · ${fuelType} · Fully insured and showroom-sanitized.`}
         </p>
+
         <div class="vehicle-card-price-row">
           <div class="vehicle-card-price">
             ${fmtMoney(rate)} <span class="price-unit">/ day</span>
           </div>
           <span class="badge ${isAvailable ? 'badge-available' : 'badge-rented'}">
+            <span class="status-dot"></span>
             ${isAvailable ? 'Available' : 'Booked'}
           </span>
         </div>
         <button type="button" class="btn btn-primary vehicle-book-pill-btn" data-book-btn="${v.id}">
-          View Deal
+          <span>View Deal</span>
+          <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
     </div>

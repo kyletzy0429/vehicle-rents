@@ -158,7 +158,7 @@ export async function triggerLiveBookingAlert(booking) {
   updateNotificationBadge();
 
   // 4. Show friendly live toast banner
-  toast(`🔔 Bagong booking request mula kay ${custName} para sa ${vehName}!`, 'info');
+  toast(`Bagong booking request mula kay ${custName} para sa ${vehName}!`, 'info');
 
   // 5. Desktop Notification if allowed
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -191,9 +191,9 @@ export async function handleLiveStatusChange(data) {
 
     if (data.status === 'approved') {
       playNotificationChime();
-      toast('🎉 Na-approve na ang iyong booking ng staff! Maaari ka nang magbayad o mag-check in.', 'success');
+      toast('Na-approve na ang iyong booking ng staff! Maaari ka nang magbayad o mag-check in.', 'success');
     } else if (data.status === 'rejected') {
-      toast('⚠️ Hindi na-approve ang booking request. Pakitingnan ang detalye sa My Bookings.', 'warning');
+      toast('Hindi na-approve ang booking request. Pakitingnan ang detalye sa My Bookings.', 'warning');
     }
 
     if (window.renderTab && state.tab === 'bookings') {
@@ -228,7 +228,7 @@ async function runPollingTick() {
       for (const b of currentPending) {
         const sid = String(b.id);
         if (!lastKnownPendingIds.has(sid)) {
-          console.log('⚡ New booking request caught via live poller:', b);
+          console.log('[Realtime] New booking request caught via live poller:', b);
           triggerLiveBookingAlert(b);
         }
       }
@@ -285,7 +285,7 @@ function setupSupabaseRealtime() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bookings' },
         async (payload) => {
-          console.log('⚡ Supabase Realtime: New booking INSERT', payload.new);
+          console.log('[Realtime] Supabase Realtime: New booking INSERT', payload.new);
           const { fetchMergedBookings } = await import('./admin.js');
           const all = await fetchMergedBookings();
           const match = all.find(b => String(b.id) === String(payload.new?.id));
@@ -296,7 +296,7 @@ function setupSupabaseRealtime() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'bookings' },
         async (payload) => {
-          console.log('⚡ Supabase Realtime: Booking UPDATE', payload.new);
+          console.log('[Realtime] Supabase Realtime: Booking UPDATE', payload.new);
           handleLiveStatusChange({
             bookingId: payload.new?.id,
             status: payload.new?.status,
@@ -306,7 +306,7 @@ function setupSupabaseRealtime() {
       )
       .subscribe((status, err) => {
         if (err) console.warn('Supabase Realtime subscribe note:', err);
-        else console.log('⚡ Supabase Realtime connected:', status);
+        else console.log('[Realtime] Supabase Realtime connected:', status);
       });
   } catch (e) {
     console.warn('Supabase Realtime setup exception:', e);

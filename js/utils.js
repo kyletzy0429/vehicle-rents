@@ -39,6 +39,25 @@ export function openModal(html, wide = false) {
   overlay.id = 'activeModal';
   overlay.innerHTML = `<div class="glass modal ${wide ? 'modal-wide' : ''}">${html}</div>`;
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+  // Auto-bind any close buttons inside the modal
+  overlay.querySelectorAll('.modal-close, #mClose, [data-modal-close], #pClose').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
+  });
+
+  // ESC key to close modal
+  const onEsc = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', onEsc);
+    }
+  };
+  document.addEventListener('keydown', onEsc);
+
   document.body.appendChild(overlay);
   return overlay;
 }
@@ -149,7 +168,7 @@ export function buildCustomerNotif(b) {
     if (endStr === todayStr) {
       return {
         id: `return-today-${b.id}`,
-        title: `🚨 VEHICLE RETURN DAY TODAY`,
+        title: `VEHICLE RETURN DAY TODAY`,
         time: 'Due by 12:00 PM',
         desc: `Your ${vName} (${shortId}) is scheduled for return today! Please ensure fuel matches pickup level. Need more time? Request a rental extension instantly.`,
         read: false,
@@ -159,7 +178,7 @@ export function buildCustomerNotif(b) {
     } else if (endStr < todayStr) {
       return {
         id: `return-overdue-${b.id}`,
-        title: `⚠️ OVERDUE RETURN NOTICE`,
+        title: `OVERDUE RETURN NOTICE`,
         time: 'Immediate Action Required',
         desc: `Your ${vName} (${shortId}) return date was ${fmtDate(endStr)}. Please return vehicle or request extension to avoid late penalty charges.`,
         read: false,
@@ -314,7 +333,7 @@ export async function openNotificationsModal() {
     </div>
     <div style="padding:28px 0;text-align:center;"><div class="loading-spin"></div><p style="margin-top:12px;color:var(--text-mid);font-size:0.85rem;">Checking for live updates...</p></div>
   `);
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
 
   const notifs = await fetchLiveNotifications();
 
@@ -367,7 +386,7 @@ export async function openNotificationsModal() {
     </div>
   `);
 
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
 
   const markAllBtn = $('#markAllReadBtn');
   if (markAllBtn) {

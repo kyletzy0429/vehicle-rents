@@ -69,31 +69,31 @@
 
 .angle-viewer {
   position: relative;
-  background: #ffffff;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 14px;
+  background: radial-gradient(ellipse at 50% 80%, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0.02) 65%, transparent 75%), var(--bg-subtle);
+  border: 1.5px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(124, 58, 237, 0.04);
 }
 
 .angle-viewer-img-wrap {
-  height: 190px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  background: #ffffff;
+  background: transparent;
 }
 
 .angle-viewer-img {
   max-height: 100%;
   max-width: 100%;
   object-fit: contain;
-  mix-blend-mode: multiply;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
-  filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.08));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.4s ease;
+  filter: drop-shadow(0 10px 20px rgba(22, 14, 51, 0.14));
 }
 
 .angle-viewer-img.side-view {
@@ -236,6 +236,72 @@
 .pay-tier-btn .tier-sub {
   font-size: 0.68rem;
   color: #64748b;
+}
+
+/* Payment Methods Grid */
+.pay-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 520px) {
+  .pay-method-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.pay-method-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
+  background: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--border-light, #e2e8f0);
+  border-radius: var(--radius-sm, 10px);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-mid, #475569);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  user-select: none;
+  min-height: 42px;
+}
+
+.pay-method-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-subtle, rgba(124, 58, 237, 0.06));
+  transform: translateY(-1px);
+}
+
+.pay-method-btn.active {
+  background: var(--primary-gradient, linear-gradient(135deg, #7c3aed, #9333ea));
+  border-color: transparent;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px var(--accent-glow, rgba(124, 58, 237, 0.25));
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .pay-method-btn {
+  background: #1e1b2e;
+  border-color: #332d4a;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .pay-method-btn:hover {
+  border-color: var(--accent);
+  color: #ffffff;
+  background: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .pay-method-btn.active {
+  background: var(--primary-gradient);
+  border-color: transparent;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .receipt {
@@ -815,7 +881,11 @@
 
 .cal-dual-layout .cal-day-single,
 .cal-day-single {
+  background: var(--primary-gradient, linear-gradient(135deg, #7c3aed, #9333ea)) !important;
+  color: #ffffff !important;
   border-radius: 8px !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35) !important;
+  font-weight: 800 !important;
 }
 
 /* In-range days */

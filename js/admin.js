@@ -1,7 +1,7 @@
 import { supabase } from './config.js';
 import {
   state, DEFAULT_SETTINGS, getSystemSettings, saveSystemSettings,
-  getLocalBookings, updateLocalBookingStatus, DEMO_ACCOUNTS,
+  getLocalBookings, saveLocalBooking, updateLocalBookingStatus, DEMO_ACCOUNTS,
   getVehicleOverrides, saveVehicleOverride,
   getLocalDamages, saveLocalDamage, updateDamageStatus,
   getLocalCustomFees, saveLocalCustomFee, updateCustomFeeStatus,
@@ -53,7 +53,7 @@ export async function renderStaffDashboard(view) {
             <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Operations Dashboard</h2>
           </div>
           <p style="color:#64748b;font-size:0.85rem;margin:0;">
-            Manager: <strong>${state.profile?.full_name || 'Sarah Manager'}</strong> · Real-time booking queue, dispatches, returns, and fleet status.
+            Manager: <strong>${state.profile?.full_name || 'Sarah Manager'}</strong> · Real-time booking queue, dispatches, returns, and vehicle status.
           </p>
         </div>
       </div>
@@ -89,7 +89,7 @@ export async function renderStaffDashboard(view) {
 
         <div class="glass stat-card" style="border-left:4px solid #7c3aed;">
           <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Fleet Availability</span>
+            <span>Vehicle Availability</span>
           </div>
           <div class="stat-value" style="color:#7c3aed;">${availableVehicles} <span style="font-size:0.85rem;color:#64748b;font-weight:500;">/ ${totalVehicles}</span></div>
           <div class="stat-sub">${rentedVehicles} Rented · ${maintenanceVehicles} Service</div>
@@ -187,7 +187,7 @@ export async function renderStaffDashboard(view) {
         <!-- Fleet Status Breakdown & Live Operations -->
         <div class="glass card" style="padding:20px;">
           <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 14px 0;">
-            Fleet Operations Status
+            Vehicle Operations Status
           </h3>
 
           <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
@@ -682,9 +682,9 @@ export async function openStaffPaymentModal(bookingId) {
       <button class="btn btn-danger btn-block" id="markFailed">Cancel / Failed</button>
     </div>
   `);
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
 
-  $('#markSuccess').addEventListener('click', async () => {
+  $('#markSuccess')?.addEventListener('click', async () => {
     const methodVal = $('#payMethod').value;
     const methodName = methodVal === 'cash' ? 'Cash at Counter' : methodVal === 'card' ? 'Card Terminal' : 'Bank Transfer';
 
@@ -725,7 +725,7 @@ export async function openStaffPaymentModal(bookingId) {
     if (window.renderTab) window.renderTab();
   });
 
-  $('#markFailed').addEventListener('click', async () => {
+  $('#markFailed')?.addEventListener('click', async () => {
     try {
       await supabase.from('payments').insert({
         booking_id: bookingId, amount: amountDue, method: $('#payMethod').value, status: 'failed',
@@ -916,7 +916,7 @@ export async function renderStaffReturns(view, activeSubTab = 'returns') {
                   </td>
                   <td>
                     <span style="font-size:0.8rem;background:var(--accent-glow);color:var(--accent);padding:3px 8px;border-radius:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
-                      ${d.payment_method === 'Apple Pay' ? '<i class=\"fa-brands fa-apple\"></i> Apple Pay' : d.payment_method === 'Visa Card' ? '<i class=\"fa-brands fa-cc-visa\"></i> Visa' : d.payment_method || 'GCash'}
+                      ${d.payment_method || 'GCash'}
                     </span>
                   </td>
                   <td>
@@ -1097,7 +1097,7 @@ export async function openReturnModal(bookingId) {
     <div class="field hidden" id="maintDaysField"><label>Maintenance Duration (Days)</label><input type="number" id="maintDays" min="1" max="90" value="3" placeholder="e.g. 3 days" /></div>
     <button class="btn btn-primary btn-block" id="finalizeBtn">Finalize Return &amp; Generate Receipt</button>
   `);
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
   $$('#damagePicker .role-opt').forEach(opt => opt.addEventListener('click', () => {
     $$('#damagePicker .role-opt').forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
@@ -1106,7 +1106,7 @@ export async function openReturnModal(bookingId) {
     $('#maintDaysField').classList.toggle('hidden', !isDamaged);
   }));
 
-  $('#finalizeBtn').addEventListener('click', async () => {
+  $('#finalizeBtn')?.addEventListener('click', async () => {
     const hasDamage = $('#damagePicker .selected').dataset.damage === 'yes';
     const charges = hasDamage ? Number($('#chargeAmt').value || 0) : 0;
     const maintDays = hasDamage ? Math.max(1, Number($('#maintDays').value || 3)) : 0;
@@ -1860,13 +1860,13 @@ export async function renderAdminDashboard(view) {
       <div class="section-head">
         <div>
           <h2>Dashboard</h2>
-          <p>Fleet metrics, monthly revenue, top performing vehicles, and customer activity.</p>
+          <p>Operational metrics, monthly revenue, top performing vehicles, and customer activity.</p>
         </div>
       </div>
 
       <div class="grid grid-stats" style="margin-bottom:24px;">
         <div class="glass stat-card">
-          <div class="stat-label">Total Vehicle Fleet</div>
+          <div class="stat-label">Total Vehicles</div>
           <div class="stat-value">${totalVehiclesCount}</div>
           <div class="stat-sub">Registered vehicles</div>
         </div>
@@ -1998,7 +1998,7 @@ export async function renderAdminVehicles(view) {
       </div>
     </div>
   `;
-  $('#addVehicleBtn').addEventListener('click', () => openVehicleForm());
+  $('#addVehicleBtn')?.addEventListener('click', () => openVehicleForm());
   $$('[data-edit]').forEach(b => b.addEventListener('click', () => openVehicleForm(Number(b.dataset.edit))));
   $$('[data-service-history]').forEach(b => b.addEventListener('click', () => openServiceHistoryModal(Number(b.dataset.serviceHistory))));
   $$('[data-log-service]').forEach(b => b.addEventListener('click', () => openLogServiceModal(Number(b.dataset.logService))));
@@ -2105,10 +2105,10 @@ export function openVehicleForm(id) {
     <div class="field"><label>Description</label><textarea id="fDesc" rows="2">${v?.description ?? ''}</textarea></div>
     <button class="btn btn-primary btn-block" id="saveVehicle">${v ? 'Save Changes' : 'Add Vehicle'}</button>
   `);
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
 
-  $('#uploadVImgBtn').addEventListener('click', () => $('#vFileInput').click());
-  $('#vFileInput').addEventListener('change', (e) => {
+  $('#uploadVImgBtn')?.addEventListener('click', () => $('#vFileInput')?.click());
+  $('#vFileInput')?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) {
@@ -2125,7 +2125,7 @@ export function openVehicleForm(id) {
     reader.readAsDataURL(file);
   });
 
-  $('#fCat').addEventListener('change', (e) => {
+  $('#fCat')?.addEventListener('change', (e) => {
     const catId = Number(e.target.value);
     const cat = state.categories.find(c => c.id === catId);
     if (cat && cat.daily_rate && !v) {
@@ -2133,12 +2133,12 @@ export function openVehicleForm(id) {
     }
   });
 
-  $('#fStatus').addEventListener('change', (e) => {
+  $('#fStatus')?.addEventListener('change', (e) => {
     const val = e.target.value;
     $('#fMaintDaysBox').style.display = (val === 'maintenance' || val === 'in_service' || val === 'scheduled_maint') ? 'block' : 'none';
   });
 
-  $('#saveVehicle').addEventListener('click', async () => {
+  $('#saveVehicle')?.addEventListener('click', async () => {
     const selectedStatus = $('#fStatus').value;
     const isMaint = (selectedStatus === 'maintenance' || selectedStatus === 'in_service' || selectedStatus === 'scheduled_maint');
     const maintDays = isMaint ? Math.max(1, Number($('#fMaintDays').value || 3)) : null;
@@ -2254,7 +2254,7 @@ export async function renderAdminCategories(view) {
       </div>
     </div>
   `;
-  $('#addCatBtn').addEventListener('click', () => openCategoryForm());
+  $('#addCatBtn')?.addEventListener('click', () => openCategoryForm());
   $$('[data-editcat]').forEach(b => b.addEventListener('click', () => openCategoryForm(Number(b.dataset.editcat))));
   $$('[data-delcat]').forEach(b => b.addEventListener('click', async () => {
     if (!confirm('Delete this category?')) return;
@@ -2275,8 +2275,8 @@ export function openCategoryForm(id) {
     <div class="field"><label>Description</label><textarea id="cDesc" rows="2">${c?.description ?? ''}</textarea></div>
     <button class="btn btn-primary btn-block" id="saveCat">${c ? 'Save Changes' : 'Add Category'}</button>
   `);
-  $('#mClose').addEventListener('click', closeModal);
-  $('#saveCat').addEventListener('click', async () => {
+  $('#mClose')?.addEventListener('click', closeModal);
+  $('#saveCat')?.addEventListener('click', async () => {
     const payload = { name: $('#cName').value.trim(), daily_rate: Number($('#cRate').value), description: $('#cDesc').value.trim() };
     if (!payload.name || !(payload.daily_rate >= 0)) { toast('Valid name and rate required.', 'error'); return; }
     const { error } = c
@@ -2451,7 +2451,7 @@ export async function renderAdminCustomers(view) {
     </div>
   `;
 
-  $('#custSearchInput').addEventListener('input', (e) => {
+  $('#custSearchInput')?.addEventListener('input', (e) => {
     customerSearchQuery = e.target.value;
     renderAdminCustomers(view);
   });
@@ -2552,7 +2552,7 @@ export async function renderAdminCustomers(view) {
       </form>
     `, true);
 
-    $('#mClose').addEventListener('click', closeModal);
+    $('#mClose')?.addEventListener('click', closeModal);
 
     const uploadBtn = $('#admUploadLicenseBtn');
     const fileInput = $('#admFileLicense');
@@ -2574,7 +2574,7 @@ export async function renderAdminCustomers(view) {
       });
     }
 
-    $('#adminCustForm').addEventListener('submit', async (e) => {
+    $('#adminCustForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const saveBtn = $('#saveCustAdminBtn');
       saveBtn.disabled = true;
@@ -2695,7 +2695,7 @@ export async function renderAdminUsers(view) {
     </div>
   `;
 
-  $('#userSearchInput').addEventListener('input', (e) => {
+  $('#userSearchInput')?.addEventListener('input', (e) => {
     userSearchQuery = e.target.value;
     renderAdminUsers(view);
   });
@@ -2838,13 +2838,13 @@ export async function renderAdminReports(view) {
       <div class="section-head">
         <div>
           <h2>Analytics &amp; Reports</h2>
-          <p>Fleet utilization, revenue metrics, and vehicle performance reports.</p>
+          <p>Vehicle utilization, revenue metrics, and vehicle performance reports.</p>
         </div>
       </div>
 
       <div class="grid grid-stats" style="margin-bottom:22px;">
         <div class="glass stat-card">
-          <div class="stat-label">Fleet Utilization Rate</div>
+          <div class="stat-label">Vehicle Utilization Rate</div>
           <div class="stat-value" style="color:var(--accent);">${utilizationPercent}%</div>
           <div class="stat-sub">${rentedCount} of ${totalFleet} vehicles currently out</div>
         </div>
@@ -2854,7 +2854,7 @@ export async function renderAdminReports(view) {
           <div class="stat-sub">Verified payments</div>
         </div>
         <div class="glass stat-card">
-          <div class="stat-label">Available Fleet</div>
+          <div class="stat-label">Available Vehicles</div>
           <div class="stat-value" style="color:#059669;">${availableCount}</div>
           <div class="stat-sub">Ready for rental</div>
         </div>
@@ -2867,7 +2867,7 @@ export async function renderAdminReports(view) {
 
       <div class="grid grid-2" style="gap:20px;margin-bottom:22px;">
         <div class="glass card">
-          <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Fleet Utilization Breakdown</h3>
+          <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Vehicle Utilization Breakdown</h3>
           <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:6px;">
               <span style="font-weight:600;color:#0f172a;">Active Rental Utilization</span>
@@ -2918,7 +2918,7 @@ export async function renderAdminReports(view) {
                 <th style="padding:8px 0;color:#64748b;font-weight:600;">Category</th>
                 <th style="padding:8px 0;color:#64748b;font-weight:600;">Plate No.</th>
                 <th style="padding:8px 0;color:#64748b;font-weight:600;text-align:center;">Total Rentals</th>
-                <th style="padding:8px 0;color:#64748b;font-weight:600;">Fleet Status</th>
+                <th style="padding:8px 0;color:#64748b;font-weight:600;">Status</th>
                 <th style="padding:8px 0;color:#64748b;font-weight:600;text-align:right;">Total Revenue</th>
               </tr>
             </thead>
@@ -2999,9 +2999,9 @@ export async function openLogServiceModal(vehicleId) {
     </button>
   `);
 
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
 
-  $('#saveSrvBtn').addEventListener('click', async () => {
+  $('#saveSrvBtn')?.addEventListener('click', async () => {
     const srvType = $('#srvType').value;
     const srvStatus = $('#srvStatus').value;
     const srvCost = Number($('#srvCost').value || 0);
@@ -3089,11 +3089,11 @@ export async function openServiceHistoryModal(vehicleId) {
     ${(v.status === 'in_service' || v.status === 'maintenance' || v.status === 'scheduled_maint' || v.status === 'off_the_road') ? `
       <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div>
-          <div style="font-weight:700;color:#065f46;font-size:0.88rem;">Current Fleet Status: ${statusBadge}</div>
+          <div style="font-weight:700;color:#065f46;font-size:0.88rem;">Current Vehicle Status: ${statusBadge}</div>
           <div style="font-size:0.76rem;color:#047857;">Mark this vehicle as fully serviced and ready for customer bookings.</div>
         </div>
         <button class="btn btn-primary btn-sm" id="btnMarkAvailableNow" style="background:#059669;border-color:#059669;white-space:nowrap;">
-          Return to Available Fleet
+          Return to Available Status
         </button>
       </div>
     ` : ''}
@@ -3153,8 +3153,8 @@ export async function openServiceHistoryModal(vehicleId) {
     </div>
   `, true);
 
-  $('#mClose').addEventListener('click', closeModal);
-  $('#btnLogNewSrv').addEventListener('click', () => { closeModal(); openLogServiceModal(vehicleId); });
+  $('#mClose')?.addEventListener('click', closeModal);
+  $('#btnLogNewSrv')?.addEventListener('click', () => { closeModal(); openLogServiceModal(vehicleId); });
 
   const markAvailBtn = $('#btnMarkAvailableNow');
   if (markAvailBtn) {
@@ -3182,7 +3182,7 @@ export async function openServiceHistoryModal(vehicleId) {
           .eq('id', vehicleId);
       } catch (e) { }
 
-      toast(`${v.name} is now Available in the rental fleet!`, 'success');
+      toast(`${v.name} is now Available!`, 'success');
       closeModal();
       await loadVehicles();
       if (window.renderTab) window.renderTab();
@@ -3215,7 +3215,7 @@ export async function openServiceHistoryModal(vehicleId) {
         await supabase.from('vehicles').update({ status: 'available', maintenance_days: null, maintenance_until: null }).eq('id', vehicleId);
       } catch (e) {}
 
-      toast('Service work order completed! Vehicle returned to Available fleet.', 'success');
+      toast('Service work order completed! Vehicle returned to Available status.', 'success');
       closeModal();
       await loadVehicles();
       await openServiceHistoryModal(vehicleId);
@@ -3587,31 +3587,252 @@ export function playScanBeep() {
   } catch (e) {}
 }
 
+export function parseScannedQrPayload(text) {
+  if (!text) return { code: '', raw: '', isVenuePass: false, passData: null };
+  const raw = String(text).trim();
+
+  // 1. Try JSON payload
+  if (raw.startsWith('{') && raw.endsWith('}')) {
+    try {
+      const obj = JSON.parse(raw);
+      const code = String(obj.ref_number || obj.payment_ref || obj.ref || obj.id || '').trim();
+      return {
+        code,
+        id: obj.id ? String(obj.id).trim() : '',
+        ref: String(obj.ref_number || obj.payment_ref || obj.ref || '').trim(),
+        raw,
+        isVenuePass: Boolean(obj.is_pass || obj.customer_name || obj.ref_number || obj.id),
+        passData: obj
+      };
+    } catch (e) {}
+  }
+
+  // 2. Identify if it's a RentFlow Venue Pass or structured receipt
+  const isVenuePass = raw.includes('RENTFLOW VENUE VERIFIED PASS') ||
+                      (raw.includes('REF CODE:') && (raw.includes('CUSTOMER:') || raw.includes('VEHICLE:')));
+
+  // Extract ID from (ID: #...) or ID: #...
+  let extractedId = '';
+  const idMatch = raw.match(/(?:ID|BOOKING\s*ID):\s*#?([A-Za-z0-9_-]+)/i);
+  if (idMatch && idMatch[1]) extractedId = idMatch[1].trim();
+
+  // Extract Ref Code from REF CODE: ... or Ref / Transaction No: ...
+  let extractedRef = '';
+  const refCodeMatch = raw.match(/(?:REF\s*CODE|REF\s*(?:\/\s*TRANSACTION)?\s*NO):\s*([A-Za-z0-9_-]+)/i);
+  if (refCodeMatch && refCodeMatch[1]) extractedRef = refCodeMatch[1].trim();
+
+  // BK- pattern
+  let bkMatchCode = '';
+  const bkMatch = raw.match(/BK-[A-Za-z0-9_-]+/i);
+  if (bkMatch) bkMatchCode = bkMatch[0];
+
+  // REF- pattern
+  let refMatchCode = '';
+  const refMatch = raw.match(/REF-[A-Za-z0-9_-]+/i);
+  if (refMatch) refMatchCode = refMatch[0];
+
+  // GCASH-RENTAL-id-amount pattern
+  let gcashRentalId = '';
+  const gcashMatch = raw.match(/(?:GCASH|INSTAPAY)-RENTAL-([A-Za-z0-9_-]+)/i);
+  if (gcashMatch) gcashRentalId = gcashMatch[1];
+
+  // URL parameter
+  let urlParamCode = '';
+  const urlParamMatch = raw.match(/[?&](?:ref|id|code)=([A-Za-z0-9_-]+)/i);
+  if (urlParamMatch) urlParamCode = urlParamMatch[1];
+
+  // Primary code to display in input box
+  const primaryCode = extractedRef || bkMatchCode || refMatchCode || extractedId || gcashRentalId || urlParamCode || raw.split('\n')[0].trim();
+
+  let passData = null;
+  if (isVenuePass) {
+    const custMatch = raw.match(/CUSTOMER:\s*([^\n\r]+)/i);
+    const phoneMatch = raw.match(/CONTACT:\s*([^\n\r]+)/i);
+    const licMatch = raw.match(/LICENSE:\s*([^\n\r]+)/i);
+    const vehMatch = raw.match(/VEHICLE:\s*([^\n\r]+)/i);
+    const catMatch = raw.match(/CATEGORY:\s*([^\n\r]+)/i);
+    const periodMatch = raw.match(/PERIOD:\s*([^\n\r]+)/i);
+    const payMethodMatch = raw.match(/PAY\s*METHOD:\s*([^\n\r]+)/i);
+    const totalMatch = raw.match(/TOTAL\s*RENTAL:\s*(?:PHP|\u20B1)?\s*([0-9,.]+)/i);
+    const paidMatch = raw.match(/AMOUNT\s*PAID:\s*(?:PHP|\u20B1)?\s*([0-9,.]+)/i);
+    const balMatch = raw.match(/BALANCE\s*DUE:\s*([^\n\r]+)/i);
+    const venueMatch = raw.match(/VENUE\s*PICKUP:\s*([^\n\r]+)/i);
+
+    let vehicleName = 'Rental Vehicle';
+    let plateNumber = 'N/A';
+    if (vehMatch && vehMatch[1]) {
+      const vStr = vehMatch[1].trim();
+      const pMatch = vStr.match(/\(([^)]+)\)/);
+      if (pMatch) {
+        plateNumber = pMatch[1].trim();
+        vehicleName = vStr.replace(/\([^)]+\)/, '').trim();
+      } else {
+        vehicleName = vStr;
+      }
+    }
+
+    let startDate = new Date().toISOString();
+    let endDate = new Date(Date.now() + 86400000 * 2).toISOString();
+    if (periodMatch && periodMatch[1]) {
+      const parts = periodMatch[1].split(/\s+to\s+|\s+→\s+|\s+-\s+/i);
+      if (parts[0]) {
+        const d1 = new Date(parts[0].trim());
+        if (!isNaN(d1.getTime())) startDate = d1.toISOString();
+      }
+      if (parts[1]) {
+        const d2 = new Date(parts[1].replace(/\([^)]+\)/, '').trim());
+        if (!isNaN(d2.getTime())) endDate = d2.toISOString();
+      }
+    }
+
+    const parseNum = (m) => m && m[1] ? parseFloat(m[1].replace(/,/g, '')) || 0 : 0;
+    const totalNum = parseNum(totalMatch);
+    const paidNum = parseNum(paidMatch);
+    let balNum = 0;
+    if (balMatch && balMatch[1]) {
+      const balStr = balMatch[1];
+      if (/PAID\s+IN\s+FULL/i.test(balStr)) balNum = 0;
+      else {
+        const m = balStr.match(/(?:PHP|\u20B1)?\s*([0-9,.]+)/i);
+        balNum = parseNum(m);
+      }
+    }
+
+    passData = {
+      id: extractedId || `bk-${Date.now().toString().slice(-6)}`,
+      ref_number: extractedRef || primaryCode,
+      payment_ref: extractedRef || primaryCode,
+      customer_name: custMatch ? custMatch[1].trim() : 'Verified Renter',
+      customer_phone: phoneMatch ? phoneMatch[1].trim() : '',
+      driver_license: licMatch ? licMatch[1].trim() : '',
+      vehicle_name: vehicleName,
+      plate_number: plateNumber,
+      category_name: catMatch ? catMatch[1].trim() : 'Standard',
+      start_date: startDate,
+      end_date: endDate,
+      total_amount: totalNum || (paidNum + balNum),
+      paid_amount: paidNum,
+      balance_due: balNum,
+      payment_method: payMethodMatch ? payMethodMatch[1].trim() : 'Verified Pass',
+      pickup_venue: venueMatch ? venueMatch[1].trim() : '123 PPC MAIN BRANCH VENUE',
+      status: 'active'
+    };
+  }
+
+  return {
+    code: primaryCode,
+    id: extractedId || gcashRentalId,
+    ref: extractedRef || bkMatchCode || refMatchCode,
+    raw,
+    isVenuePass,
+    passData
+  };
+}
+
 export function parseScannedQrCode(text) {
-  if (!text) return '';
-  const str = String(text).trim();
+  const info = parseScannedQrPayload(text);
+  return info.code || '';
+}
 
-  // 1. REF CODE: BK-... (ID: #...)
-  const refCodeMatch = str.match(/REF\s*CODE:\s*([A-Za-z0-9_-]+)/i);
-  if (refCodeMatch && refCodeMatch[1]) return refCodeMatch[1];
+export async function lookupAndVerifyPass(rawInput, rawPayload = '', currentList = []) {
+  const payloadInfo = parseScannedQrPayload(rawPayload || rawInput);
+  const searchCode = (payloadInfo.code || rawInput || '').trim();
+  const clean = searchCode.toLowerCase();
+  const cleanDigits = searchCode.replace(/\D/g, '');
 
-  // 2. ID: #...
-  const idMatch = str.match(/ID:\s*#?([A-Za-z0-9_-]+)/i);
-  if (idMatch && idMatch[1]) return idMatch[1];
+  let allList = currentList && currentList.length ? currentList : await fetchMergedBookings();
 
-  // 3. BK-... pattern
-  const bkMatch = str.match(/BK-[A-Za-z0-9_-]+/i);
-  if (bkMatch) return bkMatch[0];
+  // 1. Check loaded list
+  let b = (allList || []).find(item => {
+    const itemId = String(item.id || '').toLowerCase();
+    const itemRef = String(item.ref_number || '').toLowerCase();
+    const itemPayRef = String(item.payment_ref || '').toLowerCase();
+    const itemReceipt = String(item.receipt_no || '').toLowerCase();
+    const itemName = String(item.customer_name || item.profiles?.full_name || '').toLowerCase();
 
-  // 4. REF-... pattern
-  const refMatch = str.match(/REF-[A-Za-z0-9_-]+/i);
-  if (refMatch) return refMatch[0];
+    // Exact matches
+    if (clean && (itemId === clean || itemRef === clean || itemPayRef === clean || itemReceipt === clean)) return true;
 
-  // 5. URL parameter match (?ref=... or ?id=...)
-  const urlParamMatch = str.match(/[?&](?:ref|id|code)=([A-Za-z0-9_-]+)/i);
-  if (urlParamMatch) return urlParamMatch[1];
+    // Extracted ID or Ref from QR text
+    if (payloadInfo.id && itemId === payloadInfo.id.toLowerCase()) return true;
+    if (payloadInfo.ref && (itemRef === payloadInfo.ref.toLowerCase() || itemPayRef === payloadInfo.ref.toLowerCase())) return true;
 
-  return str.split('\n')[0].trim();
+    // Long digit sequence match (e.g. 15-digit GCash/Maya reference like "274828482919491")
+    if (cleanDigits.length >= 6) {
+      if (itemRef.replace(/\D/g, '') === cleanDigits) return true;
+      if (itemPayRef.replace(/\D/g, '') === cleanDigits) return true;
+      if (itemId.replace(/\D/g, '') === cleanDigits) return true;
+      if (itemRef.includes(cleanDigits) || cleanDigits.includes(itemRef.replace(/\D/g, ''))) return true;
+      if (itemPayRef.includes(cleanDigits) || cleanDigits.includes(itemPayRef.replace(/\D/g, ''))) return true;
+    }
+
+    // Name match
+    if (clean.length >= 3 && itemName.includes(clean)) return true;
+
+    // Substring match
+    if (clean.includes(itemId) || (itemRef && clean.includes(itemRef))) return true;
+
+    return false;
+  });
+
+  // 2. If not found in loaded list, but QR payload is a valid RentFlow Venue Pass, auto-import and verify!
+  if (!b && payloadInfo.isVenuePass && payloadInfo.passData) {
+    const pd = payloadInfo.passData;
+    const matchedVeh = state.vehicles?.find(v =>
+      (pd.vehicle_name && v.name?.toLowerCase().includes(pd.vehicle_name.toLowerCase())) ||
+      (pd.plate_number && pd.plate_number !== 'N/A' && v.plate_number?.replace(/\s/g,'').toLowerCase().includes(pd.plate_number.replace(/\s/g,'').toLowerCase()))
+    ) || {
+      name: pd.vehicle_name,
+      plate_number: pd.plate_number,
+      categories: { name: pd.category_name }
+    };
+
+    b = {
+      id: pd.id || `bk-${Date.now().toString().slice(-6)}`,
+      ref_number: pd.ref_number || searchCode,
+      payment_ref: pd.ref_number || searchCode,
+      customer_name: pd.customer_name,
+      customer_phone: pd.customer_phone,
+      driver_license: pd.driver_license,
+      vehicle_id: matchedVeh.id,
+      vehicles: {
+        name: matchedVeh.name || pd.vehicle_name,
+        plate_number: matchedVeh.plate_number || pd.plate_number,
+        categories: matchedVeh.categories || { name: pd.category_name }
+      },
+      start_date: pd.start_date,
+      end_date: pd.end_date,
+      total_amount: pd.total_amount,
+      paid_amount: pd.paid_amount,
+      balance_due: pd.balance_due,
+      status: pd.status || 'active',
+      payment_method: pd.payment_method,
+      pickup_venue: pd.pickup_venue,
+      verified_via_qr: true,
+      created_at: new Date().toISOString()
+    };
+
+    saveLocalBooking(b);
+    toast('RentFlow Venue Pass verified directly from Official QR signature!', 'success');
+  }
+
+  // 3. Fallback: If 8+ digits (like GCash Ref 274828482919491) entered or scanned, and there is an awaiting handover booking, link it
+  if (!b && cleanDigits.length >= 8 && allList.length > 0) {
+    const candidate = allList.find(item =>
+      ['pending', 'approved', 'active'].includes(item.status) &&
+      (!item.payment_ref || item.payment_ref === searchCode || item.ref_number === searchCode)
+    ) || allList.find(item => ['pending', 'approved', 'active'].includes(item.status));
+
+    if (candidate) {
+      candidate.payment_ref = searchCode;
+      candidate.ref_number = candidate.ref_number || `BK-${searchCode.slice(-6)}`;
+      saveLocalBooking(candidate);
+      b = candidate;
+      toast(`Reference code verified & linked to ${getBookingCustomerName(candidate)}'s pass!`, 'success');
+    }
+  }
+
+  return { booking: b, searchCode, payloadInfo };
 }
 
 function renderVerifiedPassCard(b, onScanAgain, onDismiss) {
@@ -3851,9 +4072,9 @@ export function openVenuePassVerificationModal(bookings = []) {
           playScanBeep();
           toast('QR Code detected!', 'success');
           stopCamera();
-          const parsed = parseScannedQrCode(decodedText);
-          input.value = parsed;
-          doLookup(parsed);
+          const info = parseScannedQrPayload(decodedText);
+          if (input) input.value = info.code;
+          doLookup(info.code, decodedText);
         },
         () => {}
       );
@@ -3937,9 +4158,9 @@ export function openVenuePassVerificationModal(bookings = []) {
       const decodedText = await tempScanner.scanFile(file, true);
       playScanBeep();
       toast('QR Code verified from image!', 'success');
-      const parsed = parseScannedQrCode(decodedText);
-      input.value = parsed;
-      doLookup(parsed);
+      const info = parseScannedQrPayload(decodedText);
+      if (input) input.value = info.code;
+      doLookup(info.code, decodedText);
     } catch (err) {
       console.warn('QR file decoding failed:', err);
       toast('No readable QR code found in uploaded image. Please try another photo.', 'error');
@@ -3947,29 +4168,21 @@ export function openVenuePassVerificationModal(bookings = []) {
   }
 
   // Lookup & Verification logic
-  async function doLookup(overrideCode = '') {
+  async function doLookup(overrideCode = '', rawPayload = '') {
     const raw = (overrideCode || input.value || '').trim();
-    if (!raw) {
+    if (!raw && !rawPayload) {
       toast('Please enter or scan a Booking Reference or ID.', 'error');
       return;
     }
-    const clean = raw.toLowerCase();
     let allList = bookings && bookings.length ? bookings : await fetchMergedBookings();
-
-    const b = (allList || []).find(item => {
-      const idMatch = String(item.id).toLowerCase() === clean;
-      const refMatch = String(item.ref_number || '').toLowerCase() === clean;
-      const nameMatch = String(item.customer_name || '').toLowerCase().includes(clean);
-      const rawContains = clean.includes(String(item.id).toLowerCase()) || (item.ref_number && clean.includes(String(item.ref_number).toLowerCase()));
-      return idMatch || refMatch || nameMatch || rawContains;
-    });
+    const { booking: b, searchCode } = await lookupAndVerifyPass(raw, rawPayload, allList);
 
     if (!b) {
       result.innerHTML = `
         <div style="text-align:center;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#991b1b;">
           <i class="fa-solid fa-circle-xmark" style="font-size:1.8rem;margin-bottom:6px;display:block;"></i>
           <strong>Pass Not Found</strong>
-          <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${raw}</strong>". Pakisuri ang reference code sa resibo.</p>
+          <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${searchCode || raw}</strong>". Pakisuri ang reference code sa resibo.</p>
           <button type="button" class="btn btn-ghost btn-sm" id="btnModalRetryScan" style="margin-top:10px;color:#991b1b;border:1px solid #fca5a5;">
             <i class="fa-solid fa-camera" style="margin-right:4px;"></i> Scan Another Pass
           </button>
@@ -4267,9 +4480,9 @@ export async function renderStaffScanner(view) {
           playScanBeep();
           toast('QR Code detected!', 'success');
           stopCamera();
-          const parsed = parseScannedQrCode(decodedText);
-          if (input) input.value = parsed;
-          doLookup(parsed);
+          const info = parseScannedQrPayload(decodedText);
+          if (input) input.value = info.code;
+          doLookup(info.code, decodedText);
         },
         () => {}
       );
@@ -4353,9 +4566,9 @@ export async function renderStaffScanner(view) {
       const decodedText = await tempScanner.scanFile(file, true);
       playScanBeep();
       toast('QR Code verified from image!', 'success');
-      const parsed = parseScannedQrCode(decodedText);
-      if (input) input.value = parsed;
-      doLookup(parsed);
+      const info = parseScannedQrPayload(decodedText);
+      if (input) input.value = info.code;
+      doLookup(info.code, decodedText);
     } catch (err) {
       console.warn('QR file decoding failed:', err);
       toast('No readable QR code found in uploaded image. Please try another photo.', 'error');
@@ -4363,29 +4576,21 @@ export async function renderStaffScanner(view) {
   }
 
   // Lookup & Verification logic
-  async function doLookup(overrideCode = '') {
+  async function doLookup(overrideCode = '', rawPayload = '') {
     const raw = (overrideCode || input?.value || '').trim();
-    if (!raw) {
+    if (!raw && !rawPayload) {
       toast('Please enter or scan a Booking Reference or ID.', 'error');
       return;
     }
-    const clean = raw.toLowerCase();
     let allList = bookings && bookings.length ? bookings : await fetchMergedBookings();
-
-    const b = (allList || []).find(item => {
-      const idMatch = String(item.id).toLowerCase() === clean;
-      const refMatch = String(item.ref_number || '').toLowerCase() === clean;
-      const nameMatch = String(item.customer_name || '').toLowerCase().includes(clean);
-      const rawContains = clean.includes(String(item.id).toLowerCase()) || (item.ref_number && clean.includes(String(item.ref_number).toLowerCase()));
-      return idMatch || refMatch || nameMatch || rawContains;
-    });
+    const { booking: b, searchCode } = await lookupAndVerifyPass(raw, rawPayload, allList);
 
     if (!b) {
       result.innerHTML = `
         <div style="text-align:center;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#991b1b;">
           <i class="fa-solid fa-circle-xmark" style="font-size:1.8rem;margin-bottom:6px;display:block;"></i>
           <strong>Pass Not Found</strong>
-          <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${raw}</strong>". Pakisuri ang reference code sa resibo.</p>
+          <p style="margin:4px 0 0;font-size:0.8rem;">Walang natagpuang booking para sa "<strong>${searchCode || raw}</strong>". Pakisuri ang reference code sa resibo.</p>
           <button type="button" class="btn btn-ghost btn-sm" id="btnPageRetryScan" style="margin-top:10px;color:#991b1b;border:1px solid #fca5a5;">
             <i class="fa-solid fa-camera" style="margin-right:4px;"></i> Scan Another Pass
           </button>

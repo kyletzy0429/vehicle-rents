@@ -192,7 +192,7 @@ function renderExtensionModalContent(booking, allActiveBookings) {
           </h3>
           <span class="muted" style="font-size:0.8rem;">Extend the return date of an active rental and calculate extra charges.</span>
         </div>
-        <div class="modal-close" id="mClose">Close</div>
+        <button type="button" class="modal-close" id="mClose" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i> Close</button>
       </div>
 
       <!-- Booking Selector if multiple available -->
@@ -280,6 +280,8 @@ function renderExtensionModalContent(booking, allActiveBookings) {
   const quickDaysWrap = $('#extQuickDays');
 
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  const mCloseBtn = $('#mClose');
+  if (mCloseBtn) mCloseBtn.addEventListener('click', closeModal);
 
   if (bookingSelect) {
     bookingSelect.addEventListener('change', () => {

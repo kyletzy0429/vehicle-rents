@@ -78,7 +78,7 @@ export function renderLandingPage() {
       vehicle: 'Toyota Fortuner 2.8 V',
       cat: 'SUV',
       text: 'Super smooth ng booking process! Pagka-landing namin sa PPC, naka-park na agad ang Fortuner sa arrival area with instant digital key access. Mababait at very professional ang staff. Napakalinis ng sasakyan, amoy showroom bago pa!',
-      chips: ['✨ Spotless Clean', '✈️ PPC Airport Handover', '⚡ Contactless Key Handover']
+      chips: ['Spotless Clean', 'PPC Airport Handover', 'Contactless Key Handover']
     },
     {
       category: 'suv luxury',
@@ -93,7 +93,7 @@ export function renderLandingPage() {
       vehicle: 'Ford Ranger Raptor 4x4',
       cat: 'Pickup',
       text: 'Immaculate vehicle condition. Kayang-kaya ng Raptor ang long drive galing PPC papuntang El Nido nang walang aberya. Extending our trip by two days via the portal took less than two minutes without calling anyone. Truly a world-class platform!',
-      chips: ['⛰️ 4x4 Palawan Roadtrip', '🔄 Instant Trip Extension', '🛡️ Comprehensive Cover']
+      chips: ['4x4 Palawan Roadtrip', 'Instant Trip Extension', 'Comprehensive Cover']
     },
     {
       category: 'city luxury',
@@ -108,7 +108,7 @@ export function renderLandingPage() {
       vehicle: 'Toyota Vios 1.5 G CVT',
       cat: 'Sedan',
       text: 'Effortless rental experience. The real-time availability engine meant zero waiting for manual phone confirmations. Official digital receipt and rental agreement were generated immediately. Napakatipid pa sa gas para sa city driving dito sa PPC.',
-      chips: ['💼 City Rental PPC', '⚡ Instant Agreement Sync', '⛽ High Fuel Efficiency']
+      chips: ['City Rental PPC', 'Instant Agreement Sync', 'High Fuel Efficiency']
     },
     {
       category: 'suv city airport',
@@ -123,12 +123,16 @@ export function renderLandingPage() {
       vehicle: 'Toyota Innova 2.8 E',
       cat: 'MPV',
       text: 'Booked the 8-seater Innova para sa family trip namin sa Puerto Princesa at mga pasyalan sa Palawan. Plenty of legroom and luggage space. The vehicle was thoroughly disinfected and had GPS tracking enabled. Best rental platform in Palawan by far.',
-      chips: ['👨‍👩‍👧‍👦 Family Vacation', '💺 8-Seater Comfort', '📍 Live GPS Enabled']
+      chips: ['Family Vacation', '8-Seater Comfort', 'Live GPS Enabled']
     }
   ];
 
   $('#app').innerHTML = `
     <div class="landing-page" data-theme="${isDark ? 'dark' : ''}">
+      <div class="ambient-aura">
+        <div class="ambient-blob-1"></div>
+        <div class="ambient-blob-2"></div>
+      </div>
 
       <!-- ═══ NAVBAR ═══ -->
       <nav class="lp-navbar">
@@ -136,14 +140,13 @@ export function renderLandingPage() {
           <div class="lp-navbar-brand">
             <div>
               <div class="lp-navbar-title">Vehicle Rental<br>Management System</div>
-              <div class="lp-navbar-sub">Realtime Fleet System</div>
+              <div class="lp-navbar-sub">Vehicle Rental System</div>
             </div>
           </div>
           <div class="lp-navbar-links">
             <a href="#lp-hero" class="lp-nav-link active">Home</a>
-            <a href="#lp-recommendations" class="lp-nav-link">Recommendations</a>
             <a href="#lp-about" class="lp-nav-link">About</a>
-            <a href="#lp-fleet" class="lp-nav-link">Fleet</a>
+            <a href="#lp-fleet" class="lp-nav-link">Vehicles</a>
             <a href="#lp-perks" class="lp-nav-link">Features</a>
             <a href="#lp-reviews" class="lp-nav-link">Reviews</a>
           </div>
@@ -159,7 +162,7 @@ export function renderLandingPage() {
               <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in
             </button>
             <button type="button" class="lp-btn-reserve" id="lpReserveBtn">
-              <i class="fa-solid fa-calendar-check"></i> Reserve now
+              <i class="fa-solid fa-calendar-check"></i> View Deals
             </button>
           </div>
           <button type="button" class="lp-mobile-menu-btn" id="lpMobileMenuBtn" aria-label="Menu">
@@ -171,21 +174,21 @@ export function renderLandingPage() {
       <!-- ═══ HERO ═══ -->
       <section class="lp-hero" id="lp-hero">
         <div class="lp-hero-content">
-          <div class="lp-hero-tag">✦ PREMIUM FLEET &amp; LIVE SYNC</div>
-          <h1 class="lp-hero-headline">Experience<br>Premium Vehicle Rentals &amp;<br><span class="lp-hero-highlight">Realtime Availability</span></h1>
-          <p class="lp-hero-desc">Step into world-class convenience with live fleet availability, instant reservations, personalized digital guest services, and 24/7 customer support.</p>
+          <div class="lp-hero-tag">PREMIUM VEHICLE RENTALS</div>
+          <h1 class="lp-hero-headline">Experience Next-Gen<br>Luxury Vehicle Rentals &amp;<br><span class="lp-hero-highlight">Live Instant Handover</span></h1>
+          <p class="lp-hero-desc">Discover Palawan &amp; beyond with live vehicle availability, instant digital reservations, contactless QR check-in, and 24/7 dedicated roadside support.</p>
           <div class="lp-hero-btns">
-            <a href="#lp-recommendations" class="lp-btn-explore">Explore Recommendations <i class="fa-solid fa-arrow-down" style="font-size:0.8rem;"></i></a>
-            <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Reserve</button>
+            <a href="#lp-fleet" class="lp-btn-explore">Explore Available Vehicles <i class="fa-solid fa-arrow-down" style="font-size:0.8rem;"></i></a>
+            <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to View Deals</button>
           </div>
           <div class="lp-hero-stats">
-            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">Renter Rating</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">100%</span><span class="lp-stat-label">Realtime Sync</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">24/7</span><span class="lp-stat-label">Personalized Service</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">4.9 <i class="fa-solid fa-star" style="color:#f59e0b;font-size:0.8rem;"></i></span><span class="lp-stat-label">99.4% Verified Rating</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">&lt;60s</span><span class="lp-stat-label">Instant Cloud Booking</span></div>
+            <div class="lp-stat"><span class="lp-stat-val">24/7</span><span class="lp-stat-label">VIP Concierge Service</span></div>
           </div>
         </div>
         <div class="lp-hero-image-wrap">
-          <img src="images/hero-fleet.jpg?v=3" alt="Premium Fleet Showroom" class="lp-hero-img" />
+          <img src="images/hero-fleet.jpg?v=3" alt="Premium Vehicles" class="lp-hero-img" />
           <div class="lp-hero-availability-badge">
             <div class="lp-avail-dot"></div>
             <span class="lp-avail-label">LIVE AVAILABILITY</span>
@@ -195,20 +198,18 @@ export function renderLandingPage() {
         </div>
       </section>
 
-
-
       <!-- ═══ ABOUT ═══ -->
       <section class="lp-section" id="lp-about">
         <div class="lp-section-inner">
           <div class="lp-section-tag">PLATFORM OVERVIEW</div>
           <h2 class="lp-section-title">About Vehicle Rental Management System</h2>
-          <p class="lp-section-desc">Vehicle Rental Management System is an all-in-one fleet management and guest reservation platform designed to digitize vehicle bookings, live inventory tracking, digital concierge requests, and administrative operations.</p>
+          <p class="lp-section-desc">Vehicle Rental Management System is an all-in-one vehicle rental and guest reservation platform designed to digitize vehicle bookings, live inventory tracking, digital concierge requests, and administrative operations.</p>
 
           <div class="lp-overview-grid">
             <div class="lp-overview-card">
               <div class="lp-overview-icon"><i class="fa-solid fa-car"></i></div>
               <h3 class="lp-overview-title">Application Purpose</h3>
-              <p class="lp-overview-text">The system enables guests to explore our premium fleet of vehicles, view live pricing, make instant reservations, check in contactlessly with QR codes, and submit service requests directly from their personal devices.</p>
+              <p class="lp-overview-text">The system enables guests to explore our premium selection of vehicles, view live pricing, make instant reservations, check in contactlessly with QR codes, and submit service requests directly from their personal devices.</p>
             </div>
             <div class="lp-overview-card">
               <div class="lp-overview-icon"><i class="fa-solid fa-lock"></i></div>
@@ -218,7 +219,7 @@ export function renderLandingPage() {
             <div class="lp-overview-card">
               <div class="lp-overview-icon"><i class="fa-solid fa-bolt"></i></div>
               <h3 class="lp-overview-title">Real-Time Cloud Sync</h3>
-              <p class="lp-overview-text">Connected to real-time cloud data, our system ensures instant synchronization between guest bookings, fleet dispatch statuses, maintenance tasks, and digital payment receipts.</p>
+              <p class="lp-overview-text">Connected to real-time cloud data, our system ensures instant synchronization between guest bookings, dispatch statuses, maintenance tasks, and digital payment receipts.</p>
             </div>
           </div>
 
@@ -239,25 +240,29 @@ export function renderLandingPage() {
       <section class="lp-section lp-section-fleet" id="lp-fleet">
         <div class="lp-section-inner">
           <div class="lp-section-tag">REALTIME INVENTORY</div>
-          <h2 class="lp-section-title">Featured Vehicles &amp; Fleet</h2>
-          <p class="lp-section-desc">Live pricing and availability directly connected to our fleet database.</p>
+          <h2 class="lp-section-title">Featured Vehicles</h2>
+          <p class="lp-section-desc">Live pricing and availability directly connected to our verified database.</p>
 
           <div class="lp-fleet-grid">
             ${vehiclePreviews.map(v => `
               <div class="lp-fleet-card">
                 <div class="lp-fleet-img-wrap">
+                  <span class="vehicle-stage-badge">${v.cat}</span>
                   <img src="${v.img}" alt="${v.name}" class="lp-fleet-img" loading="lazy" />
-                  <span class="lp-fleet-avail-tag">Available</span>
+                  <span class="lp-fleet-avail-tag"><span class="status-dot"></span> Ready</span>
                 </div>
                 <div class="lp-fleet-body">
-                  <h3 class="lp-fleet-name">${v.name} — ${v.cat}</h3>
-                  <div class="lp-fleet-meta">
-                    <span><i class="fa-solid fa-users"></i> Max ${v.seats} ${v.seats > 2 ? 'passengers' : 'riders'}</span>
-                    <span><i class="fa-solid fa-bolt"></i> Realtime Sync</span>
+                  <h3 class="lp-fleet-name">${v.name}</h3>
+                  <div class="vehicle-specs-row">
+                    <span class="v-spec-pill"><i class="fa-solid fa-users"></i> ${v.seats} Seats</span>
+                    <span class="v-spec-pill"><i class="fa-solid fa-bolt"></i> Live Sync</span>
+                    <span class="v-spec-pill"><i class="fa-solid fa-shield-halved"></i> Full Cover</span>
                   </div>
-                  <div class="lp-fleet-price">${v.rate.toLocaleString()}.00 <span>/ day</span></div>
+                  <div class="lp-fleet-price">₱${v.rate.toLocaleString()}.00 <span>/ day</span></div>
                   <p class="lp-fleet-desc">${v.desc}</p>
-                  <button type="button" class="lp-btn-booknow" data-lp-book>View Deal</button>
+                  <button type="button" class="lp-btn-booknow" data-lp-book>
+                    <span>View Deal</span> <i class="fa-solid fa-arrow-right"></i>
+                  </button>
                 </div>
               </div>
             `).join('')}
@@ -346,7 +351,7 @@ export function renderLandingPage() {
                 <div class="lp-metric-icon"><i class="fa-solid fa-shield-halved"></i></div>
                 <div class="lp-metric-info">
                   <span class="lp-metric-val">100%</span>
-                  <span class="lp-metric-lbl">Guaranteed Fleet Sync</span>
+                  <span class="lp-metric-lbl">Guaranteed Live Sync</span>
                 </div>
               </div>
               <div class="lp-trust-metric-item">
@@ -413,7 +418,7 @@ export function renderLandingPage() {
             </div>
             <div class="lp-cta-action">
               <a href="#lp-fleet" class="lp-btn-reserve-cta" id="lpReviewBookNow">
-                <i class="fa-solid fa-car"></i> Explore Available Fleet <i class="fa-solid fa-arrow-right" style="font-size:0.85rem;margin-left:4px;"></i>
+                <i class="fa-solid fa-car"></i> View Deals <i class="fa-solid fa-arrow-right" style="font-size:0.85rem;margin-left:4px;"></i>
               </a>
             </div>
           </div>
@@ -428,13 +433,13 @@ export function renderLandingPage() {
             <div style="margin-bottom:12px;">
               <span style="font-size:1.1rem;font-weight:800;color:var(--text-hi);">Vehicle Rental Management System</span>
             </div>
-            <p style="color:var(--text-mid);font-size:0.88rem;line-height:1.6;max-width:280px;">Where premium fleet meets cutting-edge real-time rental technology.</p>
+            <p style="color:var(--text-mid);font-size:0.88rem;line-height:1.6;max-width:280px;">Where premium vehicles meet cutting-edge real-time rental technology.</p>
           </div>
           <div class="lp-footer-col">
             <h4>Navigation</h4>
             <a href="#lp-hero">Home</a>
             <a href="#lp-about">About &amp; Purpose</a>
-            <a href="#lp-fleet">Fleet &amp; Pricing</a>
+            <a href="#lp-fleet">Vehicles &amp; Pricing</a>
             <a href="#lp-perks">Features</a>
             <a href="#lp-reviews">Renter Reviews</a>
           </div>
@@ -654,10 +659,10 @@ export function renderAuth(initialMode = null) {
       </div>
 
       <div class="auth-split-right">
-        <img src="images/hero-fleet.jpg?v=3" alt="Premium Fleet" class="auth-hero-img" />
+        <img src="images/hero-fleet.jpg?v=3" alt="Premium Vehicles" class="auth-hero-img" />
         <div class="auth-hero-overlay">
           <h2 class="auth-hero-tagline">Every ride, elegantly managed.</h2>
-          <p class="auth-hero-sub">From pick-up to drop-out, one system keeps your fleet, guests, and staff perfectly in sync.</p>
+          <p class="auth-hero-sub">From pick-up to drop-off, one system keeps your vehicles, guests, and staff perfectly in sync.</p>
         </div>
         <div class="auth-rating-badge">
           <div class="auth-rating-label">RENTER RATING</div>
@@ -668,7 +673,7 @@ export function renderAuth(initialMode = null) {
   `;
 
   // Back to home
-  $('#authBackHome').addEventListener('click', () => renderLandingPage());
+  $('#authBackHome')?.addEventListener('click', () => renderLandingPage());
 
   // Demo quick access
   const qg = $('#quickDemoGuest');
@@ -704,7 +709,7 @@ export function renderAuth(initialMode = null) {
   }
 
   // Form submit
-  $('#authForm').addEventListener('submit', async (e) => {
+  $('#authForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = $('#authSubmit');
     submitBtn.disabled = true;

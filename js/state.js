@@ -100,10 +100,95 @@ export function saveVehicleOverride(idOrPlate, patch) {
 export function getLocalBookings() {
   try {
     const raw = localStorage.getItem('rentflow_local_bookings');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+
+  // Initial realistic sample bookings for multi-device / phone testing
+  const now = Date.now();
+  const sampleBookings = [
+    {
+      id: '1',
+      ref_number: '274828482919491',
+      payment_ref: '274828482919491',
+      customer_id: '8bebdf37-d488-4e10-bb84-63a01c157c3a',
+      customer_name: 'Mark Lester Ramos',
+      customer_phone: '0917 582 9140',
+      driver_license: 'N02-19-482019',
+      vehicle_id: 1,
+      vehicles: {
+        id: 1,
+        name: 'Toyota Fortuner 2.8 V',
+        plate_number: 'NBD-8842',
+        categories: { name: 'SUV' }
+      },
+      start_date: new Date(now + 86400000).toISOString().split('T')[0],
+      end_date: new Date(now + 86400000 * 3).toISOString().split('T')[0],
+      total_amount: 8400,
+      paid_amount: 8400,
+      balance_due: 0,
+      status: 'approved',
+      payment_method: 'GCash QR',
+      payment_type: 'full',
+      created_at: new Date(now - 3600000 * 2).toISOString()
+    },
+    {
+      id: '2',
+      ref_number: 'BK-20261022',
+      payment_ref: 'VISA-914820',
+      customer_id: '8bebdf37-d488-4e10-bb84-63a01c157c3b',
+      customer_name: 'Maria Santos',
+      customer_phone: '0918 333 4411',
+      driver_license: 'D01-18-291048',
+      vehicle_id: 2,
+      vehicles: {
+        id: 2,
+        name: 'Toyota Vios 1.5 G CVT',
+        plate_number: 'NCO-2914',
+        categories: { name: 'Sedan' }
+      },
+      start_date: new Date(now + 86400000 * 2).toISOString().split('T')[0],
+      end_date: new Date(now + 86400000 * 4).toISOString().split('T')[0],
+      total_amount: 5000,
+      paid_amount: 2500,
+      balance_due: 2500,
+      status: 'approved',
+      payment_method: 'Visa Card',
+      payment_type: 'partial',
+      created_at: new Date(now - 3600000 * 5).toISOString()
+    },
+    {
+      id: '3',
+      ref_number: 'BK-20261023',
+      payment_ref: 'APAY-441029',
+      customer_id: '8bebdf37-d488-4e10-bb84-63a01c157c3a',
+      customer_name: 'Mark Lester Ramos',
+      customer_phone: '0917 582 9140',
+      driver_license: 'N02-19-482019',
+      vehicle_id: 4,
+      vehicles: {
+        id: 4,
+        name: 'Ford Ranger Raptor',
+        plate_number: 'NDB-5591',
+        categories: { name: 'Pickup' }
+      },
+      start_date: new Date(now).toISOString().split('T')[0],
+      end_date: new Date(now + 86400000 * 2).toISOString().split('T')[0],
+      total_amount: 9000,
+      paid_amount: 9000,
+      balance_due: 0,
+      status: 'active',
+      payment_method: 'Apple Pay',
+      payment_type: 'full',
+      created_at: new Date(now - 3600000 * 10).toISOString()
+    }
+  ];
+  try {
+    localStorage.setItem('rentflow_local_bookings', JSON.stringify(sampleBookings));
+  } catch (e) {}
+  return sampleBookings;
 }
 
 export function saveLocalBooking(b) {

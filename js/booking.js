@@ -288,7 +288,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             <div class="tier-sub">Instant zero-balance reservation</div>
           </div>
           <div class="pay-tier-btn" id="payOptDown">
-            <div class="tier-label">Reserve (20% Down)</div>
+            <div class="tier-label">Downpayment (20%)</div>
             <div class="tier-amount" id="payDownAmount">0.00</div>
             <div class="tier-sub">Remaining balance upon vehicle pickup</div>
           </div>
@@ -320,7 +320,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     </div>
   `, true);
 
-  $('#mClose').addEventListener('click', closeModal);
+  $('#mClose')?.addEventListener('click', closeModal);
 
   function setStep(step) {
     currentStep = step;
@@ -348,11 +348,11 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     if (d2) d2.classList.toggle('active', step >= 3);
   }
 
-  $('#stepNode1').addEventListener('click', () => setStep(1));
-  $('#stepNode2').addEventListener('click', () => setStep(2));
-  $('#btnGoStep2').addEventListener('click', () => setStep(2));
-  $('#btnBackStep1').addEventListener('click', () => setStep(1));
-  $('#btnBackStep2').addEventListener('click', () => setStep(2));
+  $('#stepNode1')?.addEventListener('click', () => setStep(1));
+  $('#stepNode2')?.addEventListener('click', () => setStep(2));
+  $('#btnGoStep2')?.addEventListener('click', () => setStep(2));
+  $('#btnBackStep1')?.addEventListener('click', () => setStep(1));
+  $('#btnBackStep2')?.addEventListener('click', () => setStep(2));
 
   $('#btnDetailDamagePolicy')?.addEventListener('click', () => {
     import('./utils.js').then(({ openDamagePolicyModal }) => openDamagePolicyModal());
@@ -424,7 +424,15 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     const cardReturn = $('#calCardReturn');
 
     if (pickupText) pickupText.textContent = selectedStartVal ? formatShortDate(selectedStartVal) : 'Select Date';
-    if (returnText) returnText.textContent = selectedEndVal ? formatShortDate(selectedEndVal) : 'Select Date';
+    if (returnText) {
+      if (selectedStartVal && selectedEndVal) {
+        returnText.textContent = selectedStartVal === selectedEndVal ? `${formatShortDate(selectedEndVal)} (1 Day)` : formatShortDate(selectedEndVal);
+      } else if (selectedStartVal) {
+        returnText.textContent = 'Same Day / Return';
+      } else {
+        returnText.textContent = 'Select Date';
+      }
+    }
 
     if (cardPickup && cardReturn) {
       if (!selectedStartVal || (selectedStartVal && selectedEndVal)) {
@@ -439,9 +447,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     if (tripDaysEl) {
       if (selectedStartVal && selectedEndVal) {
         const days = Math.max(1, Math.round((new Date(selectedEndVal) - new Date(selectedStartVal)) / (1000 * 60 * 60 * 24)));
-        tripDaysEl.textContent = `${days} Day${days > 1 ? 's' : ''} Rental`;
+        tripDaysEl.innerHTML = `<strong>${days} Day${days > 1 ? 's' : ''}</strong> Rental`;
       } else if (selectedStartVal) {
-        tripDaysEl.textContent = 'Select return date';
+        tripDaysEl.innerHTML = `<span id="calQuickSingleDay" style="cursor:pointer;color:var(--accent);font-weight:700;" title="Click for 1-day rental">1 Day? Tap here</span>`;
       } else {
         tripDaysEl.textContent = 'Select dates';
       }
@@ -574,14 +582,34 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       start.value = '';
       end.value = '';
       renderInteractiveCalendar();
+      checkAvailability();
     });
 
     $('#calCardReturn')?.addEventListener('click', () => {
-      if (start.value) {
+      if (start.value && !end.value) {
+        // Quick toggle to 1-day rental!
+        end.value = start.value;
+        renderInteractiveCalendar();
+        checkAvailability();
+      } else if (start.value && end.value) {
         end.value = '';
         renderInteractiveCalendar();
+        checkAvailability();
       }
     });
+
+    // Quick single-day rental helper link if present
+    const qBtn = calContainer.querySelector('#calQuickSingleDay') || $('#calQuickSingleDay');
+    if (qBtn) {
+      qBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (start.value) {
+          end.value = start.value;
+          renderInteractiveCalendar();
+          checkAvailability();
+        }
+      });
+    }
 
     // Hover Range Preview Effect & Date Selection
     const priceCells = calContainer.querySelectorAll('.cal-day-price');
@@ -612,23 +640,51 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
       cell.addEventListener('click', () => {
         const clickedDate = cell.dataset.date;
+
+        // Check if the next consecutive day is booked or unavailable
+        const nextDateObj = new Date(clickedDate + 'T00:00:00');
+        nextDateObj.setDate(nextDateObj.getDate() + 1);
+        const nextDateIso = nextDateObj.toISOString().slice(0, 10);
+        const isNextDayBooked = allBookedIntervals && allBookedIntervals.some(b => nextDateIso >= b.start_date && nextDateIso <= b.end_date);
+
         if (!start.value || (start.value && end.value)) {
           start.value = clickedDate;
-          end.value = '';
+          // If the next consecutive date is already booked, this is an isolated single day left!
+          // Auto-select as 1-day rental so the user can immediately book without being blocked!
+          if (isNextDayBooked) {
+            end.value = clickedDate;
+            toast('1-day rental selected (next date is already reserved).', 'info');
+          } else {
+            end.value = '';
+          }
+        } else if (clickedDate === start.value) {
+          // User clicked on the exact same date again -> Confirm as 1-day rental!
+          end.value = clickedDate;
+          toast('1-day rental confirmed for this date.', 'info');
         } else if (clickedDate > start.value) {
+          // Check if any existing booking starts strictly between start.value and clickedDate
           const hasBookedInside = allBookedIntervals && allBookedIntervals.some(b => {
-            return (b.start_date > start.value && b.start_date < clickedDate) || (b.end_date >= start.value && b.start_date <= clickedDate);
+            return b.start_date > start.value && b.start_date <= clickedDate;
           });
           if (hasBookedInside) {
             toast('Cannot select range across already booked dates.', 'error');
             start.value = clickedDate;
-            end.value = '';
+            if (isNextDayBooked) {
+              end.value = clickedDate;
+            } else {
+              end.value = '';
+            }
           } else {
             end.value = clickedDate;
           }
         } else {
+          // Clicked earlier date
           start.value = clickedDate;
-          end.value = '';
+          if (isNextDayBooked) {
+            end.value = clickedDate;
+          } else {
+            end.value = '';
+          }
         }
         renderInteractiveCalendar();
         checkAvailability();

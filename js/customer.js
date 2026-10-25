@@ -162,7 +162,7 @@ export async function renderCustomerProfile(view) {
     import('./auth.js').then(({ promptRenterVerificationModal }) => promptRenterVerificationModal(true));
   });
 
-  $('#profileForm').addEventListener('submit', async (e) => {
+  $('#profileForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const saveBtn = $('#saveProfBtn');
 
@@ -559,7 +559,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
   const modal = openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">${isPayingBalance ? 'Pay Remaining Balance' : 'Pay / Reserve Booking'}</h3>
+        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">${isPayingBalance ? 'Pay Remaining Balance' : 'Complete Booking Payment'}</h3>
         <span class="muted" style="font-size:0.78rem;">${vehicleName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
       </div>
       <div class="modal-close" id="mClose">Close</div>
@@ -574,7 +574,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <div class="tier-sub">No balance at pickup</div>
         </div>
         <div class="pay-tier-btn ${selectedPct === 20 ? 'active' : ''}" data-pct="20">
-          <div class="tier-label">20% Deposit (Reserve)</div>
+          <div class="tier-label">20% Downpayment</div>
           <div class="tier-amount">${fmtMoney(getCalculatedPayNow(20))}</div>
           <div class="tier-sub">Balance ${fmtMoney(getCalculatedBalance(20))}</div>
         </div>
@@ -603,25 +603,13 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       `}
     </div>
 
-    <div class="auth-tabs" style="margin-bottom:16px;">
-      <div class="auth-tab active" data-pay-method="gcash">
-        GCash QR
-      </div>
-      <div class="auth-tab" data-pay-method="visa">
-        <i class="fa-brands fa-cc-visa" style="color:#2563eb;font-size:1.1rem;margin-right:4px;"></i> Visa Card
-      </div>
-      <div class="auth-tab" data-pay-method="applepay">
-        <i class="fa-brands fa-apple" style="font-size:1.15rem;margin-right:4px;"></i> Apple Pay
-      </div>
-      <div class="auth-tab" data-pay-method="bank_qr">
-        Bank QR
-      </div>
-      <div class="auth-tab" data-pay-method="card">
-        Mastercard
-      </div>
-      <div class="auth-tab" data-pay-method="cash">
-        Pay on Cash
-      </div>
+    <div class="pay-method-grid">
+      <div class="pay-method-btn active" data-pay-method="gcash">GCash QR</div>
+      <div class="pay-method-btn" data-pay-method="visa">Visa</div>
+      <div class="pay-method-btn" data-pay-method="applepay">Apple Pay</div>
+      <div class="pay-method-btn" data-pay-method="bank_qr">Bank QR</div>
+      <div class="pay-method-btn" data-pay-method="card">Mastercard</div>
+      <div class="pay-method-btn" data-pay-method="cash">Pay on Cash</div>
     </div>
 
     <div id="payContent"></div>
@@ -726,7 +714,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <div style="width:170px;height:170px;background:#ffffff;border:3px solid #059669;border-radius:12px;margin:0 auto 12px auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(5,150,105,0.15);">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INSTAPAY-RENTAL-${b.id}-${payNow}" alt="Bank QR Code" style="width:100%;height:100%;object-fit:contain;" />
           </div>
-          <div style="font-weight:700;font-size:0.9rem;color:#0f172a;margin-bottom:2px;">RentFlow Corporate Fleet</div>
+          <div style="font-weight:700;font-size:0.9rem;color:#0f172a;margin-bottom:2px;">RentFlow Official Account</div>
           <div style="font-size:0.78rem;color:#475569;font-weight:600;">Account: <span style="font-family:monospace;">0012 •••• 8899</span></div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Secured by QR Ph & InstaPay Philippines</div>
         </div>
@@ -745,7 +733,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <div class="visa-chip"></div>
             <div style="display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:800;letter-spacing:0.05em;">
-              <i class="fa-brands fa-cc-visa" style="font-size:1.8rem;"></i>
+              <span style="font-weight:900;letter-spacing:0.12em;font-size:1.05rem;color:#ffffff;">VISA</span>
             </div>
           </div>
           <div style="font-family:monospace;font-size:1.15rem;letter-spacing:0.18em;margin-bottom:12px;text-shadow:0 1px 2px rgba(0,0,0,0.3);">
@@ -771,7 +759,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <label>Visa Card Number</label>
           <div style="position:relative;">
             <input type="text" id="visaNumber" value="4111 2026 8892 4892" placeholder="4xxx •••• •••• xxxx" maxlength="19" required />
-            <i class="fa-brands fa-cc-visa" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#2563eb;font-size:1.4rem;"></i>
+            <i class="fa-solid fa-credit-card" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:1.1rem;"></i>
           </div>
         </div>
         <div class="detail-grid">
@@ -786,15 +774,15 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         </div>
         <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:#059669;margin-top:6px;">
           <i class="fa-solid fa-shield-halved"></i>
-          <span>Protected by <strong>Verified by Visa</strong> &amp; 3D Secure 2.0 Encryption</span>
+          <span>Protected by <strong>3D Secure 2.0</strong> Bank-Grade Encryption</span>
         </div>
       `;
       if (pBtn) pBtn.textContent = `Pay ${fmtMoney(payNow)} with Visa`;
     } else if (selectedMethod === 'applepay') {
       container.innerHTML = `
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;">
-          <div style="width:54px;height:54px;background:#000000;color:#ffffff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;">
-            <i class="fa-brands fa-apple"></i>
+          <div style="width:48px;height:48px;background:var(--primary-gradient);color:#ffffff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;">
+            <i class="fa-solid fa-wallet"></i>
           </div>
           <h4 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Apple Pay Ready</h4>
           <p style="font-size:0.8rem;color:#64748b;margin:0 0 16px 0;line-height:1.4;">
@@ -812,8 +800,8 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
             </div>
           </div>
 
-          <button type="button" class="btn-apple-pay" id="applePayDirectBtn">
-            <i class="fa-brands fa-apple"></i> Pay with Apple Pay
+          <button type="button" class="btn btn-primary btn-block" id="applePayDirectBtn" style="padding:12px;font-size:0.95rem;font-weight:700;">
+            <i class="fa-solid fa-wallet"></i> Pay with Apple Pay
           </button>
         </div>
       `;
@@ -843,9 +831,9 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
   renderPaymentMethodContent();
 
-  modal.querySelectorAll('.auth-tab').forEach(tab => {
+  modal.querySelectorAll('.pay-method-btn').forEach(tab => {
     tab.addEventListener('click', () => {
-      modal.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      modal.querySelectorAll('.pay-method-btn').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       selectedMethod = tab.dataset.payMethod;
       renderPaymentMethodContent();
@@ -886,7 +874,11 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         paid_amount: newTotalPaid,
         balance_due: newBalance,
         payment_type: newPaymentType,
-        downpayment_percent: selectedPct
+        downpayment_percent: selectedPct,
+        ref_number: finalRefNo,
+        payment_ref: finalRefNo,
+        receipt_no: finalRefNo,
+        payment_method: methodName
       });
 
       // Update in-memory booking
@@ -896,6 +888,10 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         b.balance_due = newBalance;
         b.payment_type = newPaymentType;
         b.downpayment_percent = selectedPct;
+        b.ref_number = finalRefNo;
+        b.payment_ref = finalRefNo;
+        b.receipt_no = finalRefNo;
+        b.payment_method = methodName;
       }
 
       // If DB booking, save to Supabase
@@ -928,7 +924,11 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         paid_amount: newTotalPaid,
         balance_due: newBalance,
         payment_type: newPaymentType,
-        downpayment_percent: selectedPct
+        downpayment_percent: selectedPct,
+        ref_number: finalRefNo,
+        payment_ref: finalRefNo,
+        receipt_no: finalRefNo,
+        payment_method: methodName
       });
       broadcastBookingStatusChange(bookingId, 'active');
 
@@ -992,6 +992,9 @@ export async function openPaidReceiptModal(bookingId, payMethod = 'Online Paymen
   const hasAC = v.has_ac !== undefined ? v.has_ac : true;
   const days = daysBetween(b.start_date, b.end_date);
   const refCode = refNo || b.ref_number || `REF-${String(b.id).slice(-4)}-${Date.now().toString().slice(-4)}`;
+  b.ref_number = refCode;
+  b.payment_ref = refCode;
+  updateLocalBookingStatus(b.id, b.status || 'active', { ref_number: refCode, payment_ref: refCode });
   const sysSettings = getSystemSettings();
   const comp = sysSettings.company || DEFAULT_SETTINGS.company;
 
@@ -1248,7 +1251,7 @@ export async function openRefundRequestModal(bookingId) {
     </form>
   `);
 
-  $('#refundReqForm').addEventListener('submit', async (e) => {
+  $('#refundReqForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('#subRefBtn');
     btn.disabled = true;

@@ -27,7 +27,7 @@ export function renderRoleSwitcherHTML(currentRole) {
     <div class="role-dropdown-container" id="roleDropdownContainer">
       <button type="button" class="role-dropdown-trigger" id="roleDropdownToggle" aria-haspopup="true" aria-expanded="false" title="Switch Role">
         <strong class="role-dropdown-val">${currentLabel}</strong>
-        <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;color:#64748b;margin-left:4px;"></i>
+        <i class="fa-solid fa-chevron-down role-dropdown-arrow"></i>
       </button>
 
       <div class="role-dropdown-menu" id="roleDropdownMenu" style="display:none;">
@@ -35,17 +35,17 @@ export function renderRoleSwitcherHTML(currentRole) {
         
         <div class="role-menu-item ${currentRole === 'customer' ? 'active' : ''}" data-role-choice="customer">
           <span class="role-item-title">Renter</span>
-          ${currentRole === 'customer' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
+          ${currentRole === 'customer' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
         </div>
 
         <div class="role-menu-item ${currentRole === 'staff' ? 'active' : ''}" data-role-choice="staff">
           <span class="role-item-title">Staff</span>
-          ${currentRole === 'staff' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
+          ${currentRole === 'staff' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
         </div>
 
         <div class="role-menu-item ${currentRole === 'admin' ? 'active' : ''}" data-role-choice="admin">
           <span class="role-item-title">Admin</span>
-          ${currentRole === 'admin' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);"></i>' : ''}
+          ${currentRole === 'admin' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
         </div>
       </div>
     </div>
@@ -113,7 +113,7 @@ export function openUserMenuModal() {
         <div class="receipt-row"><span style="color:#64748b;">Admin Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'roland.bautista@rentflow.ph'}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Contact Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 992 3341'}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Access Level</span><span style="font-weight:700;color:var(--accent);">Full System &amp; Financial Control</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Department</span><span style="font-weight:600;color:#0f172a;">Executive Fleet Management</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Department</span><span style="font-weight:600;color:#0f172a;">Operations &amp; Administration</span></div>
       </div>
 
       <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Administrator Controls &amp; Shortcuts</h4>
@@ -128,8 +128,8 @@ export function openUserMenuModal() {
 
         <button class="btn btn-ghost" id="adminGoVehicles" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Fleet &amp; Vehicle Inventory</div>
-            <div style="font-size:0.75rem;color:#64748b;">Manage vehicle fleet, daily rental rates, and categories</div>
+            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Vehicle Inventory</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage vehicles, daily rental rates, and categories</div>
           </div>
         </button>
 
@@ -175,7 +175,7 @@ export function openUserMenuModal() {
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
         <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'sarah.villanueva@rentflow.ph'}</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 882 1450'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Operations Role</span><span style="font-weight:700;color:#059669;">Fleet Dispatch &amp; Booking Approvals</span></div>
+        <div class="receipt-row"><span style="color:#64748b;">Operations Role</span><span style="font-weight:700;color:#059669;">Vehicle Dispatch &amp; Booking Approvals</span></div>
         <div class="receipt-row"><span style="color:#64748b;">Station</span><span style="font-weight:600;color:#0f172a;">RentFlow Main Hub Operations</span></div>
       </div>
 
@@ -185,7 +185,7 @@ export function openUserMenuModal() {
         <button class="btn btn-ghost" id="staffGoDashboard" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
             <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Operations Dashboard</div>
-            <div style="font-size:0.75rem;color:#64748b;">Overview of booking queue and fleet status</div>
+            <div style="font-size:0.75rem;color:#64748b;">Overview of booking queue and vehicle status</div>
           </div>
         </button>
 
@@ -283,8 +283,8 @@ export function openUserMenuModal() {
 
   openModal(modalContent);
 
-  $('#mClose').addEventListener('click', closeModal);
-  $('#umLogout').addEventListener('click', () => { closeModal(); logout(); });
+  $('#mClose')?.addEventListener('click', closeModal);
+  $('#umLogout')?.addEventListener('click', () => { closeModal(); logout(); });
 
   // Admin shortcuts
   const aSet = $('#adminGoSettings');
@@ -431,7 +431,7 @@ export function renderShell() {
           <!-- Customer Header Center Navigation -->
           <nav class="portal-header-nav" id="portalHeaderNav" aria-label="Customer Navigation">
             <button type="button" class="portal-nav-link ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
-              <i class="fa-solid fa-magnifying-glass"></i> Browse Fleet
+              <i class="fa-solid fa-magnifying-glass"></i> Browse Vehicles
             </button>
             <button type="button" class="portal-nav-link ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
               <i class="fa-solid fa-calendar-check"></i> My Bookings
@@ -451,7 +451,7 @@ export function renderShell() {
             </div>
 
             <button type="button" id="topThemeBtn" class="topbar-icon-btn" title="Toggle Light/Dark Mode" aria-label="Toggle Light/Dark Mode">
-              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : '#3b82f6'};"></i>
+              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : 'var(--accent)'};"></i>
             </button>
 
             <button type="button" id="topNotifBtn" class="topbar-icon-btn" title="View Notifications" aria-label="View Notifications">
@@ -473,10 +473,10 @@ export function renderShell() {
       </div>
     `;
 
-    $('#brandHomeBtn').addEventListener('click', () => { state.tab = 'browse'; renderShell(); });
-    $('#topThemeBtn').addEventListener('click', toggleTheme);
-    $('#topNotifBtn').addEventListener('click', openNotificationsModal);
-    $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
+    $('#brandHomeBtn')?.addEventListener('click', () => { state.tab = 'browse'; renderShell(); });
+    $('#topThemeBtn')?.addEventListener('click', toggleTheme);
+    $('#topNotifBtn')?.addEventListener('click', openNotificationsModal);
+    $('#topUserMenuBtn')?.addEventListener('click', openUserMenuModal);
     bindRoleSwitcherEvents();
 
     const gMenuBtn = $('#guestMenuBtn');
@@ -534,8 +534,8 @@ export function renderShell() {
       <aside class="sidebar" id="sidebarMenu">
         <div class="sidebar-brand" style="display:flex;align-items:center;gap:10px;">
           <div style="flex:1;">
-            <div style="font-weight:800;font-size:0.88rem;line-height:1.2;color:#0f172a;letter-spacing:-0.01em;">Vehicle Rental Management System</div>
-            <div style="font-size:0.7rem;color:#64748b;font-weight:600;margin-top:2px;">${roleTitle} Portal</div>
+            <div style="font-weight:800;font-size:0.88rem;line-height:1.2;color:var(--text-hi);letter-spacing:-0.01em;">Vehicle Rental Management System</div>
+            <div style="font-size:0.7rem;color:var(--accent);font-weight:700;margin-top:2px;">${roleTitle} Portal</div>
           </div>
           <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close Menu" aria-label="Close Menu">
             <i class="fa-solid fa-xmark"></i>
@@ -619,10 +619,10 @@ export function renderShell() {
   const sidebarOverlay = $('#sidebarOverlay');
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
-  $('#logoutBtn').addEventListener('click', logout);
-  $('#topThemeBtn').addEventListener('click', toggleTheme);
-  $('#topNotifBtn').addEventListener('click', openNotificationsModal);
-  $('#topUserMenuBtn').addEventListener('click', openUserMenuModal);
+  $('#logoutBtn')?.addEventListener('click', logout);
+  $('#topThemeBtn')?.addEventListener('click', toggleTheme);
+  $('#topNotifBtn')?.addEventListener('click', openNotificationsModal);
+  $('#topUserMenuBtn')?.addEventListener('click', openUserMenuModal);
   bindRoleSwitcherEvents();
   const uChip = $('#userProfileChip');
   if (uChip) uChip.addEventListener('click', openUserMenuModal);
