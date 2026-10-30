@@ -261,7 +261,7 @@ export function renderLandingPage() {
                   <div class="lp-fleet-price">₱${v.rate.toLocaleString()}.00 <span>/ day</span></div>
                   <p class="lp-fleet-desc">${v.desc}</p>
                   <button type="button" class="lp-btn-booknow" data-lp-book>
-                    <span>Rent Now</span>
+                    <span>View Deal</span>
                   </button>
                 </div>
               </div>

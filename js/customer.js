@@ -233,11 +233,11 @@ export async function renderMyBookings(view) {
   window._activeCustomerBookings = bookings;
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const returnDueBooking = bookings.find(b => ['active', 'approved'].includes(b.status) && (b.end_date || '').slice(0, 10) <= todayStr);
+  const returnDueBooking = bookings.find(b => ['active', 'approved', 'confirmed', 'vehicle_released'].includes(b.status) && (b.end_date || '').slice(0, 10) <= todayStr);
   const isOverdue = returnDueBooking && (returnDueBooking.end_date || '').slice(0, 10) < todayStr;
 
-  const pendingCount = bookings.filter(b => b.status === 'pending').length;
-  const activeCount = bookings.filter(b => ['active', 'approved', 'reserved', 'partially_paid'].includes(b.status)).length;
+  const pendingCount = bookings.filter(b => ['pending', 'pending_verification', 'cash_on_pickup', 'awaiting_payment'].includes(b.status)).length;
+  const activeCount = bookings.filter(b => ['active', 'approved', 'confirmed', 'vehicle_released', 'reserved', 'partially_paid'].includes(b.status)).length;
   const completedCount = bookings.filter(b => b.status === 'completed').length;
   const cancelledCount = bookings.filter(b => ['cancelled', 'rejected', 'refunded', 'refund_requested'].includes(b.status)).length;
 
@@ -302,8 +302,8 @@ export async function renderMyBookings(view) {
 
 
   const filterBookings = (f) => {
-    if (f === 'pending') return bookings.filter(b => b.status === 'pending');
-    if (f === 'active') return bookings.filter(b => ['active', 'approved', 'reserved', 'partially_paid'].includes(b.status));
+    if (f === 'pending') return bookings.filter(b => ['pending', 'pending_verification', 'cash_on_pickup', 'awaiting_payment'].includes(b.status));
+    if (f === 'active') return bookings.filter(b => ['active', 'approved', 'confirmed', 'vehicle_released', 'reserved', 'partially_paid'].includes(b.status));
     if (f === 'completed') return bookings.filter(b => b.status === 'completed');
     if (f === 'cancelled') return bookings.filter(b => ['cancelled', 'rejected', 'refunded', 'refund_requested'].includes(b.status));
     return bookings;
@@ -404,36 +404,78 @@ export function customerBookingRow(b) {
   const v = b.vehicles;
   const isPartial = b.balance_due && Number(b.balance_due) > 0 && Number(b.paid_amount || 0) > 0;
   let actions = '';
-  if (b.status === 'pending') {
+  let badgeHTML = '';
+
+  if (b.status === 'pending_verification') {
+    badgeHTML = `<span class="badge badge-pending_verification"><i class="fa-solid fa-hourglass-half" style="margin-right:4px;"></i> Pending Verification</span>`;
     actions = `
-      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>
-      <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel Request</button>
-    `;
-  } else if (b.status === 'approved') {
-    actions = `
-      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>
+      <div style="font-size:0.78rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:4px;">
+        <i class="fa-solid fa-clock"></i> Awaiting Staff Review
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt"></i> View Pass / Receipt</button>
       <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
     `;
-  } else if (b.status === 'active' || b.status === 'completed') {
+  } else if (b.status === 'cash_on_pickup') {
+    badgeHTML = `<span class="badge badge-cash_on_pickup"><i class="fa-solid fa-money-bill-wave" style="margin-right:4px;"></i> Cash on Pickup</span>`;
     actions = `
-      ${b.status === 'active' ? `<button type="button" class="btn btn-ghost btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-clock-rotate-left"></i> Extend Rental</button>` : ''}
+      <div style="font-size:0.78rem;color:#166534;font-weight:700;display:flex;align-items:center;gap:4px;">
+        <i class="fa-solid fa-store"></i> Pay at Counter Upon Pickup
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt"></i> View Pass / Receipt</button>
+      <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
+    `;
+  } else if (b.status === 'confirmed' || b.status === 'approved') {
+    badgeHTML = `<span class="badge badge-confirmed"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> Confirmed</span>`;
+    actions = `
+      <div style="font-size:0.75rem;color:#059669;font-weight:700;display:flex;align-items:center;gap:4px;">
+        <i class="fa-solid fa-car-side"></i> Vehicle Ready for Release
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Receipt &amp; QR Pass</button>
+    `;
+  } else if (b.status === 'vehicle_released' || b.status === 'active') {
+    badgeHTML = `<span class="badge badge-vehicle_released"><i class="fa-solid fa-route" style="margin-right:4px;"></i> Vehicle Released</span>`;
+    actions = `
+      <button type="button" class="btn btn-ghost btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-clock-rotate-left"></i> Extend Rental</button>
       ${isPartial ? `<button type="button" class="btn btn-primary btn-sm" data-pay-balance-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}', true)"><i class="fa-solid fa-credit-card"></i> Pay Balance (₱${fmtMoney(b.balance_due)})</button>` : ''}
       <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Receipt &amp; QR Pass</button>
       <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fffbeb;border:1px solid #fde68a;"><i class="fa-solid fa-arrow-rotate-left"></i> Request Refund</button>
     `;
-  } else if (b.status === 'cancelled' || b.status === 'rejected') {
+  } else if (b.status === 'awaiting_payment') {
+    badgeHTML = `<span class="badge badge-awaiting_payment"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> Awaiting Payment</span>`;
     actions = `
-      <button type="button" class="btn btn-warning btn-sm" data-refund-req-id="${b.id}" onclick="window.openRefundRequestModal && window.openRefundRequestModal('${b.id}')" style="color:#b45309;background:#fffbeb;border:1px solid #fde68a;"><i class="fa-solid fa-arrow-rotate-left"></i> Request Refund</button>
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-rotate-right"></i> Resubmit Payment Information</button>
+      <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
+    `;
+  } else if (b.status === 'pending' || b.status === 'pending_payment') {
+    badgeHTML = `<span class="badge badge-pending">Pending Payment</span>`;
+    actions = `
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>
+      <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel Request</button>
+    `;
+  } else if (b.status === 'completed') {
+    badgeHTML = `<span class="badge badge-completed"><i class="fa-solid fa-flag-checkered" style="margin-right:4px;"></i> Completed</span>`;
+    actions = `
+      <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt"></i> Official Receipt</button>
+    `;
+  } else if (b.status === 'cancelled' || b.status === 'rejected') {
+    badgeHTML = `<span class="badge badge-rejected">${b.status}</span>`;
+    actions = `
+      <button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-rotate-right"></i> Resubmit Payment Information</button>
     `;
   } else if (b.status === 'refund_requested') {
-    actions = `<span class="badge" style="background:#fff7ed;color:#c2410c;border:1px solid #ffedd5;padding:6px 12px;"><i class="fa-solid fa-hourglass-half"></i> Refund Pending</span>`;
+    badgeHTML = `<span class="badge badge-pending">Refund Pending</span>`;
+    actions = `<span class="badge" style="background:#fff7ed;color:#c2410c;border:1px solid #ffedd5;padding:6px 12px;"><i class="fa-solid fa-hourglass-half"></i> Refund Pending Review</span>`;
   } else if (b.status === 'refunded') {
+    badgeHTML = `<span class="badge badge-completed">Refunded</span>`;
     actions = `<button type="button" class="btn btn-ghost btn-sm" data-refund-voucher-id="${b.id}" onclick="window.openRefundVoucherModal && window.openRefundVoucherModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt"></i> Refund Voucher</button>`;
+  } else {
+    badgeHTML = `<span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>`;
+    actions = `<button type="button" class="btn btn-primary btn-sm" data-pay-id="${b.id}" onclick="window.openPaymentModal && window.openPaymentModal('${b.id}')"><i class="fa-solid fa-credit-card"></i> Pay Now</button>`;
   }
 
-  const badgeHTML = isPartial
-    ? `<span class="badge badge-reserved">Reserved (${b.downpayment_percent || 20}% Paid)</span>`
-    : `<span class="badge badge-${b.status}">${b.status.replace('_', ' ')}</span>`;
+  if (isPartial && !['confirmed', 'vehicle_released', 'completed'].includes(b.status)) {
+    badgeHTML = `<span class="badge badge-reserved">Reserved (${b.downpayment_percent || 20}% Paid)</span>`;
+  }
 
   const cleanNotes = (b.review_notes || '')
     .replace(/Promo Applied:[^|]+\|\s*/gi, '')
@@ -648,6 +690,8 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     });
   }
 
+  let modalProofDataUrl = null;
+
   function renderPaymentMethodContent() {
     const container = modal.querySelector('#payContent');
     const pBtn = modal.querySelector('#payBtn');
@@ -672,12 +716,12 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           </div>
         </div>
       `;
-      if (pBtn) pBtn.textContent = `Confirm Cash Reservation (${fmtMoney(payNow)})`;
+      if (pBtn) pBtn.textContent = `Confirm Reservation (Cash on Pickup)`;
     } else if (selectedMethod === 'gcash') {
       container.innerHTML = `
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
           <div style="font-size:0.8rem;font-weight:700;color:#1e40af;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-            Scan to Pay via GCash
+            1. Scan QR Code via GCash
           </div>
           <div style="width:170px;height:170px;background:#ffffff;border:3px solid var(--accent);border-radius:12px;margin:0 auto 12px auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--accent-glow);position:relative;">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${b.id}-${payNow}" alt="GCash QR Code" style="width:100%;height:100%;object-fit:contain;" />
@@ -687,19 +731,33 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Official GCash Express Merchant (Privacy Protected)</div>
         </div>
         <div class="field">
-          <label>GCash Reference Number</label>
-          <input type="text" id="payRefNo" placeholder="e.g. 1002 9482 1102" required />
+          <label style="font-weight:700;font-size:0.8rem;">2. GCash Reference Number <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="payRefNo" placeholder="e.g. 1002 9482 1102" value="${b.payment_ref && !b.payment_ref.startsWith('BK-') && !b.payment_ref.startsWith('CASH-') ? b.payment_ref : ''}" required />
         </div>
-        <p class="muted" style="font-size:0.76rem;color:#64748b;line-height:1.4;">
-          Open your GCash App &gt; QR &gt; Scan QR code. Enter the Reference Number after payment.
-        </p>
+        <div class="field" style="margin-top:10px;">
+          <label style="font-weight:700;font-size:0.8rem;">3. Upload Proof of Payment (Receipt Screenshot) <span style="font-weight:400;color:#64748b;">(Optional)</span></label>
+          <div class="proof-upload-box" id="mProofDropzone">
+            ${modalProofDataUrl ? `
+              <div class="proof-preview-wrap">
+                <img src="${modalProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
+                <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image">✕</button>
+              </div>
+              <div style="font-size:0.75rem;color:#059669;font-weight:700;"><i class="fa-solid fa-check"></i> Proof of payment attached</div>
+            ` : `
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.8rem;color:var(--accent);margin-bottom:4px;display:block;"></i>
+              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">Click to Upload or Drag Receipt Screenshot</div>
+              <div style="font-size:0.72rem;color:#64748b;">Supports JPG, PNG, or mobile screenshot</div>
+            `}
+            <input type="file" id="mProofInput" accept="image/*" style="display:none;" />
+          </div>
+        </div>
       `;
-      if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
+      if (pBtn) pBtn.textContent = `Submit Payment (${fmtMoney(payNow)})`;
     } else if (selectedMethod === 'bank_qr') {
       container.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
           <div style="font-size:0.8rem;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-            InstaPay / QR Ph Payment
+            1. InstaPay / QR Ph Payment
           </div>
           <div style="margin-bottom:10px;">
             <label style="font-size:0.7rem;color:#166534;">Select your bank app</label>
@@ -719,14 +777,28 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Secured by QR Ph & InstaPay Philippines</div>
         </div>
         <div class="field">
-          <label>Bank Reference / Transaction ID</label>
-          <input type="text" id="payRefNo" placeholder="e.g. TXN-99482019" required />
+          <label style="font-weight:700;font-size:0.8rem;">2. Bank Reference / Transaction ID <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="payRefNo" placeholder="e.g. TXN-99482019" value="${b.payment_ref && !b.payment_ref.startsWith('BK-') && !b.payment_ref.startsWith('CASH-') ? b.payment_ref : ''}" required />
         </div>
-        <p class="muted" style="font-size:0.76rem;color:#64748b;line-height:1.4;">
-          Scan with any QR Ph compliant PH Bank app (BDO, BPI, Maya, UnionBank).
-        </p>
+        <div class="field" style="margin-top:10px;">
+          <label style="font-weight:700;font-size:0.8rem;">3. Upload Proof of Payment (Receipt Screenshot) <span style="font-weight:400;color:#64748b;">(Optional)</span></label>
+          <div class="proof-upload-box" id="mProofDropzone">
+            ${modalProofDataUrl ? `
+              <div class="proof-preview-wrap">
+                <img src="${modalProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
+                <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image">✕</button>
+              </div>
+              <div style="font-size:0.75rem;color:#059669;font-weight:700;"><i class="fa-solid fa-check"></i> Proof of payment attached</div>
+            ` : `
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.8rem;color:#059669;margin-bottom:4px;display:block;"></i>
+              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">Click to Upload or Drag Bank Receipt Screenshot</div>
+              <div style="font-size:0.72rem;color:#64748b;">Supports JPG, PNG, or mobile screenshot</div>
+            `}
+            <input type="file" id="mProofInput" accept="image/*" style="display:none;" />
+          </div>
+        </div>
       `;
-      if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
+      if (pBtn) pBtn.textContent = `Submit Payment (${fmtMoney(payNow)})`;
     } else if (selectedMethod === 'visa') {
       container.innerHTML = `
         <div class="visa-card-box">
@@ -827,6 +899,55 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       `;
       if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
     }
+
+    // Attach listeners for proof upload
+    const dropzone = container.querySelector('#mProofDropzone');
+    const fileInput = container.querySelector('#mProofInput');
+    const removeBtn = container.querySelector('#mRemoveProofBtn');
+
+    if (dropzone && fileInput) {
+      dropzone.addEventListener('click', (e) => {
+        if (e.target !== removeBtn && !e.target.closest('#mRemoveProofBtn')) {
+          fileInput.click();
+        }
+      });
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+      dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleModalProof(e.dataTransfer.files[0]);
+        }
+      });
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleModalProof(e.target.files[0]);
+        }
+      });
+    }
+
+    if (removeBtn) {
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modalProofDataUrl = null;
+        renderPaymentMethodContent();
+      });
+    }
+  }
+
+  function handleModalProof(file) {
+    if (!file.type.startsWith('image/')) {
+      toast('Please upload an image file (JPG, PNG, Screenshot).', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      modalProofDataUrl = e.target.result;
+      toast('Proof of payment attached!', 'success');
+      renderPaymentMethodContent();
+    };
+    reader.readAsDataURL(file);
   }
 
   renderPaymentMethodContent();
@@ -853,14 +974,15 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       }
 
       payBtn.disabled = true;
-      payBtn.textContent = selectedMethod === 'cash' ? 'Confirming Cash Reservation…' : 'Verifying Payment…';
+      payBtn.textContent = selectedMethod === 'cash' ? 'Confirming Cash Reservation…' : 'Submitting Payment…';
 
       const methodName = selectedMethod === 'cash' ? 'Cash on Pickup'
         : selectedMethod === 'gcash' ? 'GCash QR'
         : selectedMethod === 'bank_qr' ? 'Bank QR Ph'
         : selectedMethod === 'visa' ? 'Visa Card'
         : selectedMethod === 'applepay' ? 'Apple Pay'
-        : 'Card';
+        : 'Mastercard';
+
       const newTotalPaid = selectedMethod === 'cash' ? currentPaid : (currentPaid + payNow);
       const newBalance = selectedMethod === 'cash' ? (totalAmount - currentPaid) : Math.max(0, totalAmount - newTotalPaid);
       const newPaymentType = newBalance === 0 ? 'full' : 'partial';
@@ -869,8 +991,24 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         : selectedMethod === 'applepay' ? `APAY-${Date.now().toString().slice(-6)}`
         : (refNo || `RCPT-${bookingId}`);
 
-      // Update local storage booking immediately
-      updateLocalBookingStatus(bookingId, 'active', {
+      // Determine target reservation and payment status
+      let targetStatus = 'pending_verification';
+      let targetPaymentStatus = 'pending_verification';
+
+      if (selectedMethod === 'cash') {
+        targetStatus = 'cash_on_pickup';
+        targetPaymentStatus = 'unpaid';
+      } else if (selectedMethod === 'gcash' || selectedMethod === 'bank_qr') {
+        targetStatus = 'pending_verification';
+        targetPaymentStatus = 'pending_verification';
+      } else {
+        targetStatus = 'confirmed';
+        targetPaymentStatus = 'verified';
+      }
+
+      const updatePayload = {
+        status: targetStatus,
+        payment_status: targetPaymentStatus,
         paid_amount: newTotalPaid,
         balance_due: newBalance,
         payment_type: newPaymentType,
@@ -878,20 +1016,17 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         ref_number: finalRefNo,
         payment_ref: finalRefNo,
         receipt_no: finalRefNo,
-        payment_method: methodName
-      });
+        payment_method: methodName,
+        proof_image: modalProofDataUrl || b.proof_image || null,
+        review_notes: selectedMethod === 'cash' ? 'Pay on Cash selected.' : (selectedMethod === 'gcash' || selectedMethod === 'bank_qr' ? 'Payment submitted with reference number. Awaiting staff review.' : 'Payment authorized and verified.')
+      };
+
+      // Update local storage booking immediately
+      updateLocalBookingStatus(bookingId, targetStatus, updatePayload);
 
       // Update in-memory booking
       if (b) {
-        b.status = 'active';
-        b.paid_amount = newTotalPaid;
-        b.balance_due = newBalance;
-        b.payment_type = newPaymentType;
-        b.downpayment_percent = selectedPct;
-        b.ref_number = finalRefNo;
-        b.payment_ref = finalRefNo;
-        b.receipt_no = finalRefNo;
-        b.payment_method = methodName;
+        Object.assign(b, updatePayload);
       }
 
       // If DB booking, save to Supabase
@@ -900,49 +1035,38 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
           await supabase.from('payments').insert({
             booking_id: Number(bookingId),
             amount: payNow,
-            status: 'successful',
+            status: targetPaymentStatus === 'verified' ? 'successful' : 'pending',
             method: methodName,
             paid_at: new Date().toISOString(),
           });
           await supabase.from('bookings').update({
-            status: 'active',
+            status: targetStatus,
             paid_amount: newTotalPaid,
             balance_due: newBalance,
             payment_type: newPaymentType,
             downpayment_percent: selectedPct
           }).eq('id', Number(bookingId));
-          if (b.vehicle_id) {
-            await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
-          }
         } catch (e) {
           console.warn('DB payment update notice:', e);
         }
       }
 
-      // Update local storage and broadcast live to staff dashboard
-      updateLocalBookingStatus(bookingId, 'active', {
-        paid_amount: newTotalPaid,
-        balance_due: newBalance,
-        payment_type: newPaymentType,
-        downpayment_percent: selectedPct,
-        ref_number: finalRefNo,
-        payment_ref: finalRefNo,
-        receipt_no: finalRefNo,
-        payment_method: methodName
-      });
-      broadcastBookingStatusChange(bookingId, 'active');
+      // Broadcast live to staff and admin dashboards
+      broadcastBookingStatusChange(bookingId, targetStatus);
 
-      toast(selectedMethod === 'cash'
-        ? `Reservation confirmed for Cash payment on pickup (${fmtMoney(payNow)})!`
-        : (newBalance > 0
-          ? `Reservation secured with ${selectedPct}% Deposit (${fmtMoney(payNow)})!`
-          : `Payment verified via ${methodName}! Booking fully paid.`
-        ),
-        'success'
-      );
+      if (targetStatus === 'pending_verification') {
+        toast(`Payment submitted! Reference #${finalRefNo}. Reservation status is now Pending Verification.`, 'success');
+      } else if (targetStatus === 'cash_on_pickup') {
+        toast(`Reservation confirmed! Status: Cash on Pickup. Pay at counter upon vehicle meetup/pickup.`, 'success');
+      } else {
+        toast(`Payment verified via ${methodName}! Reservation confirmed, vehicle is ready for release.`, 'success');
+      }
+
       closeModal();
       await loadVehicles();
-      await openPaidReceiptModal(bookingId, methodName, finalRefNo);
+      if (targetStatus === 'confirmed') {
+        await openPaidReceiptModal(bookingId, methodName, finalRefNo);
+      }
       if (window.renderTab) window.renderTab();
     });
   }

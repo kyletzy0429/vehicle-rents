@@ -108,6 +108,8 @@ export function getLocalBookings() {
 
   // Initial realistic sample bookings for multi-device / phone testing
   const now = Date.now();
+  const mockReceiptGCash = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="520" viewBox="0 0 400 520"><rect width="400" height="520" rx="16" fill="%23f8fafc" stroke="%23cbd5e1" stroke-width="2"/><rect x="24" y="24" width="352" height="70" rx="12" fill="%23005ce6"/><text x="200" y="54" fill="%23ffffff" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle">GCash Express Payment</text><text x="200" y="76" fill="%23b8d5ff" font-family="sans-serif" font-size="12" text-anchor="middle">OFFICIAL TRANSACTION RECEIPT</text><circle cx="200" cy="140" r="32" fill="%23ecfdf5"/><path d="M188 140l8 8 16-16" stroke="%23059669" stroke-width="4" fill="none" stroke-linecap="round"/><text x="200" y="200" fill="%230f172a" font-family="sans-serif" font-size="24" font-weight="bold" text-anchor="middle">PHP 8,400.00</text><text x="200" y="222" fill="%23059669" font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle">PAYMENT SUCCESSFUL</text><line x1="40" y1="245" x2="360" y2="245" stroke="%23e2e8f0" stroke-dasharray="6,6"/><text x="44" y="275" fill="%2364748b" font-family="sans-serif" font-size="13">Merchant:</text><text x="356" y="275" fill="%230f172a" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="end">RentFlow Vehicles Inc.</text><text x="44" y="305" fill="%2364748b" font-family="sans-serif" font-size="13">Ref Number:</text><text x="356" y="305" fill="%23005ce6" font-family="monospace" font-size="14" font-weight="bold" text-anchor="end">274828482919491</text><text x="44" y="335" fill="%2364748b" font-family="sans-serif" font-size="13">Sender Account:</text><text x="356" y="335" fill="%230f172a" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="end">0917 •••• 9140</text><text x="44" y="365" fill="%2364748b" font-family="sans-serif" font-size="13">Payment Method:</text><text x="356" y="365" fill="%230f172a" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="end">GCash QR Express</text><text x="44" y="395" fill="%2364748b" font-family="sans-serif" font-size="13">Date &amp; Time:</text><text x="356" y="395" fill="%230f172a" font-family="sans-serif" font-size="13" text-anchor="end">Oct 30, 2026 · 09:14 PM</text><rect x="40" y="425" width="320" height="60" rx="8" fill="%23eff6ff" stroke="%23bfdbfe"/><text x="200" y="450" fill="%231e40af" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle">BANGKO SENTRAL NG PILIPINAS REGULATED</text><text x="200" y="468" fill="%233b82f6" font-family="sans-serif" font-size="10" text-anchor="middle">Digital E-Money Issuer &bull; Trace ID: GC-89102-PP</text></svg>`;
+
   const sampleBookings = [
     {
       id: '1',
@@ -129,15 +131,18 @@ export function getLocalBookings() {
       total_amount: 8400,
       paid_amount: 8400,
       balance_due: 0,
-      status: 'approved',
+      status: 'pending_verification',
+      payment_status: 'pending_verification',
       payment_method: 'GCash QR',
       payment_type: 'full',
-      created_at: new Date(now - 3600000 * 2).toISOString()
+      proof_image: mockReceiptGCash,
+      review_notes: 'GCash QR payment proof submitted by customer. Awaiting staff review.',
+      created_at: new Date(now - 3600000 * 1).toISOString()
     },
     {
       id: '2',
-      ref_number: 'BK-20261022',
-      payment_ref: 'VISA-914820',
+      ref_number: 'CASH-20261022',
+      payment_ref: 'CASH-20261022',
       customer_id: '8bebdf37-d488-4e10-bb84-63a01c157c3b',
       customer_name: 'Maria Santos',
       customer_phone: '0918 333 4411',
@@ -152,12 +157,14 @@ export function getLocalBookings() {
       start_date: new Date(now + 86400000 * 2).toISOString().split('T')[0],
       end_date: new Date(now + 86400000 * 4).toISOString().split('T')[0],
       total_amount: 5000,
-      paid_amount: 2500,
-      balance_due: 2500,
-      status: 'approved',
-      payment_method: 'Visa Card',
-      payment_type: 'partial',
-      created_at: new Date(now - 3600000 * 5).toISOString()
+      paid_amount: 0,
+      balance_due: 5000,
+      status: 'cash_on_pickup',
+      payment_status: 'unpaid',
+      payment_method: 'Pay on Cash',
+      payment_type: 'full',
+      review_notes: 'Pay on Cash selected. Customer to pay at counter upon pickup.',
+      created_at: new Date(now - 3600000 * 4).toISOString()
     },
     {
       id: '3',
@@ -174,15 +181,71 @@ export function getLocalBookings() {
         plate_number: 'NDB-5591',
         categories: { name: 'Pickup' }
       },
-      start_date: new Date(now).toISOString().split('T')[0],
-      end_date: new Date(now + 86400000 * 2).toISOString().split('T')[0],
+      start_date: new Date(now + 86400000).toISOString().split('T')[0],
+      end_date: new Date(now + 86400000 * 3).toISOString().split('T')[0],
       total_amount: 9000,
       paid_amount: 9000,
       balance_due: 0,
-      status: 'active',
+      status: 'confirmed',
+      payment_status: 'verified',
       payment_method: 'Apple Pay',
       payment_type: 'full',
-      created_at: new Date(now - 3600000 * 10).toISOString()
+      review_notes: 'Payment verified. Vehicle ready for release upon pickup.',
+      created_at: new Date(now - 3600000 * 8).toISOString()
+    },
+    {
+      id: '4',
+      ref_number: 'BK-20261024',
+      payment_ref: 'VISA-914820',
+      customer_id: '8bebdf37-d488-4e10-bb84-63a01c157c3a',
+      customer_name: 'Mark Lester Ramos',
+      customer_phone: '0917 582 9140',
+      driver_license: 'N02-19-482019',
+      vehicle_id: 3,
+      vehicles: {
+        id: 3,
+        name: 'Mitsubishi Xpander Cross',
+        plate_number: 'NCL-3921',
+        categories: { name: 'MPV' }
+      },
+      start_date: new Date(now - 86400000).toISOString().split('T')[0],
+      end_date: new Date(now + 86400000 * 2).toISOString().split('T')[0],
+      total_amount: 7000,
+      paid_amount: 7000,
+      balance_due: 0,
+      status: 'vehicle_released',
+      payment_status: 'verified',
+      payment_method: 'Visa Card',
+      payment_type: 'full',
+      review_notes: 'Vehicle released to customer. Active rental on road.',
+      created_at: new Date(now - 86400000 * 2).toISOString()
+    },
+    {
+      id: '5',
+      ref_number: 'BK-20261025',
+      payment_ref: 'TXN-991823',
+      customer_id: '8bebdf37-d488-4e10-bb84-63a01c157c3a',
+      customer_name: 'Mark Lester Ramos',
+      customer_phone: '0917 582 9140',
+      driver_license: 'N02-19-482019',
+      vehicle_id: 5,
+      vehicles: {
+        id: 5,
+        name: 'Honda ADV 160 (Motorcycle)',
+        plate_number: 'MC-7712',
+        categories: { name: 'Motorcycles' }
+      },
+      start_date: new Date(now + 86400000 * 3).toISOString().split('T')[0],
+      end_date: new Date(now + 86400000 * 5).toISOString().split('T')[0],
+      total_amount: 1200,
+      paid_amount: 0,
+      balance_due: 1200,
+      status: 'awaiting_payment',
+      payment_status: 'rejected',
+      payment_method: 'Bank QR',
+      payment_type: 'full',
+      review_notes: 'Payment Rejected: Reference number not found in merchant bank records. Please resubmit your payment details.',
+      created_at: new Date(now - 3600000 * 12).toISOString()
     }
   ];
   try {
@@ -347,12 +410,12 @@ export const PORTAL_TABS = {
   ],
   admin: [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'customers', label: 'Customers' },
-    { id: 'vehicles', label: 'Vehicles' },
+    { id: 'customers', label: 'Manage Users' },
+    { id: 'users', label: 'Manage Staff' },
+    { id: 'vehicles', label: 'Manage Vehicles' },
+    { id: 'rentals', label: 'Monitor Reservations' },
+    { id: 'reports', label: 'View Reports' },
     { id: 'categories', label: 'Categories & Rates' },
-    { id: 'users', label: 'System Roles' },
-    { id: 'rentals', label: 'Rentals & Transactions' },
-    { id: 'reports', label: 'Reports' },
     { id: 'settings', label: 'System Settings' },
   ],
 };

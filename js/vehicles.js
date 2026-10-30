@@ -824,7 +824,7 @@ export function vehicleCardHTML(v) {
           </span>
         </div>
         <button type="button" class="btn btn-primary vehicle-book-pill-btn" data-book-btn="${v.id}">
-          <span>Rent Now</span>
+          <span>View Deal</span>
         </button>
       </div>
     </div>

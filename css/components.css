@@ -180,19 +180,36 @@ select option {
 .badge-successful,
 .badge-completed,
 .badge-approved,
+.badge-confirmed,
+.badge-verified,
 .badge-active {
   background: #ecfdf5;
   color: #059669;
   border-color: #a7f3d0;
 }
 
-.badge-pending {
+.badge-pending,
+.badge-pending_payment,
+.badge-pending_verification {
   background: #fffbeb;
   color: #d97706;
   border-color: #fde68a;
 }
 
+.badge-cash_on_pickup,
+.badge-cash_due {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #86efac;
+}
 
+.badge-vehicle_released {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border-color: #ddd6fe;
+}
+
+.badge-awaiting_payment,
 .badge-rented,
 .badge-rejected,
 .badge-failed,
@@ -201,7 +218,6 @@ select option {
   color: #dc2626;
   border-color: #fecdd3;
 }
-
 
 .badge-maintenance {
   background: #fefce8;
@@ -233,6 +249,57 @@ select option {
   background: #fef2f2;
   color: #b91c1c;
   border-color: #fecdd3;
+}
+
+/* Proof of payment upload container */
+.proof-upload-box {
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.proof-upload-box:hover,
+.proof-upload-box.dragover {
+  border-color: var(--accent);
+  background: rgba(124, 58, 237, 0.04);
+}
+.proof-preview-wrap {
+  position: relative;
+  max-width: 240px;
+  margin: 0 auto 10px auto;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.proof-preview-img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.proof-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(15,23,42,0.8);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.proof-remove-btn:hover {
+  background: #dc2626;
 }
 
 

@@ -34,10 +34,10 @@ export async function renderStaffDashboard(view) {
   const bookings = await fetchMergedBookings();
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  const pendingBookings = bookings.filter(b => b.status === 'pending');
-  const activeBookings = bookings.filter(b => b.status === 'active');
-  const approvedBookings = bookings.filter(b => b.status === 'approved');
-  const todayReturns = bookings.filter(b => b.status === 'active' && b.end_date <= todayStr);
+  const pendingBookings = bookings.filter(b => ['pending', 'pending_verification', 'cash_on_pickup', 'awaiting_payment'].includes(b.status));
+  const activeBookings = bookings.filter(b => ['active', 'vehicle_released'].includes(b.status));
+  const approvedBookings = bookings.filter(b => ['approved', 'confirmed'].includes(b.status));
+  const todayReturns = bookings.filter(b => ['active', 'vehicle_released'].includes(b.status) && b.end_date <= todayStr);
   const refundClaims = bookings.filter(b => b.status === 'refund_requested');
 
   const totalVehicles = state.vehicles.length;
@@ -326,8 +326,25 @@ export async function fetchMergedBookings(filterFn = null) {
   }
 
   const localBookings = getLocalBookings();
+  const localMap = new Map(localBookings.map(b => [String(b.id), b]));
   const dbIds = new Set(dbBookings.map(b => String(b.id)));
-  const merged = [...dbBookings];
+  const merged = dbBookings.map(b => {
+    const lb = localMap.get(String(b.id));
+    if (lb) {
+      return {
+        ...b,
+        status: lb.status || b.status,
+        payment_status: lb.payment_status || b.payment_status,
+        payment_ref: lb.payment_ref || b.payment_ref,
+        proof_image: lb.proof_image || b.proof_image,
+        payment_method: lb.payment_method || b.payment_method,
+        review_notes: lb.review_notes !== undefined ? lb.review_notes : b.review_notes,
+        paid_amount: lb.paid_amount !== undefined ? lb.paid_amount : b.paid_amount,
+        balance_due: lb.balance_due !== undefined ? lb.balance_due : b.balance_due
+      };
+    }
+    return b;
+  });
 
   for (const lb of localBookings) {
     if (!dbIds.has(String(lb.id))) {
@@ -338,7 +355,7 @@ export async function fetchMergedBookings(filterFn = null) {
           phone: lb.customer_phone || ''
         },
         vehicles: lb.vehicles || state.vehicles?.find(v => v.id === lb.vehicle_id) || { name: 'Vehicle', plate_number: 'N/A' },
-        payments: lb.paid_amount > 0 ? [{ amount: lb.paid_amount, status: 'successful', method: 'Online Payment' }] : []
+        payments: lb.paid_amount > 0 ? [{ amount: lb.paid_amount, status: 'successful', method: lb.payment_method || 'Online Payment' }] : []
       });
     }
   }
@@ -537,99 +554,361 @@ export function getBookingCustomerPhone(b) {
 export async function renderStaffRequests(view) {
   const canApprove = hasPermission('canApproveBookings');
   const canReject = hasPermission('canRejectBookings');
-  const bookings = await fetchMergedBookings(b => b.status === 'pending');
+  const bookings = await fetchMergedBookings(b => ['pending', 'pending_verification', 'cash_on_pickup', 'awaiting_payment'].includes(b.status));
 
   view.innerHTML = `
     <div class="view">
-      <div class="section-head"><div><h2>Booking Requests</h2><p>Review requirements and approve or reject incoming requests.</p></div></div>
+      <div class="section-head">
+        <div>
+          <h2>Booking Requests &amp; Payment Verification</h2>
+          <p>Review customer requirements, verify payment receipts &amp; references, and approve reservations.</p>
+        </div>
+      </div>
       <div class="row-list">
         ${bookings.length ? bookings.map(b => {
     const cName = getBookingCustomerName(b);
     const cPhone = getBookingCustomerPhone(b);
+
+    let badgeHTML = '';
+    let actionButtons = '';
+
+    if (b.status === 'pending_verification') {
+      badgeHTML = `<span class="badge badge-pending_verification"><i class="fa-solid fa-hourglass-half"></i> Pending Verification</span>`;
+      actionButtons = `
+        <button class="btn btn-primary btn-sm" data-review-payment="${b.id}" ${!canApprove ? 'disabled' : ''}><i class="fa-solid fa-file-invoice-dollar"></i> Review Payment</button>
+        <button class="btn btn-danger btn-sm" data-reject="${b.id}" ${!canReject ? 'disabled' : ''}>Reject</button>
+      `;
+    } else if (b.status === 'cash_on_pickup') {
+      badgeHTML = `<span class="badge badge-cash_on_pickup"><i class="fa-solid fa-money-bill-wave"></i> Cash on Pickup</span>`;
+      actionButtons = `
+        <button class="btn btn-primary btn-sm" data-confirm-cash="${b.id}" ${!canApprove ? 'disabled' : ''}><i class="fa-solid fa-circle-check"></i> Confirm Reservation</button>
+        <button class="btn btn-danger btn-sm" data-reject="${b.id}" ${!canReject ? 'disabled' : ''}>Cancel</button>
+      `;
+    } else if (b.status === 'awaiting_payment') {
+      badgeHTML = `<span class="badge badge-awaiting_payment"><i class="fa-solid fa-triangle-exclamation"></i> Awaiting Payment</span>`;
+      actionButtons = `
+        <button class="btn btn-secondary btn-sm" data-review-payment="${b.id}"><i class="fa-solid fa-eye"></i> View Record</button>
+      `;
+    } else {
+      badgeHTML = `<span class="badge badge-pending">Pending</span>`;
+      actionButtons = `
+        <button class="btn btn-primary btn-sm" data-review-payment="${b.id}" ${!canApprove ? 'disabled' : ''}><i class="fa-solid fa-clipboard-check"></i> Review Payment</button>
+        <button class="btn btn-danger btn-sm" data-reject="${b.id}" ${!canReject ? 'disabled' : ''}>Reject</button>
+      `;
+    }
+
     return `
           <div class="glass item-row">
             <div class="item-main">
               <div class="item-title">${b.vehicles?.name || 'Vehicle'} <span class="muted">(${b.vehicles?.plate_number || 'N/A'})</span></div>
               <div class="item-sub">Requested by <strong>${cName}</strong> ${cPhone ? '· ' + cPhone : ''}</div>
               <div class="item-sub">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong></div>
+              <div class="item-sub" style="margin-top:2px;">
+                <span class="badge badge-primary" style="font-size:0.7rem;">${b.payment_method || 'GCash QR'}</span>
+                ${b.payment_ref ? ` · Ref: <code>${b.payment_ref}</code>` : ''}
+                ${b.proof_image ? ` · <span style="color:#059669;font-weight:600;"><i class="fa-solid fa-receipt"></i> Proof Uploaded</span>` : ''}
+              </div>
               ${b.vehicles && b.vehicles.status !== 'available' ? `<div class="item-sub" style="color:var(--coral);">Vehicle currently ${b.vehicles.status}</div>` : ''}
-              ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.78rem;margin-top:4px;">${b.review_notes}</div>` : ''}
+              ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.78rem;margin-top:4px;"><strong>Note:</strong> ${b.review_notes}</div>` : ''}
             </div>
-            <span class="badge badge-pending">pending</span>
+            ${badgeHTML}
             <div class="item-actions">
-              <button class="btn btn-primary btn-sm" data-approve="${b.id}" ${!canApprove ? 'disabled title="Requires canApproveBookings RBAC permission"' : ''}>Approve</button>
-              <button class="btn btn-danger btn-sm" data-reject="${b.id}" ${!canReject ? 'disabled title="Requires canRejectBookings RBAC permission"' : ''}>Reject</button>
+              ${actionButtons}
             </div>
           </div>
         `;
-  }).join('') : emptyState('', 'No pending requests right now.')}
+  }).join('') : emptyState('', 'No pending booking or payment requests right now.')}
       </div>
     </div>
   `;
 
-  $$('[data-approve]').forEach(btn => btn.addEventListener('click', async () => {
-    const id = btn.dataset.approve;
+  $$('[data-review-payment]').forEach(btn => btn.addEventListener('click', () => {
+    openStaffPaymentReviewModal(btn.dataset.reviewPayment);
+  }));
+
+  $$('[data-confirm-cash]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.confirmCash;
+    const b = bookings.find(item => String(item.id) === String(id));
     btn.disabled = true;
 
-    updateLocalBookingStatus(id, 'approved');
-    broadcastBookingStatusChange(id, 'approved');
+    updateLocalBookingStatus(id, 'confirmed', {
+      payment_status: 'cash_due',
+      balance_due: Number(b?.total_amount || 0),
+      review_notes: 'Reservation confirmed for Cash on Pickup at rental desk.'
+    });
+    broadcastBookingStatusChange(id, 'confirmed', { payment_status: 'cash_due' });
 
     const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
       await supabase.from('bookings').update({
-        status: 'approved', reviewed_by: currentUserId, review_notes: null,
+        status: 'confirmed', reviewed_by: currentUserId, review_notes: 'Confirmed for Cash on Pickup.'
       }).eq('id', id);
     } catch (e) {
-      console.warn('DB approve notice:', e);
+      console.warn('DB confirm notice:', e);
     }
 
-    toast('Booking approved. Customer notified to pay.', 'success');
+    toast('Reservation confirmed! Vehicle is ready for release upon cash pickup.', 'success');
     if (window.renderTab) window.renderTab();
   }));
 
   $$('[data-reject]').forEach(btn => btn.addEventListener('click', async () => {
     const id = btn.dataset.reject;
-    const reason = prompt('Reason for rejecting this request (shown to the customer):', 'Vehicle unavailable for the requested dates.');
+    const reason = prompt('Reason for rejecting this request (shown to the customer):', 'Invalid or illegible payment proof / vehicle unavailable.');
     if (reason === null) return;
 
-    updateLocalBookingStatus(id, 'rejected', { review_notes: reason });
-    broadcastBookingStatusChange(id, 'rejected', { reason });
+    updateLocalBookingStatus(id, 'awaiting_payment', {
+      payment_status: 'rejected',
+      review_notes: reason
+    });
+    broadcastBookingStatusChange(id, 'awaiting_payment', { payment_status: 'rejected', reason });
 
     const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
       await supabase.from('bookings').update({
-        status: 'rejected', reviewed_by: currentUserId, review_notes: reason,
+        status: 'awaiting_payment', reviewed_by: currentUserId, review_notes: reason,
       }).eq('id', id);
     } catch (e) {
       console.warn('DB reject notice:', e);
     }
 
-    toast('Request rejected. Customer notified.', 'info');
+    toast('Payment marked rejected. Customer notified to resubmit.', 'info');
     if (window.renderTab) window.renderTab();
   }));
 }
 
+export async function openStaffPaymentReviewModal(bookingId) {
+  let b = null;
+  try {
+    const { data } = await supabase.from('bookings').select('*, vehicles(*), profiles!customer_id(*)').eq('id', bookingId).single();
+    if (data) b = data;
+  } catch (e) {}
+  if (!b) {
+    b = getLocalBookings().find(item => String(item.id) === String(bookingId));
+  }
+  if (!b) {
+    toast('Booking details not found.', 'danger');
+    return;
+  }
+
+  const cName = getBookingCustomerName(b);
+  const cPhone = getBookingCustomerPhone(b);
+  const days = Math.max(1, Math.round((new Date(b.end_date) - new Date(b.start_date)) / 86400000));
+  const vehicleName = b.vehicles?.name || 'Vehicle';
+  const plateNo = b.vehicles?.plate_number || 'N/A';
+  const payMethod = b.payment_method || 'GCash QR';
+  const payRef = b.payment_ref || 'NO REFERENCE RECORDED';
+  const proofImg = b.proof_image || null;
+
+  openModal(`
+    <div class="modal-head">
+      <div>
+        <h3 style="margin:0;font-size:1.25rem;display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Review Payment &amp; Verify Receipt
+        </h3>
+        <p class="muted" style="margin:2px 0 0;font-size:0.8rem;">Staff verification portal · Review customer receipt and transaction reference.</p>
+      </div>
+      <div class="modal-close" id="mReviewClose">Close</div>
+    </div>
+
+    <!-- Reservation Summary -->
+    <div style="background:rgba(241,245,249,0.7);border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:800;font-size:1.05rem;color:#0f172a;">${vehicleName}</div>
+          <div style="font-size:0.8rem;color:#64748b;">Plate: <strong>${plateNo}</strong></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:700;">Total Amount</div>
+          <div style="font-size:1.2rem;font-weight:900;color:#059669;">${fmtMoney(b.total_amount)}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;border-top:1px dashed #cbd5e1;padding-top:8px;">
+        <div>Customer: <strong>${cName}</strong></div>
+        <div>Contact: <strong>${cPhone || 'N/A'}</strong></div>
+        <div>Rental Period: <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+        <div>Duration: <strong>${days} Day(s)</strong></div>
+      </div>
+    </div>
+
+    <!-- Reference Number Verification Box -->
+    <div style="background:#fff;border:2px solid #3b82f6;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 4px 12px rgba(59,130,246,0.08);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:0.75rem;font-weight:800;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;">
+          <i class="fa-solid fa-hashtag"></i> Payment Method &amp; Reference Number
+        </span>
+        <span class="badge badge-primary" style="font-size:0.75rem;">${payMethod}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f8fafc;padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;">
+        <div>
+          <div style="font-size:0.72rem;color:#64748b;font-weight:600;">Transaction Ref No.:</div>
+          <div style="font-family:monospace;font-size:1.15rem;font-weight:800;color:#0f172a;letter-spacing:1px;" id="dispRefNo">${payRef}</div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnCopyRef">
+          <i class="fa-solid fa-copy"></i> Copy Ref
+        </button>
+      </div>
+    </div>
+
+    <!-- Proof of Payment / Uploaded Receipt Image -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:0.8rem;font-weight:700;color:#334155;">
+          <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Customer Receipt / Proof of Payment
+        </span>
+        ${proofImg ? `<span class="badge badge-confirmed" style="font-size:0.7rem;"><i class="fa-solid fa-circle-check"></i> Proof Attached</span>` : `<span class="badge badge-pending" style="font-size:0.7rem;">No Image Attached</span>`}
+      </div>
+      <div style="border:1px solid #e2e8f0;border-radius:12px;background:#0f172a;min-height:180px;max-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+        ${proofImg ? `
+          <img src="${proofImg}" alt="Proof of Payment" style="max-height:290px;max-width:100%;object-fit:contain;cursor:zoom-in;" id="proofZoomImg" title="Click to view full image in new tab" />
+        ` : `
+          <div style="text-align:center;color:#94a3b8;padding:24px;">
+            <i class="fa-solid fa-image" style="font-size:2rem;margin-bottom:8px;opacity:0.6;"></i>
+            <div style="font-size:0.85rem;">No proof image uploaded by customer.</div>
+            <div style="font-size:0.75rem;opacity:0.8;">Please verify via banking app using Reference Number above.</div>
+          </div>
+        `}
+      </div>
+      ${proofImg ? `<div style="text-align:center;font-size:0.72rem;color:#64748b;margin-top:4px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Click image to open high-resolution receipt</div>` : ''}
+    </div>
+
+    ${b.review_notes ? `
+      <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:8px 12px;font-size:0.8rem;margin-bottom:14px;">
+        <strong>Previous Review Notes:</strong> ${b.review_notes}
+      </div>
+    ` : ''}
+
+    <!-- Verification Decision Buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+      <button class="btn btn-primary" id="btnApprovePaymentAction" style="background:#059669;border-color:#059669;padding:12px 10px;text-align:center;">
+        <div style="font-size:0.95rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Approve Payment</div>
+        <div style="font-size:0.72rem;opacity:0.9;font-weight:400;margin-top:2px;">Verified · Confirmed · Ready for Release</div>
+      </button>
+      <button class="btn btn-danger" id="btnRejectPaymentAction" style="background:#dc2626;border-color:#dc2626;padding:12px 10px;text-align:center;">
+        <div style="font-size:0.95rem;font-weight:800;"><i class="fa-solid fa-circle-xmark"></i> Reject Payment</div>
+        <div style="font-size:0.72rem;opacity:0.9;font-weight:400;margin-top:2px;">Rejected · Awaiting Customer Resubmission</div>
+      </button>
+    </div>
+  `, true);
+
+  $('#mReviewClose')?.addEventListener('click', closeModal);
+
+  $('#btnCopyRef')?.addEventListener('click', () => {
+    if (payRef && payRef !== 'NO REFERENCE RECORDED') {
+      navigator.clipboard.writeText(payRef);
+      toast(`Copied Reference: ${payRef}`, 'info');
+    }
+  });
+
+  $('#proofZoomImg')?.addEventListener('click', () => {
+    if (proofImg) {
+      const win = window.open();
+      win.document.write(`<img src="${proofImg}" style="max-width:100%;height:auto;display:block;margin:0 auto;" />`);
+    }
+  });
+
+  // Approve Payment
+  $('#btnApprovePaymentAction')?.addEventListener('click', async () => {
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
+    updateLocalBookingStatus(bookingId, 'confirmed', {
+      payment_status: 'verified',
+      paid_amount: Number(b.total_amount || 0),
+      balance_due: 0,
+      payment_type: 'full',
+      reviewed_by: currentUserId,
+      review_notes: 'Payment verified and approved by staff.'
+    });
+
+    try {
+      await supabase.from('payments').insert({
+        booking_id: bookingId,
+        amount: Number(b.total_amount || 0),
+        method: payMethod,
+        status: 'successful',
+        paid_at: new Date().toISOString()
+      });
+
+      await supabase.from('bookings').update({
+        status: 'confirmed',
+        reviewed_by: currentUserId,
+        review_notes: 'Payment verified and approved by staff.'
+      }).eq('id', bookingId);
+    } catch (e) {
+      console.warn('DB approve payment notice:', e);
+    }
+
+    broadcastBookingStatusChange(bookingId, 'confirmed', {
+      payment_status: 'verified',
+      ready_for_release: true
+    });
+
+    toast('Payment Approved & Verified! Reservation is Confirmed — Vehicle is ready for release.', 'success');
+    closeModal();
+    if (window.renderTab) window.renderTab();
+  });
+
+  // Reject Payment
+  $('#btnRejectPaymentAction')?.addEventListener('click', async () => {
+    const reason = prompt('Specify rejection reason (visible to customer):', 'Reference number could not be verified on banking statement. Please check and re-upload proof of payment.');
+    if (reason === null) return;
+
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
+    updateLocalBookingStatus(bookingId, 'awaiting_payment', {
+      payment_status: 'rejected',
+      review_notes: reason,
+      reviewed_by: currentUserId
+    });
+
+    try {
+      await supabase.from('bookings').update({
+        status: 'awaiting_payment',
+        reviewed_by: currentUserId,
+        review_notes: reason
+      }).eq('id', bookingId);
+    } catch (e) {
+      console.warn('DB reject payment notice:', e);
+    }
+
+    broadcastBookingStatusChange(bookingId, 'awaiting_payment', {
+      payment_status: 'rejected',
+      reason
+    });
+
+    toast('Payment marked Rejected. Reservation status updated to Awaiting Payment.', 'info');
+    closeModal();
+    if (window.renderTab) window.renderTab();
+  });
+}
+window.openStaffPaymentReviewModal = openStaffPaymentReviewModal;
+
 export async function renderStaffActive(view) {
-  const bookings = await fetchMergedBookings(b => ['approved', 'active'].includes(b.status));
+  const bookings = await fetchMergedBookings(b => ['confirmed', 'approved', 'cash_on_pickup', 'vehicle_released', 'active'].includes(b.status));
 
   view.innerHTML = `
     <div class="view">
-      <div class="section-head"><div><h2>Active Rentals &amp; Reservations</h2><p>Approved bookings, partial reservations, and vehicles currently out.</p></div></div>
+      <div class="section-head">
+        <div>
+          <h2>Active Rentals &amp; Dispatches</h2>
+          <p>Confirmed reservations ready for release, cash pickups, and vehicles currently out on the road.</p>
+        </div>
+      </div>
       <div class="row-list">
         ${bookings.length ? bookings.map(b => {
     const cName = getBookingCustomerName(b);
-    const isPartial = b.balance_due && Number(b.balance_due) > 0 && Number(b.paid_amount || 0) > 0;
-    const badgeHTML = isPartial
-      ? `<span class="badge badge-reserved">Reserved (${fmtMoney(b.paid_amount)} Paid)</span>`
-      : `<span class="badge badge-${b.status}">${b.status}</span>`;
-
+    let badgeHTML = '';
     let actionBtn = '';
-    if (b.status === 'approved') {
-      actionBtn = `<button class="btn btn-amber btn-sm" data-record-payment="${b.id}">Record Payment (${fmtMoney(b.total_amount)})</button>`;
-    } else if (isPartial) {
-      actionBtn = `<button class="btn btn-amber btn-sm" data-record-payment="${b.id}">Collect Balance (${fmtMoney(b.balance_due)})</button>`;
-    } else {
-      actionBtn = `<span class="muted" style="color:#059669;font-weight:700;">Fully Paid &amp; Active</span>`;
+
+    if (b.status === 'confirmed' || b.status === 'approved') {
+      badgeHTML = `<span class="badge badge-confirmed"><i class="fa-solid fa-circle-check"></i> Confirmed (Ready for Release)</span>`;
+      actionBtn = `<button class="btn btn-primary btn-sm" data-release-vehicle="${b.id}" style="background:#059669;border-color:#059669;"><i class="fa-solid fa-key"></i> Release Vehicle</button>`;
+    } else if (b.status === 'cash_on_pickup') {
+      badgeHTML = `<span class="badge badge-cash_on_pickup"><i class="fa-solid fa-money-bill-wave"></i> Cash on Pickup</span>`;
+      actionBtn = `<button class="btn btn-amber btn-sm" data-collect-cash-release="${b.id}"><i class="fa-solid fa-hand-holding-dollar"></i> Collect Cash &amp; Release (${fmtMoney(b.total_amount)})</button>`;
+    } else if (b.status === 'vehicle_released' || b.status === 'active') {
+      badgeHTML = `<span class="badge badge-vehicle_released"><i class="fa-solid fa-road"></i> Vehicle Released (Active)</span>`;
+      actionBtn = `
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')"><i class="fa-solid fa-clock-rotate-left"></i> Extend</button>
+        <button class="btn btn-primary btn-sm" data-complete-rental="${b.id}" style="background:#059669;border-color:#059669;"><i class="fa-solid fa-flag-checkered"></i> Mark Completed</button>
+      `;
     }
 
     return `
@@ -637,23 +916,114 @@ export async function renderStaffActive(view) {
               <div class="item-main">
                 <div class="item-title">${b.vehicles?.name || 'Vehicle'} <span class="muted">(${b.vehicles?.plate_number || 'N/A'})</span></div>
                 <div class="item-sub">
-                  ${cName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · Total: ${fmtMoney(b.total_amount)}
-                  ${isPartial ? ` · <span style="color:var(--accent);font-weight:700;">Balance Due at Pickup: ${fmtMoney(b.balance_due)}</span>` : ''}
+                  ${cName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · Total: <strong>${fmtMoney(b.total_amount)}</strong>
+                  ${b.payment_method ? ` · <span class="badge badge-primary" style="font-size:0.7rem;">${b.payment_method}</span>` : ''}
+                  ${b.payment_ref ? ` · Ref: <code>${b.payment_ref}</code>` : ''}
                 </div>
+                ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.75rem;margin-top:2px;">${b.review_notes}</div>` : ''}
               </div>
               ${badgeHTML}
               <div class="item-actions">
                 ${actionBtn}
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')"><i class="fa-solid fa-clock-rotate-left"></i> Extend</button>
               </div>
             </div>
           `;
-  }).join('') : emptyState('', 'No approved or active rentals.')}
+  }).join('') : emptyState('', 'No active reservations or rentals out on the road.')}
       </div>
     </div>
   `;
 
-  $$('[data-record-payment]').forEach(btn => btn.addEventListener('click', () => openStaffPaymentModal(btn.dataset.recordPayment)));
+  $$('[data-release-vehicle]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.releaseVehicle;
+    const b = (await fetchMergedBookings()).find(item => String(item.id) === String(id));
+    btn.disabled = true;
+
+    updateLocalBookingStatus(id, 'vehicle_released');
+    broadcastBookingStatusChange(id, 'vehicle_released');
+
+    try {
+      await supabase.from('bookings').update({ status: 'vehicle_released' }).eq('id', id);
+      if (b && b.vehicle_id) {
+        await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+        const v = state.vehicles.find(item => item.id === b.vehicle_id);
+        if (v) v.status = 'rented';
+      }
+    } catch (e) {
+      console.warn('DB release notice:', e);
+    }
+
+    toast('Vehicle successfully released! Reservation status updated to Vehicle Released (Active on Road).', 'success');
+    if (window.renderTab) window.renderTab();
+  }));
+
+  $$('[data-collect-cash-release]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.collectCashRelease;
+    const b = (await fetchMergedBookings()).find(item => String(item.id) === String(id));
+    if (!b) return;
+
+    if (!confirm(`Confirm cash payment of ${fmtMoney(b.total_amount)} received at counter and release ${b.vehicles?.name || 'vehicle'}?`)) return;
+    btn.disabled = true;
+
+    updateLocalBookingStatus(id, 'vehicle_released', {
+      payment_status: 'verified',
+      paid_amount: Number(b.total_amount || 0),
+      balance_due: 0,
+      payment_type: 'full'
+    });
+    broadcastBookingStatusChange(id, 'vehicle_released', { payment_status: 'verified' });
+
+    try {
+      await supabase.from('payments').insert({
+        booking_id: id,
+        amount: Number(b.total_amount || 0),
+        method: 'Pay on Cash',
+        status: 'successful',
+        paid_at: new Date().toISOString()
+      });
+      await supabase.from('bookings').update({
+        status: 'vehicle_released',
+        payment_status: 'verified',
+        paid_amount: Number(b.total_amount || 0),
+        balance_due: 0
+      }).eq('id', id);
+      if (b.vehicle_id) {
+        await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+        const v = state.vehicles.find(item => item.id === b.vehicle_id);
+        if (v) v.status = 'rented';
+      }
+    } catch (e) {
+      console.warn('DB cash collect release notice:', e);
+    }
+
+    toast(`Cash of ${fmtMoney(b.total_amount)} collected! Vehicle released to customer.`, 'success');
+    if (window.renderTab) window.renderTab();
+  }));
+
+  $$('[data-complete-rental]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.completeRental;
+    const b = (await fetchMergedBookings()).find(item => String(item.id) === String(id));
+    if (!b) return;
+
+    if (!confirm(`Mark rental for ${b.vehicles?.name || 'Vehicle'} as Completed and return to available fleet?`)) return;
+    btn.disabled = true;
+
+    updateLocalBookingStatus(id, 'completed');
+    broadcastBookingStatusChange(id, 'completed');
+
+    try {
+      await supabase.from('bookings').update({ status: 'completed' }).eq('id', id);
+      if (b.vehicle_id) {
+        await supabase.from('vehicles').update({ status: 'available' }).eq('id', b.vehicle_id);
+        const v = state.vehicles.find(item => item.id === b.vehicle_id);
+        if (v) v.status = 'available';
+      }
+    } catch (e) {
+      console.warn('DB complete notice:', e);
+    }
+
+    toast('Rental completed! Vehicle has been checked in and returned to available fleet.', 'success');
+    if (window.renderTab) window.renderTab();
+  }));
 }
 
 export async function openStaffPaymentModal(bookingId) {
@@ -1222,7 +1592,7 @@ export async function renderStaffDamages(view) {
 }
 
 export function openRecordDamageModal(allBookings, view, preSelectedBookingId = '') {
-  const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved'].includes(b.status));
+  const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status));
 
   openModal(`
     <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
@@ -1435,7 +1805,7 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
 }
 
 export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = '') {
-  const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved'].includes(b.status));
+  const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status));
 
   openModal(`
     <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
@@ -1832,10 +2202,10 @@ export async function renderAdminDashboard(view) {
   const bookingsList = await fetchMergedBookings();
 
   const totalVehiclesCount = state.vehicles.length;
-  const activeRentalsCount = state.vehicles.filter(v => v.status === 'rented').length || bookingsList.filter(b => b.status === 'active').length;
+  const activeRentalsCount = state.vehicles.filter(v => v.status === 'rented').length || bookingsList.filter(b => ['active', 'vehicle_released'].includes(b.status)).length;
   const availableRentalsCount = state.vehicles.filter(v => v.status === 'available').length;
   const revenueThisMonth = (monthPayments || []).reduce((sum, p) => sum + Number(p.amount || 0), 0) ||
-    bookingsList.filter(b => b.created_at >= startOfMonth && ['active', 'completed', 'approved'].includes(b.status)).reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
+    bookingsList.filter(b => b.created_at >= startOfMonth && ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status)).reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
 
   const vehicleStatsMap = {};
   state.vehicles.forEach(v => {
@@ -1843,7 +2213,7 @@ export async function renderAdminDashboard(view) {
   });
 
   bookingsList.forEach(b => {
-    if (b.vehicle_id && vehicleStatsMap[b.vehicle_id] && ['active', 'completed', 'approved'].includes(b.status)) {
+    if (b.vehicle_id && vehicleStatsMap[b.vehicle_id] && ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status)) {
       vehicleStatsMap[b.vehicle_id].totalEarnings += Number(b.total_amount || 0);
       vehicleStatsMap[b.vehicle_id].rentalCount += 1;
     }
@@ -2307,7 +2677,7 @@ export async function renderAdminCustomers(view) {
     const pendingBooking = cBookings.find(b => b.status === 'pending');
     const approvedBooking = cBookings.find(b => b.status === 'approved');
     const totalSpent = cBookings
-      .filter(b => ['active', 'completed', 'approved'].includes(b.status))
+      .filter(b => ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status))
       .reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
 
     let liveStatus = 'idle';
@@ -2742,54 +3112,285 @@ export async function renderAdminUsers(view) {
   }));
 }
 
+export async function openAdminPaymentOverrideModal(bookingId) {
+  let b = null;
+  try {
+    const { data } = await supabase.from('bookings').select('*, vehicles(*), profiles!customer_id(*)').eq('id', bookingId).single();
+    if (data) b = data;
+  } catch (e) {}
+  if (!b) {
+    b = getLocalBookings().find(item => String(item.id) === String(bookingId));
+  }
+  if (!b) {
+    toast('Booking details not found.', 'danger');
+    return;
+  }
+
+  const cName = getBookingCustomerName(b);
+  const vehicleName = b.vehicles?.name || 'Vehicle';
+  const currentStatus = b.status || 'pending';
+  const currentPayStatus = b.payment_status || (['confirmed', 'active', 'vehicle_released', 'completed'].includes(b.status) ? 'verified' : 'pending');
+
+  openModal(`
+    <div class="modal-head">
+      <div>
+        <h3 style="margin:0;font-size:1.2rem;display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Admin Override: Payment &amp; Reservation
+        </h3>
+        <p class="muted" style="margin:2px 0 0;font-size:0.8rem;">Master override control for booking lifecycle and payment clearance.</p>
+      </div>
+      <div class="modal-close" id="mOverrideClose">Close</div>
+    </div>
+
+    <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.82rem;color:#581c87;">
+      <strong>Administrator Authority:</strong> You can directly adjust reservation lifecycle states and verify/unverify payments regardless of automated checks.
+    </div>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.82rem;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span>Booking ID: <code style="font-weight:700;">${String(b.id).slice(0, 8)}...</code></span>
+        <span class="badge badge-primary">${b.payment_method || 'GCash QR'}</span>
+      </div>
+      <div>Vehicle: <strong>${vehicleName}</strong></div>
+      <div>Customer: <strong>${cName}</strong></div>
+      <div>Amount: <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong> · Ref: <code>${b.payment_ref || 'None'}</code></div>
+      ${b.proof_image ? `
+        <div style="margin-top:8px;">
+          <a href="${b.proof_image}" target="_blank" style="color:var(--accent);font-size:0.75rem;text-decoration:underline;">
+            <i class="fa-solid fa-image"></i> View Customer Uploaded Receipt
+          </a>
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="field" style="margin-bottom:12px;">
+      <label style="font-weight:700;font-size:0.85rem;">Target Reservation Lifecycle Status</label>
+      <select id="selTargetStatus" style="width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.85rem;">
+        <option value="pending_verification" ${currentStatus === 'pending_verification' ? 'selected' : ''}>Pending Verification (Staff review queue)</option>
+        <option value="confirmed" ${currentStatus === 'confirmed' ? 'selected' : ''}>Confirmed (Payment verified, ready for release)</option>
+        <option value="cash_on_pickup" ${currentStatus === 'cash_on_pickup' ? 'selected' : ''}>Cash on Pickup (Pay cash at venue counter)</option>
+        <option value="vehicle_released" ${currentStatus === 'vehicle_released' ? 'selected' : ''}>Vehicle Released (On road / Active rental)</option>
+        <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>Completed (Vehicle returned &amp; inspected)</option>
+        <option value="awaiting_payment" ${currentStatus === 'awaiting_payment' ? 'selected' : ''}>Awaiting Payment (Rejected / Requires customer re-upload)</option>
+        <option value="cancelled" ${currentStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+      </select>
+    </div>
+
+    <div class="field" style="margin-bottom:12px;">
+      <label style="font-weight:700;font-size:0.85rem;">Target Payment Status</label>
+      <select id="selTargetPayStatus" style="width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.85rem;">
+        <option value="verified" ${currentPayStatus === 'verified' ? 'selected' : ''}>Verified (Payment Cleared &amp; Approved)</option>
+        <option value="pending" ${currentPayStatus === 'pending' ? 'selected' : ''}>Pending Verification</option>
+        <option value="rejected" ${currentPayStatus === 'rejected' ? 'selected' : ''}>Rejected</option>
+        <option value="unpaid" ${currentPayStatus === 'unpaid' ? 'selected' : ''}>Unpaid / Cash Due</option>
+      </select>
+    </div>
+
+    <div class="field" style="margin-bottom:16px;">
+      <label style="font-weight:700;font-size:0.85rem;">Audit &amp; Override Note (Optional)</label>
+      <textarea id="txtOverrideNotes" rows="2" style="width:100%;padding:8px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.82rem;" placeholder="e.g. Overridden per manual bank deposit verification by Admin">${b.review_notes || ''}</textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary btn-block" id="btnSaveOverride" style="background:#7c3aed;border-color:#7c3aed;padding:10px;">
+        <i class="fa-solid fa-floppy-disk"></i> Apply Admin Override
+      </button>
+      <button class="btn btn-secondary" id="btnCancelOverride" style="padding:10px 16px;">Cancel</button>
+    </div>
+  `);
+
+  $('#mOverrideClose')?.addEventListener('click', closeModal);
+  $('#btnCancelOverride')?.addEventListener('click', closeModal);
+
+  $('#btnSaveOverride')?.addEventListener('click', async () => {
+    const newStatus = $('#selTargetStatus').value;
+    const newPayStatus = $('#selTargetPayStatus').value;
+    const notes = $('#txtOverrideNotes').value.trim();
+
+    const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
+    const payload = {
+      status: newStatus,
+      payment_status: newPayStatus,
+      review_notes: notes || `Admin override applied by ${state.profile?.full_name || 'Admin'}.`,
+      reviewed_by: currentUserId
+    };
+
+    if (newPayStatus === 'verified' || newStatus === 'confirmed' || newStatus === 'vehicle_released' || newStatus === 'completed') {
+      payload.paid_amount = Number(b.total_amount || 0);
+      payload.balance_due = 0;
+    }
+
+    updateLocalBookingStatus(bookingId, newStatus, payload);
+
+    try {
+      await supabase.from('bookings').update(payload).eq('id', bookingId);
+
+      if (newStatus === 'vehicle_released') {
+        await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+        const v = state.vehicles.find(item => item.id === b.vehicle_id);
+        if (v) v.status = 'rented';
+      } else if (newStatus === 'completed' || newStatus === 'cancelled') {
+        await supabase.from('vehicles').update({ status: 'available' }).eq('id', b.vehicle_id);
+        const v = state.vehicles.find(item => item.id === b.vehicle_id);
+        if (v) v.status = 'available';
+      }
+    } catch (e) {
+      console.warn('DB override notice:', e);
+    }
+
+    broadcastBookingStatusChange(bookingId, newStatus, {
+      payment_status: newPayStatus,
+      review_notes: notes
+    });
+
+    toast(`Admin override applied! Reservation is now ${newStatus.replace(/_/g, ' ').toUpperCase()}.`, 'success');
+    closeModal();
+    if (window.renderTab) window.renderTab();
+  });
+}
+window.openAdminPaymentOverrideModal = openAdminPaymentOverrideModal;
+
 export async function renderAdminRentals(view) {
-  const bookings = await fetchMergedBookings();
+  const allBookings = await fetchMergedBookings();
+  window._adminRentalFilter = window._adminRentalFilter || 'all';
+
+  const filter = window._adminRentalFilter;
+  const filtered = filter === 'all'
+    ? allBookings
+    : allBookings.filter(b => b.status === filter);
 
   view.innerHTML = `
     <div class="view">
       <div class="section-head">
         <div>
-          <h2>Rentals &amp; Transactions</h2>
-          <p>Every booking, rental duration, and payment status.</p>
+          <h2>Monitor Reservations &amp; Decisions</h2>
+          <p>Real-time reservation lifecycle tracking, payment verification, and administrative decision overrides.</p>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal()">
-          <i class="fa-solid fa-clock-rotate-left"></i> Extend a Rental
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal()">
+            <i class="fa-solid fa-clock-rotate-left"></i> Extend a Rental
+          </button>
+        </div>
+      </div>
+
+      <!-- Lifecycle Filter Pills -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="all">
+          All (${allBookings.length})
+        </button>
+        <button class="btn btn-sm ${filter === 'pending_verification' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="pending_verification">
+          Pending Verification (${allBookings.filter(b => b.status === 'pending_verification').length})
+        </button>
+        <button class="btn btn-sm ${filter === 'cash_on_pickup' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="cash_on_pickup">
+          Cash on Pickup (${allBookings.filter(b => b.status === 'cash_on_pickup').length})
+        </button>
+        <button class="btn btn-sm ${filter === 'confirmed' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="confirmed">
+          Confirmed (${allBookings.filter(b => b.status === 'confirmed').length})
+        </button>
+        <button class="btn btn-sm ${filter === 'vehicle_released' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="vehicle_released">
+          Vehicle Released (${allBookings.filter(b => b.status === 'vehicle_released').length})
+        </button>
+        <button class="btn btn-sm ${filter === 'completed' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="completed">
+          Completed (${allBookings.filter(b => b.status === 'completed').length})
+        </button>
+        <button class="btn btn-sm ${filter === 'awaiting_payment' ? 'btn-primary' : 'btn-secondary'}" data-admin-filter="awaiting_payment">
+          Awaiting Payment (${allBookings.filter(b => b.status === 'awaiting_payment').length})
         </button>
       </div>
+
       <div class="glass" style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>Vehicle</th>
               <th>Customer</th>
-              <th>Dates</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Payments</th>
+              <th>Dates &amp; Duration</th>
+              <th>Total Amount</th>
+              <th>Reservation Status</th>
+              <th>Payment &amp; Ref No.</th>
+              <th>Proof of Payment</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            ${bookings.map(b => `
-              <tr>
-                <td>${b.vehicles?.name || 'Vehicle'} <span class="muted">(${b.vehicles?.plate_number || 'N/A'})</span></td>
-                <td>${getBookingCustomerName(b)}</td>
-                <td>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</td>
-                <td>${fmtMoney(b.total_amount)}</td>
-                <td><span class="badge badge-${b.status}">${b.status}</span></td>
-                <td>${(b.payments || []).map(p => `<span class="badge badge-${p.status}" style="margin-right:4px;">${fmtMoney(p.amount)}</span>`).join('') || '—'}</td>
-                <td>
-                  ${['approved', 'active', 'reserved'].includes(b.status)
-                    ? `<button type="button" class="btn btn-secondary btn-xs" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')"><i class="fa-solid fa-clock-rotate-left"></i> Extend</button>`
-                    : '—'}
-                </td>
-              </tr>
-            `).join('') || `<tr><td colspan="7" class="center muted">No bookings yet.</td></tr>`}
+            ${filtered.map(b => {
+              const cName = getBookingCustomerName(b);
+              const cPhone = getBookingCustomerPhone(b);
+              const days = Math.max(1, Math.round((new Date(b.end_date) - new Date(b.start_date)) / 86400000));
+              const payMethod = b.payment_method || 'GCash QR';
+              const payStatus = b.payment_status || (['confirmed', 'vehicle_released', 'completed'].includes(b.status) ? 'verified' : b.status === 'cash_on_pickup' ? 'cash_due' : 'pending');
+
+              return `
+                <tr>
+                  <td>
+                    <strong>${b.vehicles?.name || 'Vehicle'}</strong>
+                    <div class="muted" style="font-size:0.75rem;">${b.vehicles?.plate_number || 'N/A'}</div>
+                  </td>
+                  <td>
+                    <strong>${cName}</strong>
+                    ${cPhone ? `<div class="muted" style="font-size:0.75rem;">${cPhone}</div>` : ''}
+                  </td>
+                  <td>
+                    ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}
+                    <div class="muted" style="font-size:0.75rem;">${days} Day(s)</div>
+                  </td>
+                  <td><strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong></td>
+                  <td><span class="badge badge-${b.status}">${b.status.replace(/_/g, ' ')}</span></td>
+                  <td>
+                    <span class="badge badge-primary" style="font-size:0.7rem;margin-bottom:2px;display:inline-block;">${payMethod}</span>
+                    <span class="badge badge-${payStatus}" style="font-size:0.7rem;display:inline-block;">${payStatus}</span>
+                    ${b.payment_ref ? `<div style="font-family:monospace;font-size:0.75rem;font-weight:700;color:#0f172a;margin-top:2px;">Ref: ${b.payment_ref}</div>` : ''}
+                  </td>
+                  <td>
+                    ${b.proof_image ? `
+                      <a href="${b.proof_image}" target="_blank" style="display:flex;align-items:center;gap:4px;font-size:0.75rem;color:var(--accent);text-decoration:none;">
+                        <i class="fa-solid fa-image"></i> View Receipt
+                      </a>
+                    ` : `<span class="muted" style="font-size:0.75rem;">None</span>`}
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                      ${b.status === 'pending_verification' ? `
+                        <button type="button" class="btn btn-primary btn-xs" data-review-payment="${b.id}" title="Review receipt & verify">
+                          <i class="fa-solid fa-receipt"></i> Review
+                        </button>
+                      ` : ''}
+                      <button type="button" class="btn btn-secondary btn-xs" data-override-decision="${b.id}" style="border-color:#7c3aed;color:#7c3aed;font-weight:600;" title="Admin override status & payment">
+                        <i class="fa-solid fa-shield-halved"></i> Override
+                      </button>
+                      ${['approved', 'active', 'confirmed', 'vehicle_released'].includes(b.status) ? `
+                        <button type="button" class="btn btn-secondary btn-xs" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')">
+                          <i class="fa-solid fa-clock-rotate-left"></i>
+                        </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('') || `<tr><td colspan="8" class="center muted" style="padding:24px;">No reservations found matching "${filter}".</td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
   `;
+
+  // Attach filter buttons
+  view.querySelectorAll('[data-admin-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window._adminRentalFilter = btn.dataset.adminFilter;
+      renderAdminRentals(view);
+    });
+  });
+
+  // Attach review payment
+  view.querySelectorAll('[data-review-payment]').forEach(btn => {
+    btn.addEventListener('click', () => openStaffPaymentReviewModal(btn.dataset.reviewPayment));
+  });
+
+  // Attach override decision
+  view.querySelectorAll('[data-override-decision]').forEach(btn => {
+    btn.addEventListener('click', () => openAdminPaymentOverrideModal(btn.dataset.overrideDecision));
+  });
 }
 
 export async function renderAdminReports(view) {
@@ -2820,7 +3421,7 @@ export async function renderAdminReports(view) {
   });
 
   bookingsList.forEach(b => {
-    if (b.vehicle_id && vehicleEarningsMap[b.vehicle_id] && ['active', 'completed', 'approved'].includes(b.status)) {
+    if (b.vehicle_id && vehicleEarningsMap[b.vehicle_id] && ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status)) {
       vehicleEarningsMap[b.vehicle_id].revenue += Number(b.total_amount || 0);
       vehicleEarningsMap[b.vehicle_id].rentals += 1;
     }
@@ -4669,5 +5270,8 @@ export async function renderStaffScanner(view) {
 
 window.openVenuePassVerificationModal = openVenuePassVerificationModal;
 window.renderStaffScanner = renderStaffScanner;
+window.openStaffPaymentReviewModal = openStaffPaymentReviewModal;
+window.openAdminPaymentOverrideModal = openAdminPaymentOverrideModal;
+
 
 
