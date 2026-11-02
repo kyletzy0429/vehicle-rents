@@ -302,6 +302,19 @@ select option {
   background: #dc2626;
 }
 
+[data-theme="dark"] .proof-upload-box {
+  background: #140f2b;
+  border-color: rgba(168, 85, 247, 0.25);
+}
+[data-theme="dark"] .proof-upload-box:hover,
+[data-theme="dark"] .proof-upload-box.dragover {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: var(--accent);
+}
+[data-theme="dark"] .proof-preview-wrap {
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
 
 .modal-overlay {
   position: fixed;

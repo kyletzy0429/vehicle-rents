@@ -299,7 +299,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         </div>
 
         <div class="field" style="margin-bottom:12px;">
-          <label style="font-weight:600;font-size:0.8rem;color:var(--text-hi);margin-bottom:6px;display:block;">Payment structure</label>
+          <label>Payment structure</label>
           <select id="payStructureSelect" class="clean-select">
             <option value="100">Pay in Full (100%) — Instant zero-balance reservation</option>
             <option value="20">Downpayment (20%) — Balance upon vehicle pickup</option>
@@ -307,7 +307,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         </div>
 
         <div class="field" style="margin-bottom:14px;">
-          <label style="font-weight:600;font-size:0.8rem;color:var(--text-hi);margin-bottom:6px;display:block;">Payment method</label>
+          <label>Payment method</label>
           <select id="paymentMethodSelect" class="clean-select">
             <option value="card">Card</option>
             <option value="gcash">GCash</option>
@@ -965,23 +965,23 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
       if (selectedPaymentMethod === 'card') {
         detailContainer.innerHTML = `
-          <div style="background:var(--bg-subtle);border:1px solid var(--accent-border);border-radius:10px;padding:14px;margin-top:10px;">
-            <div style="font-weight:700;font-size:0.88rem;color:var(--text-hi);margin-bottom:10px;">Card Information</div>
+          <div class="pay-detail-panel">
+            <div class="pay-detail-heading">Card Information</div>
             <div class="field" style="margin-bottom:8px;">
-              <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);">Cardholder Name</label>
+              <label>Cardholder Name</label>
               <input type="text" id="bCardName" value="${$('#renterName')?.value || ''}" placeholder="Name on card" />
             </div>
             <div class="field" style="margin-bottom:8px;">
-              <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);">Card Number</label>
+              <label>Card Number</label>
               <input type="text" id="bCardNum" placeholder="4xxx •••• •••• xxxx" maxlength="19" />
             </div>
             <div class="detail-grid" style="gap:10px;">
               <div class="field">
-                <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);">Expiry Date</label>
+                <label>Expiry Date</label>
                 <input type="text" id="bCardExp" placeholder="MM/YY" maxlength="5" />
               </div>
               <div class="field">
-                <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);">CVV</label>
+                <label>CVV</label>
                 <input type="password" id="bCardCvv" placeholder="•••" maxlength="4" />
               </div>
             </div>
@@ -990,14 +990,16 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         if (submitBtn) submitBtn.textContent = `Submit Payment (${fmtMoney(amountToPay)})`;
       } else if (selectedPaymentMethod === 'gcash') {
         detailContainer.innerHTML = `
-          <div style="background:var(--bg-subtle);border:1px solid var(--accent-border);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
-            <div style="font-size:0.8rem;font-weight:700;color:var(--text-hi);margin-bottom:8px;">Scan QR Code via GCash</div>
-            <div style="width:160px;height:160px;background:#ffffff;border:2px solid var(--accent-border);border-radius:10px;margin:0 auto 10px auto;padding:8px;display:flex;align-items:center;justify-content:center;">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${v.id}-${amountToPay}" alt="GCash QR" style="width:100%;height:100%;object-fit:contain;" />
+          <div class="pay-detail-panel" style="text-align:center;">
+            <div class="pay-detail-heading" style="text-align:center;">Scan QR Code via GCash</div>
+            <div class="pay-qr-wrap">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${v.id}-${amountToPay}" alt="GCash QR" />
             </div>
-            <div style="font-weight:700;font-size:0.88rem;color:var(--text-hi);">RentFlow Vehicles Inc.</div>
-            <div style="font-size:0.8rem;color:var(--text-mid);">Account: 0917 582 9140</div>
-            <div style="font-size:0.8rem;color:var(--text-mid);margin-top:4px;">Amount to Pay: <strong style="color:var(--text-hi);">${fmtMoney(amountToPay)}</strong></div>
+            <div class="pay-account-info">
+              <div class="pay-account-name">RentFlow Vehicles Inc.</div>
+              <div class="pay-account-num">Account: 0917 582 9140</div>
+            </div>
+            <div class="pay-amount-line">Amount to Pay: <strong>${fmtMoney(amountToPay)}</strong></div>
           </div>
 
           <div class="field" style="margin-top:12px;">
@@ -1025,11 +1027,11 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         if (submitBtn) submitBtn.textContent = `Submit Payment (${fmtMoney(amountToPay)})`;
       } else if (selectedPaymentMethod === 'bank_transfer') {
         detailContainer.innerHTML = `
-          <div style="background:var(--bg-subtle);border:1px solid var(--accent-border);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
-            <div style="font-size:0.8rem;font-weight:700;color:var(--text-hi);margin-bottom:8px;">Scan via Any PH Banking App (QR Ph / InstaPay)</div>
+          <div class="pay-detail-panel" style="text-align:center;">
+            <div class="pay-detail-heading" style="text-align:center;">Scan via Banking App (QR Ph / InstaPay)</div>
             <div style="margin-bottom:10px;text-align:left;">
               <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);margin-bottom:4px;display:block;">Select Banking App:</label>
-              <select id="bBankSelect" class="clean-select" style="padding:8px 10px;font-size:0.82rem;">
+              <select id="bBankSelect" class="clean-select">
                 <option value="Maya">Maya / Smart Padala</option>
                 <option value="BDO">BDO Unibank</option>
                 <option value="BPI">BPI Online</option>
@@ -1037,12 +1039,14 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
                 <option value="Metrobank">Metrobank Direct</option>
               </select>
             </div>
-            <div style="width:160px;height:160px;background:#ffffff;border:2px solid var(--accent-border);border-radius:10px;margin:0 auto 10px auto;padding:8px;display:flex;align-items:center;justify-content:center;">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INSTAPAY-RENTAL-${v.id}-${amountToPay}" alt="Bank QR" style="width:100%;height:100%;object-fit:contain;" />
+            <div class="pay-qr-wrap">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INSTAPAY-RENTAL-${v.id}-${amountToPay}" alt="Bank QR" />
             </div>
-            <div style="font-weight:700;font-size:0.88rem;color:var(--text-hi);">RentFlow Official Account</div>
-            <div style="font-size:0.8rem;color:var(--text-mid);">Account: 0012 3456 8899</div>
-            <div style="font-size:0.8rem;color:var(--text-mid);margin-top:4px;">Amount to Pay: <strong style="color:var(--text-hi);">${fmtMoney(amountToPay)}</strong></div>
+            <div class="pay-account-info">
+              <div class="pay-account-name">RentFlow Official Account</div>
+              <div class="pay-account-num">Account: 0012 3456 8899</div>
+            </div>
+            <div class="pay-amount-line">Amount to Pay: <strong>${fmtMoney(amountToPay)}</strong></div>
           </div>
 
           <div class="field" style="margin-top:12px;">
@@ -1070,8 +1074,8 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         if (submitBtn) submitBtn.textContent = `Submit Payment (${fmtMoney(amountToPay)})`;
       } else if (selectedPaymentMethod === 'cash') {
         detailContainer.innerHTML = `
-          <div style="background:var(--bg-subtle);border:1px solid var(--accent-border);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
-            <div style="font-weight:700;font-size:0.95rem;color:var(--text-hi);margin-bottom:6px;">Cash at Front Desk / Branch Pickup</div>
+          <div class="pay-detail-panel" style="text-align:center;">
+            <div class="pay-detail-heading" style="text-align:center;">Cash at Front Desk / Branch Pickup</div>
             <p style="font-size:0.82rem;color:var(--text-mid);margin:0 0 12px 0;line-height:1.45;">
               Pay in cash directly at the branch counter before vehicle release. No online payment required today.
             </p>
@@ -1082,7 +1086,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
               </div>
               <div style="display:flex;justify-content:space-between;">
                 <span>Pickup Location:</span>
-                <strong style="color:var(--text-hi);">123 PPC MAIN BRANCH COUNTER</strong>
+                <strong style="color:var(--text-hi);">PPC Main Branch Counter</strong>
               </div>
             </div>
           </div>
