@@ -393,13 +393,22 @@ let browseStatusFilter = 'all';
 let browseSearch = '';
 let browseStartDate = '';
 let browseEndDate = '';
+let browsePriceMax = 10000;
+let browseSeatsFilter = 'all';
+let browseTransFilter = 'all';
+let browseRatingFilter = 'all';
+let browseLocation = 'all';
+let browseSort = 'featured';
+let showAdvancedFilters = false;
 
-function formatHeroDate(iso) {
+const displayCategoryPills = ['All', 'Pickup', 'Crossover', 'Hatchback', 'Sedan', 'Van', 'Compact SUV', 'SUV', 'Motorcycles'];
+
+function formatDisplayDate(iso) {
   if (!iso) return 'mm/dd/yyyy';
   try {
-    const d = new Date(iso + 'T00:00:00');
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return `${dayNames[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}`;
+    const parts = iso.split('-');
+    if (parts.length === 3) return `${parts[1]}/${parts[2]}/${parts[0]}`;
+    return iso;
   } catch (e) {
     return iso;
   }
@@ -414,68 +423,216 @@ export function renderBrowse(view) {
   const availableCount = state.vehicles.filter(v => v.status === 'available').length;
 
   const filtered = state.vehicles.filter(v => {
-    const vCat = getVehicleCategoryName(v);
-    const matchesCat = browseFilter === 'all' ||
-      vCat.toLowerCase() === browseFilter.toLowerCase() ||
-      (v.categories?.name && v.categories.name.toLowerCase() === browseFilter.toLowerCase());
+    const vCat = getVehicleCategoryName(v).toLowerCase();
+    const vName = (v.name || '').toLowerCase();
+
+    // Category matching
+    let matchesCat = true;
+    if (browseFilter !== 'all') {
+      const f = browseFilter.toLowerCase();
+      if (f === 'compact suv') {
+        matchesCat = vCat.includes('compact') || vCat.includes('crossover') || vCat.includes('suv') || vName.includes('raize') || vName.includes('xpander') || vName.includes('rush') || vName.includes('creta') || vName.includes('sonet');
+      } else if (f === 'pickup') {
+        matchesCat = vCat.includes('pickup') || vName.includes('raptor') || vName.includes('ranger') || vName.includes('hilux') || vName.includes('strada') || vName.includes('d-max') || vName.includes('navara');
+      } else if (f === 'van') {
+        matchesCat = vCat.includes('van') || vName.includes('hiace') || vName.includes('commuter') || vName.includes('urvan') || vName.includes('grandia') || vName.includes('gl');
+      } else if (f === 'suv') {
+        matchesCat = vCat.includes('suv') || vName.includes('fortuner') || vName.includes('montero') || vName.includes('everest') || vName.includes('terra');
+      } else if (f === 'crossover') {
+        matchesCat = vCat.includes('crossover') || vCat.includes('mpv') || vName.includes('raize') || vName.includes('xpander') || vName.includes('veloz') || vName.includes('br-v') || vName.includes('stargazer');
+      } else if (f === 'sedan') {
+        matchesCat = vCat.includes('sedan') || vName.includes('vios') || vName.includes('city') || vName.includes('almera') || vName.includes('civic');
+      } else if (f === 'hatchback') {
+        matchesCat = vCat.includes('hatchback') || vCat.includes('economy') || vName.includes('wigo') || vName.includes('brio') || vName.includes('mirage') || vName.includes('swift');
+      } else if (f === 'motorcycles' || f === 'motorcycle') {
+        matchesCat = vCat.includes('motor') || vName.includes('click') || vName.includes('nmax') || vName.includes('adv') || vName.includes('pcx') || vName.includes('aerox');
+      } else {
+        matchesCat = vCat.includes(f) || vName.includes(f) || (v.categories?.name && v.categories.name.toLowerCase().includes(f));
+      }
+    }
+
     const matchesSearch = v.name.toLowerCase().includes(browseSearch.toLowerCase());
     const matchesStatus = browseStatusFilter === 'all' || v.status === browseStatusFilter;
-    return matchesCat && matchesSearch && matchesStatus;
+
+    // Location matching
+    let matchesLocation = true;
+    if (browseLocation !== 'all') {
+      matchesLocation = v.location ? v.location.toLowerCase().includes(browseLocation.toLowerCase()) : true;
+    }
+
+    // Price filter
+    const rate = getVehicleDailyRate(v);
+    const matchesPrice = rate <= browsePriceMax;
+
+    // Seats filter
+    const seats = Number(v.seats || (vCat.includes('motor') ? 2 : (vCat.includes('van') ? 14 : (vCat.includes('suv') || vCat.includes('mpv') ? 7 : 5))));
+    let matchesSeats = true;
+    if (browseSeatsFilter === '2-4') matchesSeats = seats >= 2 && seats <= 4;
+    else if (browseSeatsFilter === '5-7') matchesSeats = seats >= 5 && seats <= 7;
+    else if (browseSeatsFilter === '8+') matchesSeats = seats >= 8;
+
+    // Transmission filter
+    const trans = (v.transmission || 'Automatic').toLowerCase();
+    let matchesTrans = true;
+    if (browseTransFilter === 'Automatic') matchesTrans = trans.includes('auto') || trans.includes('cvt');
+    else if (browseTransFilter === 'Manual') matchesTrans = trans.includes('manual');
+
+    // Rating filter
+    const rating = Number(v.rating || 4.9);
+    let matchesRating = true;
+    if (browseRatingFilter !== 'all') matchesRating = rating >= parseFloat(browseRatingFilter);
+
+    return matchesCat && matchesSearch && matchesStatus && matchesLocation && matchesPrice && matchesSeats && matchesTrans && matchesRating;
   });
+
+  // Sorting
+  if (browseSort === 'price_low') {
+    filtered.sort((a, b) => getVehicleDailyRate(a) - getVehicleDailyRate(b));
+  } else if (browseSort === 'price_high') {
+    filtered.sort((a, b) => getVehicleDailyRate(b) - getVehicleDailyRate(a));
+  } else if (browseSort === 'rating') {
+    filtered.sort((a, b) => Number(b.rating || 4.9) - Number(a.rating || 4.9));
+  }
 
   view.innerHTML = `
     <div class="view">
-      <!-- Reference Hero & Availability Search Section -->
-      <div class="hero-availability-container">
-        <div class="hero-tag">KEY 02 — AVAILABILITY</div>
-        <h1 class="hero-title">Search available vehicles</h1>
-        <p class="hero-subtitle">Choose your dates to see what's open, then view deals and book on the spot.</p>
+      <!-- Section Tag & Title -->
+      <div class="hero-availability-container" style="margin-bottom:14px;">
+        <div class="hero-tag">SEARCH VEHICLES</div>
+        <h1 class="hero-title" style="font-size:1.75rem;margin-bottom:6px;">Find your ideal ride</h1>
+        <p class="hero-subtitle" style="margin-bottom:16px;">Choose from our wide variety of well-maintained vehicles.</p>
 
-        <div class="hero-filter-card" style="position:relative;" id="heroFilterCard">
-          <div class="hero-filter-field hero-date-box" id="heroPickupBox" title="Click to choose Pick-up Date">
-            <label>Pick-up</label>
-            <div class="hero-date-val-wrap">
-              <i class="fa-regular fa-calendar-days hero-cal-icon"></i>
-              <span class="hero-date-text" id="heroPickupDisplay">${browseStartDate ? formatHeroDate(browseStartDate) : 'mm/dd/yyyy'}</span>
-              <span class="hero-time-badge">Noon</span>
+        <!-- Unified Single Card Search & Filter (Matching Reference Photo 1) -->
+        <div class="search-unified-card" style="position:relative;" id="searchUnifiedCard">
+          <!-- Top Row: Location, Pickup Date, Return Date, Action Button -->
+          <div class="search-unified-top">
+            <!-- Location Field -->
+            <div class="search-field-box">
+              <label class="search-field-label">
+                <i class="fa-solid fa-location-dot"></i> Location
+              </label>
+              <div class="unified-input-wrap">
+                <select id="searchLocation" class="unified-input-control">
+                  <option value="all" ${browseLocation === 'all' ? 'selected' : ''}>All Cities</option>
+                  <option value="puerto_princesa" ${browseLocation === 'puerto_princesa' ? 'selected' : ''}>Puerto Princesa</option>
+                  <option value="el_nido" ${browseLocation === 'el_nido' ? 'selected' : ''}>El Nido</option>
+                  <option value="coron" ${browseLocation === 'coron' ? 'selected' : ''}>Coron</option>
+                  <option value="san_vicente" ${browseLocation === 'san_vicente' ? 'selected' : ''}>San Vicente</option>
+                </select>
+                <i class="fa-solid fa-chevron-down unified-dropdown-icon"></i>
+              </div>
+            </div>
+
+            <!-- Pickup Date Field -->
+            <div class="search-field-box">
+              <label class="search-field-label">
+                <i class="fa-regular fa-calendar-days"></i> Pickup Date
+              </label>
+              <div class="unified-input-wrap hero-date-box" id="heroPickupBox" title="Click to choose Pick-up Date">
+                <span class="unified-date-val" id="heroPickupDisplay">${formatDisplayDate(browseStartDate)}</span>
+                <i class="fa-regular fa-calendar unified-trailing-icon"></i>
+              </div>
+            </div>
+
+            <!-- Return Date Field -->
+            <div class="search-field-box">
+              <label class="search-field-label">
+                <i class="fa-regular fa-calendar-days"></i> Return Date
+              </label>
+              <div class="unified-input-wrap hero-date-box" id="heroDropoffBox" title="Click to choose Return Date">
+                <span class="unified-date-val" id="heroDropoffDisplay">${formatDisplayDate(browseEndDate)}</span>
+                <i class="fa-regular fa-calendar unified-trailing-icon"></i>
+              </div>
+            </div>
+
+            <!-- Check Availability Button -->
+            <div class="search-field-box" style="justify-content:flex-end;">
+              <button type="button" class="btn unified-search-btn" id="heroSearchBtn">
+                Check Availability
+              </button>
             </div>
           </div>
 
-          <div class="hero-filter-divider"></div>
-
-          <div class="hero-filter-field hero-date-box" id="heroDropoffBox" title="Click to choose Drop-out Date">
-            <label>Drop-out</label>
-            <div class="hero-date-val-wrap">
-              <i class="fa-regular fa-calendar-days hero-cal-icon"></i>
-              <span class="hero-date-text" id="heroDropoffDisplay">${browseEndDate ? formatHeroDate(browseEndDate) : 'mm/dd/yyyy'}</span>
-              <span class="hero-time-badge">Noon</span>
-            </div>
-          </div>
-
-          <div class="hero-filter-divider"></div>
-
-          <div class="hero-filter-field">
-            <label for="heroCategorySelect">Vehicle type</label>
-            <select id="heroCategorySelect">
-              <option value="all" ${browseFilter === 'all' ? 'selected' : ''}>Any type</option>
-              ${state.categories.map(c => `<option value="${c.name}" ${browseFilter.toLowerCase() === c.name.toLowerCase() ? 'selected' : ''}>${c.name}</option>`).join('')}
-            </select>
-          </div>
-
-          <button type="button" class="btn hero-search-btn" id="heroSearchBtn">
-            Search
-          </button>
-
-          <!-- Floating Dual-Month Calendar Popover (Booking.com / Hertz style) -->
+          <!-- Floating Dual-Month Calendar Popover -->
           <div class="hero-date-popover" id="heroCalendarPopover" style="display:none;"></div>
+
+          <!-- Bottom Row: Category Pills + Sort & Filters (Inside Same Card) -->
+          <div class="search-unified-bottom">
+            <div class="search-pills-scroll" id="catPills">
+              ${displayCategoryPills.map(cat => `
+                <button type="button" class="category-pill ${browseFilter.toLowerCase() === cat.toLowerCase() ? 'active' : ''}" data-cat="${cat}">
+                  ${cat}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="search-secondary-actions">
+              <div class="search-sort-wrap">
+                <select id="searchSort" class="search-sort-select">
+                  <option value="featured" ${browseSort === 'featured' ? 'selected' : ''}>Featured</option>
+                  <option value="price_low" ${browseSort === 'price_low' ? 'selected' : ''}>Price: Low to High</option>
+                  <option value="price_high" ${browseSort === 'price_high' ? 'selected' : ''}>Price: High to Low</option>
+                  <option value="rating" ${browseSort === 'rating' ? 'selected' : ''}>Top Rated</option>
+                </select>
+                <i class="fa-solid fa-chevron-down search-sort-arrow"></i>
+              </div>
+
+              <button type="button" class="btn search-filters-toggle-btn ${showAdvancedFilters ? 'active' : ''}" id="btnToggleFilters" title="Toggle filters">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Filters</span>
+                ${(browsePriceMax < 10000 || browseSeatsFilter !== 'all' || browseTransFilter !== 'all' || browseRatingFilter !== 'all') ? '<span class="filter-active-dot"></span>' : ''}
+              </button>
+            </div>
+          </div>
+
+          <!-- Expandable Advanced Filter Drawer (Inside Same Card) -->
+          <div class="search-filters-drawer ${showAdvancedFilters ? 'open' : ''}" id="searchFiltersDrawer">
+            <div class="filter-group filter-price-group">
+              <div class="filter-group-header">
+                <label class="filter-label"><i class="fa-solid fa-tag"></i> Max Price</label>
+                <span class="filter-live-val" id="priceDisplay">₱${browsePriceMax.toLocaleString()}/day</span>
+              </div>
+              <div class="filter-range-wrap">
+                <span class="range-bound">₱1k</span>
+                <input type="range" id="filterPriceMax" min="1000" max="10000" step="250" value="${browsePriceMax}" />
+                <span class="range-bound">₱10k</span>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label"><i class="fa-solid fa-users"></i> Seats</label>
+              <select id="filterSeats" class="filter-select">
+                <option value="all" ${browseSeatsFilter === 'all' ? 'selected' : ''}>All</option>
+                <option value="2-4" ${browseSeatsFilter === '2-4' ? 'selected' : ''}>2-4 Seats</option>
+                <option value="5-7" ${browseSeatsFilter === '5-7' ? 'selected' : ''}>5-7 Seats</option>
+                <option value="8+" ${browseSeatsFilter === '8+' ? 'selected' : ''}>8+ Seats</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label"><i class="fa-solid fa-gears"></i> Transmission</label>
+              <select id="filterTrans" class="filter-select">
+                <option value="all" ${browseTransFilter === 'all' ? 'selected' : ''}>All</option>
+                <option value="Automatic" ${browseTransFilter === 'Automatic' ? 'selected' : ''}>Automatic</option>
+                <option value="Manual" ${browseTransFilter === 'Manual' ? 'selected' : ''}>Manual</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label"><i class="fa-solid fa-star"></i> Minimum Rating</label>
+              <select id="filterRating" class="filter-select">
+                <option value="all" ${browseRatingFilter === 'all' ? 'selected' : ''}>All</option>
+                <option value="4.5" ${browseRatingFilter === '4.5' ? 'selected' : ''}>4.5+ ⭐</option>
+                <option value="4.0" ${browseRatingFilter === '4.0' ? 'selected' : ''}>4.0+ ⭐</option>
+                <option value="3.5" ${browseRatingFilter === '3.5' ? 'selected' : ''}>3.5+ ⭐</option>
+              </select>
+            </div>
+
+            <button type="button" class="btn btn-ghost filter-reset-btn" id="filterResetBtn" title="Reset all filters">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+          </div>
         </div>
-      </div>
-
-
-      <!-- Quick category filter pills -->
-      <div class="pill-row" id="catPills" style="margin-bottom:24px;">
-        <div class="pill ${browseFilter === 'all' ? 'active' : ''}" data-cat="all">All Vehicles (${state.vehicles.length})</div>
-        ${state.categories.map(c => `<div class="pill ${browseFilter.toLowerCase() === c.name.toLowerCase() ? 'active' : ''}" data-cat="${c.name}">${c.name}</div>`).join('')}
       </div>
 
       <!-- Vehicle Cards Grid -->
@@ -652,7 +809,7 @@ export function renderBrowse(view) {
           browseStartDate = clicked;
           browseEndDate = '';
           const pEl = $('#heroPickupDisplay');
-          if (pEl) pEl.textContent = formatHeroDate(browseStartDate);
+          if (pEl) pEl.textContent = formatDisplayDate(browseStartDate);
           const dEl = $('#heroDropoffDisplay');
           if (dEl) dEl.textContent = 'mm/dd/yyyy';
           renderHeroCalendar();
@@ -662,12 +819,12 @@ export function renderBrowse(view) {
           pBox?.classList.remove('active');
           dBox?.classList.remove('active');
           renderBrowse(view);
-          toast(`Dates selected: ${formatHeroDate(browseStartDate)} to ${formatHeroDate(browseEndDate)}`, 'success');
+          toast(`Dates selected: ${formatDisplayDate(browseStartDate)} to ${formatDisplayDate(browseEndDate)}`, 'success');
         } else {
           browseStartDate = clicked;
           browseEndDate = '';
           const pEl = $('#heroPickupDisplay');
-          if (pEl) pEl.textContent = formatHeroDate(browseStartDate);
+          if (pEl) pEl.textContent = formatDisplayDate(browseStartDate);
           renderHeroCalendar();
         }
       });
@@ -731,28 +888,102 @@ export function renderBrowse(view) {
     }
   });
 
-  if (sCat) {
-    sCat.addEventListener('change', () => {
-      browseFilter = sCat.value;
+  const locSelect = $('#searchLocation');
+  if (locSelect) {
+    locSelect.addEventListener('change', () => {
+      browseLocation = locSelect.value;
+      renderBrowse(view);
+    });
+  }
+
+  const sortSelect = $('#searchSort');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      browseSort = sortSelect.value;
+      renderBrowse(view);
+    });
+  }
+
+  const filterToggleBtn = $('#btnToggleFilters');
+  const filterDrawer = $('#searchFiltersDrawer');
+  if (filterToggleBtn) {
+    filterToggleBtn.addEventListener('click', () => {
+      showAdvancedFilters = !showAdvancedFilters;
+      if (filterDrawer) filterDrawer.classList.toggle('open', showAdvancedFilters);
+      filterToggleBtn.classList.toggle('active', showAdvancedFilters);
     });
   }
 
   if (sBtn) {
     sBtn.addEventListener('click', () => {
-      browseFilter = sCat ? sCat.value : 'all';
       if (browseStartDate && browseEndDate && browseEndDate < browseStartDate) {
         toast('Drop-out date must be on or after Pick-up date.', 'error');
         return;
       }
       renderBrowse(view);
+      toast('Availability checked! Updated fleet listing.', 'info');
     });
   }
 
-  $$('#catPills .pill').forEach(p => p.addEventListener('click', () => {
-    browseFilter = p.dataset.cat;
-    if (sCat) sCat.value = browseFilter;
+  $$('#catPills .category-pill').forEach(p => p.addEventListener('click', () => {
+    browseFilter = p.dataset.cat.toLowerCase();
     renderBrowse(view);
   }));
+
+  // Bind Advanced Filter Controls
+  const priceInput = $('#filterPriceMax');
+  const priceDisplay = $('#priceDisplay');
+  if (priceInput) {
+    priceInput.addEventListener('input', (e) => {
+      browsePriceMax = Number(e.target.value);
+      if (priceDisplay) priceDisplay.textContent = `₱${browsePriceMax.toLocaleString()}/day`;
+    });
+    priceInput.addEventListener('change', () => {
+      renderBrowse(view);
+    });
+  }
+
+  const seatsSelect = $('#filterSeats');
+  if (seatsSelect) {
+    seatsSelect.addEventListener('change', (e) => {
+      browseSeatsFilter = e.target.value;
+      renderBrowse(view);
+    });
+  }
+
+  const transSelect = $('#filterTrans');
+  if (transSelect) {
+    transSelect.addEventListener('change', (e) => {
+      browseTransFilter = e.target.value;
+      renderBrowse(view);
+    });
+  }
+
+  const ratingSelect = $('#filterRating');
+  if (ratingSelect) {
+    ratingSelect.addEventListener('change', (e) => {
+      browseRatingFilter = e.target.value;
+      renderBrowse(view);
+    });
+  }
+
+  const resetBtn = $('#filterResetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      browseFilter = 'all';
+      browseSearch = '';
+      browseStatusFilter = 'all';
+      browsePriceMax = 10000;
+      browseSeatsFilter = 'all';
+      browseTransFilter = 'all';
+      browseRatingFilter = 'all';
+      browseLocation = 'all';
+      browseSort = 'featured';
+      browseStartDate = '';
+      browseEndDate = '';
+      renderBrowse(view);
+    });
+  }
 
   $$('#vehicleGrid .vehicle-card').forEach(card => card.addEventListener('click', () => {
     openVehicleDetail(Number(card.dataset.id), browseStartDate, browseEndDate);

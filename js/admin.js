@@ -880,6 +880,160 @@ export async function openStaffPaymentReviewModal(bookingId) {
 }
 window.openStaffPaymentReviewModal = openStaffPaymentReviewModal;
 
+export async function openStaffReleasePaymentModal(bookingId) {
+  const allList = await fetchMergedBookings();
+  const b = allList.find(item => String(item.id) === String(bookingId));
+  if (!b) {
+    toast('Booking record not found.', 'error');
+    return;
+  }
+
+  const v = b.vehicles || {};
+  const cName = getBookingCustomerName(b);
+  const cPhone = getBookingCustomerPhone(b);
+  const cLicense = state.profile?.license_number || b.driver_license || 'Physical Card Verified at Counter';
+
+  const totalAmount = Number(b.total_amount || 0);
+  const paidOnline = Number(b.paid_amount || 0);
+  const balanceToCollect = Number(b.balance_due || (b.status === 'cash_on_pickup' ? totalAmount : Math.max(0, totalAmount - paidOnline)));
+
+  openModal(`
+    <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
+      <div style="font-weight:800;font-size:1.05rem;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-money-bill-transfer" style="color:#059669;"></i>
+        Vehicle Release &amp; Payment Recording
+      </div>
+      <div class="modal-close" id="mClose" onclick="window.closeModal()">✕</div>
+    </div>
+
+    <div style="margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:800;font-size:1.05rem;color:#0f172a;">${v.name || 'Vehicle'}</div>
+          <div style="font-size:0.78rem;color:#64748b;">Plate: <strong>${v.plate_number ? maskPlate(v.plate_number) : 'Unassigned'}</strong> · Category: ${v.categories?.name || 'Standard'}</div>
+        </div>
+        <span class="badge badge-primary" style="font-size:0.75rem;">${b.ref_number || ('#' + b.id)}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;border-top:1px dashed #cbd5e1;padding-top:10px;">
+        <div><span style="color:#64748b;">Renter:</span> <strong>${cName}</strong></div>
+        <div><span style="color:#64748b;">Contact:</span> <strong>${cPhone || 'N/A'}</strong></div>
+        <div><span style="color:#64748b;">Schedule:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+        <div><span style="color:#64748b;">Driver License:</span> <strong>${cLicense}</strong></div>
+      </div>
+    </div>
+
+    <!-- Split Payment Breakdown Box -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:#166534;margin-bottom:10px;">
+        Payment Status &amp; Turnover Breakdown
+      </div>
+
+      <div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:#334155;">
+        <span>Total Booking Amount:</span>
+        <strong>${fmtMoney(totalAmount)}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:#334155;">
+        <span>Reservation Deposit Paid Online:</span>
+        <strong style="color:${paidOnline > 0 ? '#059669' : '#64748b'};">${fmtMoney(paidOnline)} ${paidOnline > 0 ? '(Verified)' : '(₱0.00)'}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1.5px dashed #86efac;padding-top:10px;margin-top:6px;">
+        <span style="font-size:0.95rem;font-weight:800;color:#166534;">Release Payment to Collect (Cash):</span>
+        <span style="font-size:1.25rem;font-weight:900;color:#059669;">${fmtMoney(balanceToCollect)}</span>
+      </div>
+    </div>
+
+    <!-- Staff Collection Verification Checklist -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:8px;">Staff Turnover Checklist:</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#1e293b;cursor:pointer;margin-bottom:8px;">
+        <input type="checkbox" id="chkStaffCashReceived" checked style="width:16px;height:16px;accent-color:#059669;" />
+        <span>Cash payment of <strong>${fmtMoney(balanceToCollect)}</strong> physically received at branch counter</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#1e293b;cursor:pointer;margin-bottom:8px;">
+        <input type="checkbox" id="chkStaffLicenseVerified" checked style="width:16px;height:16px;accent-color:#059669;" />
+        <span>Physical driver's license presented and verified</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#1e293b;cursor:pointer;margin:0;">
+        <input type="checkbox" id="chkStaffKeyHandover" checked style="width:16px;height:16px;accent-color:#059669;" />
+        <span>Vehicle walkaround check complete and key handed over to customer</span>
+      </label>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button type="button" class="btn btn-ghost" onclick="window.closeModal()" style="flex:1;">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btnSubmitReleasePayment" style="flex:2;background:#059669;border-color:#059669;font-weight:800;">
+        <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> Record Release Payment &amp; Dispatch
+      </button>
+    </div>
+  `);
+
+  const submitBtn = $('#btnSubmitReleasePayment');
+  if (submitBtn) {
+    submitBtn.onclick = async () => {
+      const chkCash = $('#chkStaffCashReceived')?.checked;
+      if (!chkCash) {
+        toast('Please confirm that cash payment has been received.', 'error');
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Recording Release Payment…';
+
+      const releaseNote = ` | [RELEASE PAYMENT PAID]: Collected ${fmtMoney(balanceToCollect)} in Cash by Staff upon vehicle turnover.`;
+      const updatedNotes = (b.review_notes || '') + releaseNote;
+
+      updateLocalBookingStatus(b.id, 'vehicle_released', {
+        payment_status: 'verified',
+        paid_amount: totalAmount,
+        balance_due: 0,
+        payment_type: 'full',
+        review_notes: updatedNotes
+      });
+
+      broadcastBookingStatusChange(b.id, 'vehicle_released', {
+        payment_status: 'verified',
+        paid_amount: totalAmount,
+        balance_due: 0
+      });
+
+      try {
+        await supabase.from('payments').insert({
+          booking_id: b.id,
+          amount: balanceToCollect,
+          method: 'Cash upon Release',
+          status: 'successful',
+          paid_at: new Date().toISOString()
+        });
+
+        await supabase.from('bookings').update({
+          status: 'vehicle_released',
+          payment_status: 'verified',
+          paid_amount: totalAmount,
+          balance_due: 0,
+          review_notes: updatedNotes
+        }).eq('id', b.id);
+
+        if (b.vehicle_id) {
+          await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
+          const vObj = state.vehicles.find(item => item.id === b.vehicle_id);
+          if (vObj) vObj.status = 'rented';
+        }
+      } catch (err) {
+        console.warn('DB release update notice:', err);
+      }
+
+      toast(`Release payment of ${fmtMoney(balanceToCollect)} recorded! Vehicle dispatched and active.`, 'success');
+      closeModal();
+      if (window.renderTab) window.renderTab();
+      if (window.renderStaffActive) {
+        const view = $('#appContent') || $('#mainContent');
+        if (view) renderStaffActive(view);
+      }
+    };
+  }
+}
+window.openStaffReleasePaymentModal = openStaffReleasePaymentModal;
+
 export async function renderStaffActive(view) {
   const bookings = await fetchMergedBookings(b => ['confirmed', 'approved', 'cash_on_pickup', 'vehicle_released', 'active'].includes(b.status));
 
@@ -897,12 +1051,20 @@ export async function renderStaffActive(view) {
     let badgeHTML = '';
     let actionBtn = '';
 
+    const hasBalance = b.balance_due && Number(b.balance_due) > 0;
+    const isCashPickup = b.status === 'cash_on_pickup';
+
     if (b.status === 'confirmed' || b.status === 'approved') {
-      badgeHTML = `<span class="badge badge-confirmed"><i class="fa-solid fa-circle-check"></i> Confirmed (Ready for Release)</span>`;
-      actionBtn = `<button class="btn btn-primary btn-sm" data-release-vehicle="${b.id}" style="background:#059669;border-color:#059669;"><i class="fa-solid fa-key"></i> Release Vehicle</button>`;
-    } else if (b.status === 'cash_on_pickup') {
-      badgeHTML = `<span class="badge badge-cash_on_pickup"><i class="fa-solid fa-money-bill-wave"></i> Cash on Pickup</span>`;
-      actionBtn = `<button class="btn btn-amber btn-sm" data-collect-cash-release="${b.id}"><i class="fa-solid fa-hand-holding-dollar"></i> Collect Cash &amp; Release (${fmtMoney(b.total_amount)})</button>`;
+      if (hasBalance) {
+        badgeHTML = `<span class="badge badge-confirmed"><i class="fa-solid fa-clock-rotate-left"></i> Deposit Paid · Bal Due: ${fmtMoney(b.balance_due)}</span>`;
+        actionBtn = `<button class="btn btn-primary btn-sm" data-collect-release-payment="${b.id}" style="background:#059669;border-color:#059669;"><i class="fa-solid fa-hand-holding-dollar"></i> Collect Release Balance (${fmtMoney(b.balance_due)}) &amp; Release</button>`;
+      } else {
+        badgeHTML = `<span class="badge badge-confirmed"><i class="fa-solid fa-circle-check"></i> Confirmed (Paid in Full)</span>`;
+        actionBtn = `<button class="btn btn-primary btn-sm" data-release-vehicle="${b.id}" style="background:#059669;border-color:#059669;"><i class="fa-solid fa-key"></i> Release Vehicle</button>`;
+      }
+    } else if (isCashPickup) {
+      badgeHTML = `<span class="badge badge-cash_on_pickup"><i class="fa-solid fa-money-bill-wave"></i> Cash on Pickup · Due: ${fmtMoney(b.balance_due || b.total_amount)}</span>`;
+      actionBtn = `<button class="btn btn-amber btn-sm" data-collect-release-payment="${b.id}"><i class="fa-solid fa-hand-holding-dollar"></i> Collect Full Cash (${fmtMoney(b.balance_due || b.total_amount)}) &amp; Release</button>`;
     } else if (b.status === 'vehicle_released' || b.status === 'active') {
       badgeHTML = `<span class="badge badge-vehicle_released"><i class="fa-solid fa-road"></i> Vehicle Released (Active)</span>`;
       actionBtn = `
@@ -956,47 +1118,9 @@ export async function renderStaffActive(view) {
     if (window.renderTab) window.renderTab();
   }));
 
-  $$('[data-collect-cash-release]').forEach(btn => btn.addEventListener('click', async () => {
-    const id = btn.dataset.collectCashRelease;
-    const b = (await fetchMergedBookings()).find(item => String(item.id) === String(id));
-    if (!b) return;
-
-    if (!confirm(`Confirm cash payment of ${fmtMoney(b.total_amount)} received at counter and release ${b.vehicles?.name || 'vehicle'}?`)) return;
-    btn.disabled = true;
-
-    updateLocalBookingStatus(id, 'vehicle_released', {
-      payment_status: 'verified',
-      paid_amount: Number(b.total_amount || 0),
-      balance_due: 0,
-      payment_type: 'full'
-    });
-    broadcastBookingStatusChange(id, 'vehicle_released', { payment_status: 'verified' });
-
-    try {
-      await supabase.from('payments').insert({
-        booking_id: id,
-        amount: Number(b.total_amount || 0),
-        method: 'Pay on Cash',
-        status: 'successful',
-        paid_at: new Date().toISOString()
-      });
-      await supabase.from('bookings').update({
-        status: 'vehicle_released',
-        payment_status: 'verified',
-        paid_amount: Number(b.total_amount || 0),
-        balance_due: 0
-      }).eq('id', id);
-      if (b.vehicle_id) {
-        await supabase.from('vehicles').update({ status: 'rented' }).eq('id', b.vehicle_id);
-        const v = state.vehicles.find(item => item.id === b.vehicle_id);
-        if (v) v.status = 'rented';
-      }
-    } catch (e) {
-      console.warn('DB cash collect release notice:', e);
-    }
-
-    toast(`Cash of ${fmtMoney(b.total_amount)} collected! Vehicle released to customer.`, 'success');
-    if (window.renderTab) window.renderTab();
+  $$('[data-collect-release-payment]').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.collectReleasePayment;
+    openStaffReleasePaymentModal(id);
   }));
 
   $$('[data-complete-rental]').forEach(btn => btn.addEventListener('click', async () => {

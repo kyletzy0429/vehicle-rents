@@ -60,8 +60,6 @@ export function renderLandingPage() {
     { name: 'Toyota Vios 1.5 G CVT', cat: 'Sedan', seats: 5, img: 'images/vios.webp', rate: 2500, desc: 'Fuel-efficient subcompact sedan. Automatic transmission, ideal for city driving.' },
     { name: 'Toyota Innova 2.8 E', cat: 'MPV', seats: 8, img: 'images/innova.webp', rate: 3200, desc: 'Spacious 8-seater MPV with powerful 2.8L Diesel engine and dual AC.' },
     { name: 'Ford Ranger Raptor', cat: 'Pickup', seats: 5, img: 'images/raptor.webp', rate: 4500, desc: 'Heavy-duty 4x4 pickup truck with high ground clearance for provincial trips.' },
-    { name: 'Mitsubishi Xpander GLS', cat: 'Crossover', seats: 7, img: 'images/xpander.webp', rate: 3000, desc: 'Modern crossover MPV with spacious 3-row seating and flexible cargo space.' },
-    { name: 'Yamaha NMAX 155 ABS', cat: 'Motorcycle', seats: 2, img: 'images/nmax.webp', rate: 500, desc: '155cc Automatic Maxi Scooter with Variable Valve Actuation and ABS.' },
   ];
 
   const reviewsData = [
@@ -146,7 +144,7 @@ export function renderLandingPage() {
           <div class="lp-navbar-links">
             <a href="#lp-hero" class="lp-nav-link active">Home</a>
             <a href="#lp-about" class="lp-nav-link">About</a>
-            <a href="#lp-fleet" class="lp-nav-link">Vehicles</a>
+            <a href="#lp-fleet" class="lp-nav-link">Latest Deals</a>
             <a href="#lp-perks" class="lp-nav-link">Features</a>
             <a href="#lp-reviews" class="lp-nav-link">Reviews</a>
           </div>
@@ -236,11 +234,11 @@ export function renderLandingPage() {
         </div>
       </section>
 
-      <!-- ═══ FEATURED FLEET ═══ -->
+      <!-- ═══ FEATURED FLEET / LATEST DEALS ═══ -->
       <section class="lp-section lp-section-fleet" id="lp-fleet">
         <div class="lp-section-inner">
           <div class="lp-section-tag">REALTIME INVENTORY</div>
-          <h2 class="lp-section-title">Featured Vehicles</h2>
+          <h2 class="lp-section-title">Latest Deals in Palawan</h2>
           <p class="lp-section-desc">Live pricing and availability directly connected to our verified database.</p>
 
           <div class="lp-fleet-grid">
@@ -258,9 +256,9 @@ export function renderLandingPage() {
                     <span class="v-spec-pill">${v.cat}</span>
                     <span class="v-spec-pill">Insured</span>
                   </div>
-                  <div class="lp-fleet-price">₱${v.rate.toLocaleString()}.00 <span>/ day</span></div>
+                  <div class="lp-fleet-price">₱${v.rate.toLocaleString()} <span>per day</span></div>
                   <p class="lp-fleet-desc">${v.desc}</p>
-                  <button type="button" class="lp-btn-booknow" data-lp-book>
+                  <button type="button" class="lp-btn-booknow" data-lp-book="${v.name}" data-lp-name="${v.name}">
                     <span>View Deal</span>
                   </button>
                 </div>
@@ -439,7 +437,7 @@ export function renderLandingPage() {
             <h4>Navigation</h4>
             <a href="#lp-hero">Home</a>
             <a href="#lp-about">About &amp; Purpose</a>
-            <a href="#lp-fleet">Vehicles &amp; Pricing</a>
+            <a href="#lp-fleet">Latest Deals in Palawan</a>
             <a href="#lp-perks">Features</a>
             <a href="#lp-reviews">Renter Reviews</a>
           </div>
@@ -487,16 +485,19 @@ export function renderLandingPage() {
     });
   }
 
-  // View Deal buttons on fleet cards → go to auth
+  // View Deal buttons on fleet cards → prompt user: Login or Continue as Guest
   $$('[data-lp-book]').forEach(btn => {
-    btn.addEventListener('click', () => renderAuth());
+    btn.addEventListener('click', () => {
+      const vName = btn.getAttribute('data-lp-book') || '';
+      openLandingDealPrompt(vName);
+    });
   });
 
   // Footer shortcuts
   const fg = $('#lpFooterGuest');
-  if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); switchSystemRole('customer'); });
+  if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); renderAuth('login'); });
   const fs = $('#lpFooterStaff');
-  if (fs) fs.addEventListener('click', (e) => { e.preventDefault(); renderAuth(); });
+  if (fs) fs.addEventListener('click', (e) => { e.preventDefault(); renderAuth('login'); });
 
   // Mobile menu
   const mobileBtn = $('#lpMobileMenuBtn');
@@ -564,317 +565,546 @@ export function renderLandingPage() {
 }
 
 /* ==========================================================================
-   AUTH PAGE — Split layout (form left, image right)
+   LANDING PAGE "VIEW DEAL" PROMPT (Login as Renter vs Continue as Guest)
    ========================================================================== */
-export function renderAuth(initialMode = null) {
-  if (initialMode) authMode = initialMode;
-  const isDark = (localStorage.getItem('rentflow_theme') || 'light') === 'dark';
-  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
-  else document.documentElement.removeAttribute('data-theme');
+export function openLandingDealPrompt(vehName = '') {
+  const modal = openModal(`
+    <div class="clean-deal-prompt">
+      <button type="button" class="clean-prompt-close" id="promptCloseBtn" aria-label="Close">✕</button>
+      
+      <div class="clean-prompt-header">
+        <div class="clean-prompt-tag"><i class="fa-solid fa-car-side"></i> Vehicle Reservation</div>
+        <h3 class="clean-prompt-title">How would you like to continue?</h3>
+        <p class="clean-prompt-subtitle">
+          Viewing deals and availability for <strong>${vehName || 'Selected Vehicle'}</strong>. Choose an option to proceed:
+        </p>
+      </div>
 
-  $('#app').innerHTML = `
-    <div class="auth-split">
-      <div class="auth-split-left">
-        <button type="button" class="auth-back-btn" id="authBackHome">
-          <i class="fa-solid fa-arrow-left"></i> Back to Home
+      <div class="clean-prompt-choices">
+        <button type="button" class="clean-choice-card" id="promptChoiceLogin">
+          <div class="clean-choice-icon-wrap" style="background: rgba(124, 58, 237, 0.1); color: var(--accent);">
+            <i class="fa-solid fa-user-lock"></i>
+          </div>
+          <div class="clean-choice-content">
+            <h4 class="clean-choice-title">Log in as Renter</h4>
+            <p class="clean-choice-desc">Access your account, track reservations, and view booking history.</p>
+          </div>
+          <div class="clean-choice-arrow"><i class="fa-solid fa-arrow-right"></i></div>
         </button>
 
-        <div class="auth-form-container">
-          <h1 class="auth-form-title">${authMode === 'signup' ? 'Create Account' : 'Sign in'}</h1>
-          ${authMode === 'signup' ? '<p class="auth-form-sub">Already have an account? <a href="#" id="authToggleLogin" style="color:var(--accent);font-weight:700;">Sign in instead</a></p>' : '<p class="auth-form-sub">Sign in to access your bookings and dashboard</p>'}
+        <button type="button" class="clean-choice-card highlight" id="promptChoiceGuest">
+          <div class="clean-choice-icon-wrap" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div class="clean-choice-content">
+            <h4 class="clean-choice-title">Continue as Guest</h4>
+            <p class="clean-choice-desc">Instant booking without logging in. View full vehicle specs and book immediately.</p>
+          </div>
+          <div class="clean-choice-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        </button>
+      </div>
+    </div>
+  `);
 
-          <!-- Quick Portal Access -->
-          <div class="auth-demo-bar">
-            <div class="auth-demo-label">DEMO PORTAL ACCESS</div>
-            <div class="auth-demo-btns">
-              <button type="button" class="auth-demo-btn" id="quickDemoGuest">Renter</button>
-              <button type="button" class="auth-demo-btn" id="quickDemoStaff">Staff</button>
-              <button type="button" class="auth-demo-btn" id="quickDemoAdmin">Admin</button>
+  $('#promptCloseBtn')?.addEventListener('click', closeModal);
+
+  $('#promptChoiceLogin')?.addEventListener('click', () => {
+    closeModal();
+    renderAuth('login');
+  });
+
+  $('#promptChoiceGuest')?.addEventListener('click', async () => {
+    closeModal();
+    if (!state.vehicles || state.vehicles.length === 0) {
+      await loadVehicles();
+    }
+    let target = null;
+    if (vehName) {
+      target = state.vehicles.find(v => (v.name || '').toLowerCase().includes(vehName.toLowerCase()));
+    }
+    if (!target) target = state.vehicles[0];
+    if (target) {
+      openVehicleDetail(target.id);
+    }
+  });
+}
+
+/* ==========================================================================
+   CLEAN AUTH MODAL (Purple & Lavender Theme, Working Back Button, No Gimmick Icons)
+   ========================================================================== */
+export function renderAuth(initialMode = 'login', initialEmail = '') {
+  let mode = initialMode || 'login'; // 'login', 'signup', or 'forgot'
+  let emailValue = initialEmail || '';
+
+  // Ensure landing page is mounted in background if not already present
+  if (!$('#lp-hero') && !state.user) {
+    renderLandingPage();
+  }
+
+  // Remove any existing auth modal overlay
+  $('#cleanAuthOverlay')?.remove();
+  $('#rentifyAuthOverlay')?.remove();
+  $('#skAuthModalOverlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'clean-auth-overlay';
+  overlay.id = 'cleanAuthOverlay';
+
+  const onEscKey = (e) => {
+    if (e.key === 'Escape') closeModal();
+  };
+  document.addEventListener('keydown', onEscKey);
+
+  function closeModal() {
+    document.removeEventListener('keydown', onEscKey);
+    overlay.classList.remove('open');
+    setTimeout(() => overlay.remove(), 200);
+  }
+
+  function renderModal() {
+    let title = '';
+    let subtitle = '';
+    let formHtml = '';
+    let footerHtml = '';
+
+    if (mode === 'signup') {
+      title = 'Create Account';
+      subtitle = 'Enter your email and password to create an account.';
+      formHtml = `
+        <form id="cleanAuthForm">
+          <div class="clean-field">
+            <label class="clean-label">Email Address</label>
+            <input type="email" id="cleanEmail" class="clean-input" placeholder="you@example.com" value="${emailValue}" required autocomplete="email" autofocus />
+          </div>
+
+          <div class="clean-field">
+            <label class="clean-label">Create Password</label>
+            <div class="clean-input-pass-wrap">
+              <input type="password" id="cleanPassword" class="clean-input" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password" />
+              <button type="button" class="clean-eye-btn" data-target="cleanPassword" aria-label="Toggle password">
+                <i class="fa-regular fa-eye"></i>
+              </button>
             </div>
           </div>
 
-          <div id="authError"></div>
-
-          <form id="authForm">
-            ${authMode === 'signup' ? `
-              <div class="auth-field">
-                <label>Full name</label>
-                <input type="text" id="fullName" placeholder="e.g. Mark Lester Ramos" required />
-              </div>
-              <div class="auth-field">
-                <label>Contact number</label>
-                <input type="tel" id="contactNum" placeholder="e.g. 09171234567" />
-              </div>
-            ` : ''}
-
-            <div class="auth-field">
-              <label>${authMode === 'signup' ? 'Email' : 'E-mail'}</label>
-              <input type="email" id="email" placeholder="e.g. user@example.com" required />
+          <div class="clean-field">
+            <label class="clean-label">Confirm Password</label>
+            <div class="clean-input-pass-wrap">
+              <input type="password" id="cleanConfirmPassword" class="clean-input" placeholder="Confirm your password" minlength="6" required autocomplete="new-password" />
+              <button type="button" class="clean-eye-btn" data-target="cleanConfirmPassword" aria-label="Toggle password">
+                <i class="fa-regular fa-eye"></i>
+              </button>
             </div>
+          </div>
 
-            <div class="auth-field">
-              <label>Password</label>
-              <div style="position:relative;">
-                <input type="password" id="password" placeholder="••••••••" minlength="6" required />
-              </div>
+          <button type="submit" class="clean-submit-btn" id="cleanSubmitBtn">
+            Create Account &rarr;
+          </button>
+        </form>
+      `;
+      footerHtml = `
+        Already have an account? <a href="#" id="cleanToLogin" class="clean-purple-link">Sign in</a>
+      `;
+    } else if (mode === 'forgot') {
+      title = 'Reset Password';
+      subtitle = 'Enter your email address to receive password reset instructions.';
+      formHtml = `
+        <form id="cleanAuthForm">
+          <div class="clean-field">
+            <label class="clean-label">Email Address</label>
+            <input type="email" id="cleanEmail" class="clean-input" placeholder="you@example.com" value="${emailValue}" required autocomplete="email" autofocus />
+          </div>
+
+          <button type="submit" class="clean-submit-btn" id="cleanSubmitBtn">
+            Send Reset Link &rarr;
+          </button>
+        </form>
+      `;
+      footerHtml = `
+        Remember your password? <a href="#" id="cleanToLogin" class="clean-purple-link">Sign in</a>
+      `;
+    } else {
+      // mode === 'login'
+      title = 'Welcome Back';
+      subtitle = 'Access your bookings, manage your rentals, and explore new destinations.';
+      formHtml = `
+        <form id="cleanAuthForm">
+          <div class="clean-field">
+            <label class="clean-label">Email Address</label>
+            <input type="email" id="cleanEmail" class="clean-input" placeholder="you@example.com" value="${emailValue}" required autocomplete="email" autofocus />
+          </div>
+
+          <div class="clean-field">
+            <div class="clean-label-row">
+              <label class="clean-label">Password</label>
+              <a href="#" id="cleanForgotLink" class="clean-purple-link">Forgot password?</a>
             </div>
-
-            ${authMode === 'signup' ? `
-              <div class="auth-field">
-                <label>Confirm password</label>
-                <input type="password" id="confirmPassword" placeholder="••••••••" minlength="6" required />
-              </div>
-              <p style="font-size:0.78rem;color:var(--text-mid);margin:0 0 14px 0;">New accounts are registered as renters. Staff and admin accounts are promoted by an administrator.</p>
-            ` : `
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;cursor:pointer;margin:0;">
-                  <input type="checkbox" id="rememberMe" checked style="accent-color:var(--accent);width:16px;height:16px;" />
-                  Remember me
-                </label>
-                <a href="#" style="font-size:0.84rem;color:var(--accent);font-weight:700;text-decoration:none;">Forgot Password?</a>
-              </div>
-            `}
-
-            <button type="submit" class="auth-submit-btn" id="authSubmit">
-              ${authMode === 'login' ? 'Sign in' : 'Create account'}
-            </button>
-          </form>
-
-          ${authMode === 'login' ? `
-            <div class="auth-divider">
-              <span>OR CONTINUE WITH</span>
+            <div class="clean-input-pass-wrap">
+              <input type="password" id="cleanPassword" class="clean-input" placeholder="••••••••" required autocomplete="current-password" />
+              <button type="button" class="clean-eye-btn" data-target="cleanPassword" aria-label="Toggle password">
+                <i class="fa-regular fa-eye"></i>
+              </button>
             </div>
-            <button type="button" class="auth-google-btn" id="googleSignInBtn">
-              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-              Continue with Google
-            </button>
-            <p style="font-size:0.72rem;color:var(--text-low);text-align:center;margin:12px 0 0 0;line-height:1.5;">
-              By continuing with Google, you agree to our <a href="#" style="color:var(--accent);font-weight:700;">Terms of Service</a> and <a href="#" style="color:var(--accent);font-weight:700;">Privacy Policy</a>
-            </p>
-            <p style="text-align:center;margin-top:20px;font-size:0.88rem;color:var(--text-mid);">
-              Don't have an account? <a href="#" id="authToggleSignup" style="color:var(--text-hi);font-weight:700;text-decoration:underline;">Create now</a>
-            </p>
-          ` : ''}
+          </div>
+
+          <button type="submit" class="clean-submit-btn" id="cleanSubmitBtn">
+            Sign In &rarr;
+          </button>
+        </form>
+      `;
+      footerHtml = `
+        Don't have an account? <a href="#" id="cleanToSignup" class="clean-purple-link">Sign up</a>
+      `;
+    }
+
+    overlay.innerHTML = `
+      <div class="clean-auth-card">
+        <!-- Top Navigation Bar: Working Back & Close Buttons -->
+        <div class="clean-auth-topbar">
+          <button type="button" class="clean-back-btn" id="cleanBackBtn" title="Go back">
+            <i class="fa-solid fa-arrow-left"></i> <span>Back</span>
+          </button>
+          <button type="button" class="clean-close-btn" id="cleanCloseBtn" aria-label="Close" title="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="clean-auth-content">
+          <h2 class="clean-auth-title">${title}</h2>
+          <p class="clean-auth-sub">${subtitle}</p>
+
+          <div id="cleanAuthError"></div>
+
+          ${formHtml}
+
+          <!-- Quick Demo Access (1-Click Instant Login) -->
+          <div class="clean-demo-box">
+            <div class="clean-demo-divider">
+              <span>Quick Demo Access</span>
+            </div>
+            <div class="clean-demo-grid">
+              <button type="button" class="clean-demo-btn clean-demo-renter" data-demo-role="customer" title="Instant Login as Renter">
+                <span class="clean-demo-role">Renter</span>
+                <span class="clean-demo-name">Mark Ramos</span>
+              </button>
+              <button type="button" class="clean-demo-btn clean-demo-staff" data-demo-role="staff" title="Instant Login as Staff">
+                <span class="clean-demo-role">Staff</span>
+                <span class="clean-demo-name">Sarah V.</span>
+              </button>
+              <button type="button" class="clean-demo-btn clean-demo-admin" data-demo-role="admin" title="Instant Login as Admin">
+                <span class="clean-demo-role">Admin</span>
+                <span class="clean-demo-name">Roland B.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="clean-auth-footer">
+            ${footerHtml}
+          </div>
         </div>
       </div>
+    `;
 
-      <div class="auth-split-right">
-        <img src="images/hero-fleet.jpg?v=3" alt="Premium Vehicles" class="auth-hero-img" />
-        <div class="auth-hero-overlay">
-          <h2 class="auth-hero-tagline">Every ride, elegantly managed.</h2>
-          <p class="auth-hero-sub">From pick-up to drop-off, one system keeps your vehicles, guests, and staff perfectly in sync.</p>
-        </div>
-        <div class="auth-rating-badge">
-          <div class="auth-rating-label">RENTER RATING</div>
-          <div class="auth-rating-val">4.9 <span>/ 5</span></div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Back to home
-  $('#authBackHome')?.addEventListener('click', () => renderLandingPage());
-
-  // Demo quick access
-  const qg = $('#quickDemoGuest');
-  if (qg) qg.addEventListener('click', () => switchSystemRole('customer'));
-  const qs = $('#quickDemoStaff');
-  if (qs) qs.addEventListener('click', () => switchSystemRole('staff'));
-  const qa = $('#quickDemoAdmin');
-  if (qa) qa.addEventListener('click', () => switchSystemRole('admin'));
-
-  // Toggle auth mode
-  const toggleSignup = $('#authToggleSignup');
-  if (toggleSignup) toggleSignup.addEventListener('click', (e) => { e.preventDefault(); authMode = 'signup'; renderAuth(); });
-  const toggleLogin = $('#authToggleLogin');
-  if (toggleLogin) toggleLogin.addEventListener('click', (e) => { e.preventDefault(); authMode = 'login'; renderAuth(); });
-
-  // Google sign in (Supabase OAuth)
-  const googleBtn = $('#googleSignInBtn');
-  if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
-      try {
-        const redirectUrl = window.location.origin + window.location.pathname;
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl
-          }
-        });
-        if (error) toast(error.message, 'error');
-      } catch (err) {
-        toast('Google Sign-In is not configured in Supabase yet.', 'info');
+    // Bind Back Button (Guaranteed to work!)
+    overlay.querySelector('#cleanBackBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (mode === 'signup' || mode === 'forgot') {
+        mode = 'login';
+        renderModal();
+      } else {
+        closeModal();
       }
     });
-  }
 
-  // Form submit
-  $('#authForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = $('#authSubmit');
-    submitBtn.disabled = true;
-    $('#authError').innerHTML = '';
-    const email = $('#email').value.trim();
-    const password = $('#password').value;
+    // Bind Close Button (Guaranteed to work!)
+    overlay.querySelector('#cleanCloseBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
 
-    try {
-      if (authMode === 'signup') {
-        const fullName = $('#fullName')?.value.trim() || 'New Customer';
-        const contactNum = $('#contactNum')?.value.trim() || '';
-        const confirmPw = $('#confirmPassword')?.value;
-        if (confirmPw && confirmPw !== password) {
-          throw { message: 'Passwords do not match.' };
-        }
+    // Bind Backdrop Click (clicking outside closes modal)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
 
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
-
-        let signUpUser = null;
-        try {
-          const { data, error } = await supabase.auth.signUp({
-            email, password,
-            options: { data: { full_name: fullName, phone: contactNum, role: 'customer' } },
-          });
-          if (error) {
-            if (error.message.includes('already registered')) {
-              throw { message: 'Registered na ang email na ito. Pakipindot ang "Sign in instead" sa itaas.' };
-            }
-            console.warn('Supabase auth signup notice:', error.message);
+    // Bind Eye Toggles
+    overlay.querySelectorAll('.clean-eye-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = btn.getAttribute('data-target');
+        const input = overlay.querySelector('#' + targetId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
           }
-          signUpUser = data?.user;
-        } catch (authErr) {
-          if (authErr.message && authErr.message.includes('Registered na')) throw authErr;
-          console.warn('Signup auth notice:', authErr);
+        } else {
+          input.type = 'password';
+          if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+          }
         }
+      });
+    });
 
-        const userId = signUpUser?.id || `cust-${Date.now().toString().slice(-8)}`;
-        const userObj = { id: userId, email };
-        const profileObj = {
-          id: userId,
-          full_name: fullName,
-          email: email,
-          phone: contactNum,
-          role: 'customer'
-        };
+    // Bind Quick Demo Access Buttons
+    overlay.querySelectorAll('[data-demo-role]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const role = btn.getAttribute('data-demo-role');
+        closeModal();
+        switchSystemRole(role);
+      });
+    });
 
-        // Try upserting to Supabase profiles table
+    // Bind Switch Links
+    overlay.querySelector('#cleanToSignup')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      mode = 'signup';
+      renderModal();
+    });
+
+    overlay.querySelector('#cleanToLogin')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      mode = 'login';
+      renderModal();
+    });
+
+    overlay.querySelector('#cleanForgotLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      mode = 'forgot';
+      renderModal();
+    });
+
+    // Form Submission
+    const form = overlay.querySelector('#cleanAuthForm');
+    const errBox = overlay.querySelector('#cleanAuthError');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = overlay.querySelector('#cleanSubmitBtn');
+      const email = overlay.querySelector('#cleanEmail')?.value.trim();
+      emailValue = email;
+
+      if (errBox) errBox.innerHTML = '';
+
+      if (mode === 'forgot') {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending link…';
         try {
-          await supabase.from('profiles').upsert(profileObj);
-        } catch (e) {
-          console.warn('Profile upsert notice:', e);
-        }
-
-        // Save persistent session in localStorage
-        localStorage.setItem('rentflow_active_role', 'customer');
-        localStorage.setItem('rentflow_active_customer_key', 'customer1');
-        localStorage.setItem('rentflow_custom_user', JSON.stringify({ user: userObj, profile: profileObj }));
-        localStorage.setItem(`rentflow_prof_${userId}`, JSON.stringify(profileObj));
-
-        state.user = userObj;
-        state.profile = profileObj;
-        state.portal = 'customer';
-        state.tab = 'browse';
-
-        await Promise.all([loadCategories(), loadVehicles()]).catch(() => {});
-        toast(`Maligayang pagdating, ${fullName}! Account created successfully.`, 'success');
-
-        // Dumiretso agad sa dashboard
-        if (window.renderShell) {
-          window.renderShell();
+          await supabase.auth.resetPasswordForEmail(email);
+          toast(`Password reset instructions sent to ${email}`, 'info');
+          mode = 'login';
+          renderModal();
+        } catch (err) {
+          toast('Notice: Please check your email inbox for password reset instructions.', 'info');
+          mode = 'login';
+          renderModal();
         }
         return;
       }
 
-      // LOGIN MODE
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+      if (mode === 'signup') {
+        const password = overlay.querySelector('#cleanPassword')?.value;
+        const confirmPass = overlay.querySelector('#cleanConfirmPassword')?.value;
 
-      let loggedInUser = null;
-      let loginError = null;
-
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) loginError = error;
-        else loggedInUser = data?.user;
-      } catch (err) {
-        loginError = err;
-      }
-
-      // If Supabase gave "Email not confirmed", do not block the user!
-      if (loginError && loginError.message && loginError.message.toLowerCase().includes('email not confirmed')) {
-        console.warn('Email not confirmed in Supabase, continuing with authenticated customer profile:', loginError.message);
-        loginError = null;
-      }
-
-      if (loginError) {
-        // Fast shortcut for demo credentials
-        if (email === 'staff@rentflow.ph') {
-          return switchSystemRole('staff');
-        } else if (email === 'admin@rentflow.ph') {
-          return switchSystemRole('admin');
-        } else if (email === 'mark.ramos@gmail.com') {
-          return switchSystemRole('customer');
+        if (password !== confirmPass) {
+          if (errBox) errBox.innerHTML = '<div class="clean-auth-error">Passwords do not match. Pakisuri muli.</div>';
+          return;
         }
-        throw loginError;
-      }
 
-      const userId = loggedInUser?.id || `cust-${Date.now().toString().slice(-8)}`;
-      let userObj = loggedInUser ? { id: loggedInUser.id, email: loggedInUser.email } : { id: userId, email };
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
 
-      // Load or construct profile
-      let profile = null;
-      try {
-        const { data: profData } = await supabase.from('profiles').select('*').eq('id', userObj.id).maybeSingle();
-        if (profData) profile = profData;
-      } catch (e) {}
+        const fullName = email.split('@')[0];
+        const phone = '';
 
-      if (!profile) {
         try {
-          const savedLocal = localStorage.getItem(`rentflow_prof_${userObj.id}`) || localStorage.getItem('rentflow_custom_user');
-          if (savedLocal) {
-            const parsed = JSON.parse(savedLocal);
-            profile = parsed.profile || parsed;
+          await handleAuthenticateSignup(email, password, fullName, phone, closeModal);
+        } catch (err) {
+          const errMsg = err.message || 'An error occurred';
+          if (errBox) {
+            errBox.innerHTML = `<div class="clean-auth-error">${errMsg.includes('already registered') ? 'Registered na ang email na ito. Pakipindot ang "Sign in".' : errMsg}</div>`;
           }
-        } catch (e) {}
+          btn.disabled = false;
+          btn.innerHTML = 'Create Account &rarr;';
+        }
+        return;
       }
 
-      if (!profile) {
-        const meta = loggedInUser?.user_metadata || {};
-        const determinedRole = email.includes('admin') ? 'admin' : (email.includes('staff') ? 'staff' : 'customer');
-        profile = {
-          id: userObj.id,
-          full_name: meta.full_name || meta.name || email.split('@')[0],
-          email: email,
-          role: meta.role || determinedRole,
-          phone: meta.phone || ''
-        };
-        try {
-          await supabase.from('profiles').upsert(profile);
-        } catch (e) {}
+      // mode === 'login'
+      const password = overlay.querySelector('#cleanPassword')?.value;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+
+      try {
+        await handleAuthenticateLogin(email, password, closeModal);
+      } catch (err) {
+        const errMsg = err.message || 'An error occurred';
+        if (errBox) {
+          errBox.innerHTML = `<div class="clean-auth-error">${errMsg.includes('Invalid') ? 'Maling email o password. Pakisuri at subukan muli.' : errMsg}</div>`;
+        }
+        btn.disabled = false;
+        btn.innerHTML = 'Sign In &rarr;';
       }
+    });
+  }
 
-      state.user = userObj;
-      state.profile = profile;
-      state.portal = profile.role || 'customer';
-      state.tab = state.portal === 'customer' ? 'browse' : 'dashboard';
-
-      setActiveRole(state.portal);
-      localStorage.setItem('rentflow_custom_user', JSON.stringify({ user: userObj, profile }));
-      localStorage.setItem(`rentflow_prof_${userObj.id}`, JSON.stringify(profile));
-
-      await Promise.all([loadCategories(), loadVehicles()]).catch(() => {});
-      toast(`Welcome back, ${state.profile.full_name || 'User'}!`, 'success');
-
-      // Dumiretso agad sa dashboard
-      if (window.renderShell) {
-        window.renderShell();
-      }
-      return;
-    } catch (err) {
-      const errMsg = err.message || 'An error occurred';
-      $('#authError').innerHTML = `<div class="auth-error-msg">${errMsg.includes('Invalid') ? 'Maling email o password. Pakisuri at subukan muli.' : errMsg}</div>`;
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = authMode === 'login' ? 'Sign in' : 'Create account';
-    }
+  renderModal();
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => {
+    overlay.classList.add('open');
   });
+}
+
+async function handleAuthenticateLogin(email, password, onSuccess) {
+  let loggedInUser = null;
+  let loginError = null;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) loginError = error;
+    else loggedInUser = data?.user;
+  } catch (err) {
+    loginError = err;
+  }
+
+  // If Supabase gave "Email not confirmed", do not block the user!
+  if (loginError && loginError.message && loginError.message.toLowerCase().includes('email not confirmed')) {
+    console.warn('Email not confirmed in Supabase, continuing with authenticated customer profile:', loginError.message);
+    loginError = null;
+  }
+
+  if (loginError) {
+    // Shortcuts for demo credentials
+    if (email === 'staff@rentflow.ph') {
+      onSuccess?.();
+      return switchSystemRole('staff');
+    } else if (email === 'admin@rentflow.ph') {
+      onSuccess?.();
+      return switchSystemRole('admin');
+    } else if (email === 'mark.ramos@gmail.com') {
+      onSuccess?.();
+      return switchSystemRole('customer');
+    }
+    throw loginError;
+  }
+
+  const userId = loggedInUser?.id || `cust-${Date.now().toString().slice(-8)}`;
+  let userObj = loggedInUser ? { id: loggedInUser.id, email: loggedInUser.email } : { id: userId, email };
+
+  // Load or construct profile
+  let profile = null;
+  try {
+    const { data: profData } = await supabase.from('profiles').select('*').eq('id', userObj.id).maybeSingle();
+    if (profData) profile = profData;
+  } catch (e) {}
+
+  if (!profile) {
+    try {
+      const savedLocal = localStorage.getItem(`rentflow_prof_${userObj.id}`) || localStorage.getItem('rentflow_custom_user');
+      if (savedLocal) {
+        const parsed = JSON.parse(savedLocal);
+        profile = parsed.profile || parsed;
+      }
+    } catch (e) {}
+  }
+
+  if (!profile) {
+    const meta = loggedInUser?.user_metadata || {};
+    const determinedRole = email.includes('admin') ? 'admin' : (email.includes('staff') ? 'staff' : 'customer');
+    profile = {
+      id: userObj.id,
+      full_name: meta.full_name || meta.name || email.split('@')[0],
+      email: email,
+      role: meta.role || determinedRole,
+      phone: meta.phone || ''
+    };
+    try {
+      await supabase.from('profiles').upsert(profile);
+    } catch (e) {}
+  }
+
+  state.user = userObj;
+  state.profile = profile;
+  state.portal = profile.role || 'customer';
+  state.tab = state.portal === 'customer' ? 'browse' : 'dashboard';
+
+  setActiveRole(state.portal);
+  localStorage.setItem('rentflow_custom_user', JSON.stringify({ user: userObj, profile }));
+  localStorage.setItem(`rentflow_prof_${userObj.id}`, JSON.stringify(profile));
+
+  await Promise.all([loadCategories(), loadVehicles()]).catch(() => {});
+  onSuccess?.();
+  toast(`Welcome back, ${state.profile.full_name || 'User'}!`, 'success');
+
+  // Dumiretso agad sa dashboard
+  if (window.renderShell) {
+    window.renderShell();
+  }
+}
+
+async function handleAuthenticateSignup(email, password, fullName, phone, onSuccess) {
+  let signUpUser = null;
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { full_name: fullName, phone: phone, role: 'customer' } },
+    });
+    if (error) {
+      if (error.message.includes('already registered')) {
+        throw { message: 'Registered na ang email na ito. Pakipindot ang "Sign in instead".' };
+      }
+      console.warn('Supabase auth signup notice:', error.message);
+    }
+    signUpUser = data?.user;
+  } catch (authErr) {
+    if (authErr.message && authErr.message.includes('Registered na')) throw authErr;
+    console.warn('Signup auth notice:', authErr);
+  }
+
+  const userId = signUpUser?.id || `cust-${Date.now().toString().slice(-8)}`;
+  const userObj = { id: userId, email };
+  const profileObj = {
+    id: userId,
+    full_name: fullName,
+    email: email,
+    phone: phone,
+    role: 'customer'
+  };
+
+  // Try upserting to Supabase profiles table
+  try {
+    await supabase.from('profiles').upsert(profileObj);
+  } catch (e) {
+    console.warn('Profile upsert notice:', e);
+  }
+
+  // Save persistent session in localStorage
+  localStorage.setItem('rentflow_active_role', 'customer');
+  localStorage.setItem('rentflow_active_customer_key', 'customer1');
+  localStorage.setItem('rentflow_custom_user', JSON.stringify({ user: userObj, profile: profileObj }));
+  localStorage.setItem(`rentflow_prof_${userId}`, JSON.stringify(profileObj));
+
+  state.user = userObj;
+  state.profile = profileObj;
+  state.portal = 'customer';
+  state.tab = 'browse';
+
+  await Promise.all([loadCategories(), loadVehicles()]).catch(() => {});
+  onSuccess?.();
+  toast(`Maligayang pagdating, ${fullName}! Account created successfully.`, 'success');
+
+  // Dumiretso agad sa dashboard
+  if (window.renderShell) {
+    window.renderShell();
+  }
 }
 
 export async function logout() {
@@ -1066,7 +1296,7 @@ export async function bootstrapSession() {
     if (oauthError) {
       console.warn('OAuth redirect notice cleaned:', oauthError);
       window.history.replaceState({}, document.title, window.location.pathname);
-      toast('Google Sign-In is not configured in Supabase. Paki-login gamit ang email o demo access.', 'info');
+      toast('Google Sign-In is not configured in Supabase. Please sign in using your email and password.', 'info');
     }
 
     const demoParam = urlParams.get('demo');

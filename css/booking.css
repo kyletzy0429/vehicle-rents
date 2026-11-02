@@ -1315,42 +1315,131 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   RESPONSIVE DESIGN (MOBILE & TABLET)
+   PRIVATE DRIVER (OPTIONAL) - MATCHED TO SYSTEM UI (NO ICONS)
    ══════════════════════════════════════════════════════════════════ */
-@media (max-width: 680px) {
-  .cal-dual-months {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .cal-dual-header {
-    grid-template-columns: 36px 1fr 36px;
-    gap: 8px;
-  }
-
-  .cal-panel-title-right {
-    display: none;
-  }
-
-  .cal-booking-inputs-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .cal-input-divider {
-    transform: rotate(90deg);
-    margin: 2px 0;
-  }
-
-  .cal-summary-pill {
-    width: 100%;
-  }
-
-  .custom-calendar.cal-dual-layout {
-    padding: 14px 12px;
-  }
+.system-driver-card {
+  margin: 16px 0;
+  padding: 16px 18px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--accent-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
+.system-driver-title {
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
+}
 
+.system-driver-desc {
+  font-family: inherit;
+  font-style: italic;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-mid);
+  margin: 0 0 12px 0;
+}
+
+.system-driver-checkbox-label {
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-hi);
+  user-select: none;
+}
+
+.system-driver-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.system-driver-card.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.system-driver-moto-note {
+  font-size: 0.78rem;
+  color: var(--text-low);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PAYMENTS LAYOUT - MATCHED TO USER SPEC (HOTEL SYSTEM DROPDOWN)
+   ══════════════════════════════════════════════════════════════════ */
+.complete-payment-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--accent-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.complete-payment-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.complete-payment-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-hi);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.complete-payment-due {
+  font-size: 0.9rem;
+  color: var(--text-mid);
+  margin-bottom: 14px;
+}
+
+.complete-payment-due strong {
+  color: var(--text-hi);
+  font-size: 1.05rem;
+  margin-left: 4px;
+}
+
+.clean-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--accent-border);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: var(--bg-surface);
+  color: var(--text-hi);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.clean-select:focus {
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .clean-select {
+  background: #140f2b;
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #faf5ff;
+}
 
 
