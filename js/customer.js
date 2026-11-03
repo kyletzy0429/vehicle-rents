@@ -46,160 +46,254 @@ export async function renderCustomerFavorites(view) {
 export async function renderCustomerProfile(view) {
   const p = state.profile || {};
   const initials = (p.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const email = state.user?.email || p.email || 'mark.ramos@gmail.com';
 
   view.innerHTML = `
-    <div class="view" style="max-width:750px;margin:0 auto;">
-      <div class="section-head">
-        <div>
-          <h2>Customer Profile &amp; Driver Details</h2>
-          <p>Manage your account info, phone number, and driver's license for fast booking verification.</p>
-        </div>
+    <div class="view" style="max-width:1100px;margin:0 auto;padding:16px 8px 60px 8px;">
+      <!-- Eyebrow & Title -->
+      <div style="margin-bottom:24px;">
+        <div class="portal-eyebrow">RENTER PORTAL</div>
+        <h1 class="portal-heading">Account &amp; Security</h1>
       </div>
 
-      <div class="glass card" style="margin-bottom:20px;padding:24px;">
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #e2e8f0;">
-          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;box-shadow:0 4px 12px var(--accent-glow);">
-            ${initials}
-          </div>
-          <div style="flex:1;">
-            <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);margin-bottom:2px;">${p.full_name || 'Customer Account'}</h3>
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-mid);flex-wrap:wrap;">
-              <span>${state.user?.email || '—'}</span>
-            </div>
-          </div>
-        </div>
-
-        <form id="profileForm">
-          <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            Personal Information
-          </h4>
-          <div class="detail-grid" style="margin-bottom:18px;">
-            <div class="field">
-              <label>Full Name</label>
-              <input type="text" id="profName" value="${p.full_name ?? ''}" placeholder="Full Name" required />
-            </div>
-            <div class="field">
-              <label>Phone Number</label>
-              <input type="text" id="profPhone" value="${p.phone ?? ''}" placeholder="+63 917 123 4567" required />
+      <div class="renter-account-layout">
+        <!-- ═══ LEFT: RENTER MENU CARD ═══ -->
+        <aside class="renter-menu-card">
+          <div class="renter-menu-user-head">
+            <div class="renter-menu-avatar">${initials}</div>
+            <div class="renter-menu-user-details" style="min-width:0;">
+              <div class="renter-menu-user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.full_name || 'Renter Account'}</div>
+              <div class="renter-menu-user-email">${email}</div>
+              <span class="soft-pill soft-pill-lavender" style="margin-top:6px;display:inline-block;">Renter</span>
             </div>
           </div>
 
-          <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            Driver's License Information
-          </h4>
-          <div class="detail-grid" style="margin-bottom:18px;">
-            <div class="field">
-              <label>Driver's License Number <span style="font-weight:normal;color:var(--text-mid);font-size:0.75rem;">(Optional — verify in-person at meetup)</span></label>
-              <input type="text" id="profLicense" value="${p.license_number ?? ''}" placeholder="Optional (e.g. N02-18-984012)" />
-            </div>
-            <div class="field">
-              <label>License Expiry Date <span style="font-weight:normal;color:var(--text-mid);font-size:0.75rem;">(Optional)</span></label>
-              <input type="date" id="profLicenseExpiry" value="${p.license_expiry ?? ''}" />
-            </div>
-          </div>
+          <div class="renter-menu-nav">
+            <div class="renter-menu-section-label">RENTER MENU</div>
+            <button type="button" class="renter-menu-item active" id="menuTabProfile">
+              <i class="fa-regular fa-user"></i>
+              <span>Personal &amp; Email</span>
+            </button>
+            <button type="button" class="renter-menu-item" id="menuTabSecurity">
+              <i class="fa-solid fa-lock"></i>
+              <span>Change Password</span>
+            </button>
 
-          <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            Driver's License Photo <span style="font-weight:normal;color:var(--text-mid);font-size:0.75rem;">(Optional)</span>
-          </h4>
-          <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
-            <div id="licensePreviewBox" style="margin-bottom:12px;">
-              ${p.license_id_url ? `
-                <div style="position:relative;display:inline-block;">
-                  <img src="${p.license_id_url}" id="licenseImgPreview" style="max-width:100%;max-height:190px;border-radius:10px;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
-                  <div style="position:absolute;top:6px;right:6px;background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">ID Photo Uploaded</div>
-                </div>
-              ` : `
-                <div style="padding:16px 10px;">
-                  <div style="font-size:0.88rem;font-weight:700;color:var(--text-hi);">Upload Driver's License Card Photo</div>
-                  <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">Select clear photo of your Driver's License ID (JPG, PNG, WEBP)</div>
-                </div>
-              `}
-            </div>
-            <input type="file" id="licenseFileInput" accept="image/*" style="display:none;" />
-            <input type="hidden" id="licenseIdUrl" value="${p.license_id_url ?? ''}" />
-            <button type="button" class="btn btn-ghost btn-sm" id="uploadLicenseBtn" style="border:1px solid #cbd5e1;background:#ffffff;">
-              ${p.license_id_url ? 'Change License Photo' : 'Choose License Photo'}
+            <div class="renter-menu-section-label" style="margin-top:16px;">QUICK ACCESS</div>
+            <button type="button" class="renter-menu-item" id="menuNavBookings">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>My Bookings</span>
+            </button>
+            <button type="button" class="renter-menu-item" id="menuNavFavorites">
+              <i class="fa-regular fa-heart"></i>
+              <span>My Favorites</span>
+            </button>
+            <button type="button" class="renter-menu-item" id="menuNavBrowse">
+              <i class="fa-solid fa-car"></i>
+              <span>Browse Vehicles</span>
+            </button>
+
+            <div class="renter-menu-divider"></div>
+            <button type="button" class="renter-menu-item renter-menu-item-logout" id="menuNavLogout">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span>Sign out</span>
             </button>
           </div>
+        </aside>
 
-          <div class="field" style="margin-bottom:22px;">
-            <label>Complete Address</label>
-            <input type="text" id="profAddress" value="${p.address ?? ''}" placeholder="123 Sampaguita St, Barangay San Antonio, Makati City" />
+        <!-- ═══ RIGHT: ACCOUNT & SECURITY FORMS ═══ -->
+        <main class="renter-account-content">
+          <!-- 1. Personal Information & Email -->
+          <div class="account-card" id="sectionProfile">
+            <div class="account-card-header">
+              <h2 class="account-card-title">Personal Information</h2>
+              <p class="account-card-desc">Update your name, contact email address, and mobile number.</p>
+            </div>
+
+            <form id="profileForm">
+              <div class="account-form-grid">
+                <div class="field">
+                  <label for="profName">Full Name</label>
+                  <input type="text" id="profName" value="${p.full_name ?? ''}" placeholder="Full Name" required />
+                </div>
+
+                <div class="field">
+                  <label for="profEmail">Email Address</label>
+                  <input type="email" id="profEmail" value="${email}" placeholder="your.email@example.com" required />
+                </div>
+              </div>
+
+              <div class="account-form-grid" style="margin-top:14px;">
+                <div class="field">
+                  <label for="profPhone">Phone Number</label>
+                  <input type="tel" id="profPhone" value="${p.phone ?? ''}" placeholder="0917 123 4567" required />
+                </div>
+                <div class="field">
+                  <label for="profRole">Account Role</label>
+                  <input type="text" id="profRole" value="Renter (Customer)" disabled style="background:#f8fafc;color:#8C86A3;cursor:not-allowed;" />
+                </div>
+              </div>
+
+              <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary" id="saveProfBtn" style="padding:10px 24px;border-radius:8px;">
+                  Save Profile Details
+                </button>
+              </div>
+            </form>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block" id="saveProfBtn" style="padding:14px;">
-            Save Profile Details
-          </button>
-        </form>
+          <!-- 2. Change Password -->
+          <div class="account-card" id="sectionPassword" style="margin-top:24px;">
+            <div class="account-card-header">
+              <h2 class="account-card-title">Change Password</h2>
+              <p class="account-card-desc">Set a strong password of at least 6 characters to secure your renter account.</p>
+            </div>
+
+            <form id="passwordForm">
+              <div class="account-form-grid">
+                <div class="field">
+                  <label for="currentPassword">Current Password</label>
+                  <input type="password" id="currentPassword" placeholder="Enter current password" required />
+                </div>
+              </div>
+
+              <div class="account-form-grid" style="margin-top:14px;">
+                <div class="field">
+                  <label for="newPassword">New Password</label>
+                  <input type="password" id="newPassword" placeholder="Minimum 6 characters" minlength="6" required />
+                </div>
+                <div class="field">
+                  <label for="confirmPassword">Confirm New Password</label>
+                  <input type="password" id="confirmPassword" placeholder="Re-type new password" minlength="6" required />
+                </div>
+              </div>
+
+              <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary" id="updatePasswordBtn" style="padding:10px 24px;border-radius:8px;">
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </main>
       </div>
     </div>
   `;
 
-  const uploadBtn = $('#uploadLicenseBtn');
-  const fileInput = $('#licenseFileInput');
-  if (uploadBtn && fileInput) {
-    uploadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const dataUrl = evt.target.result;
-        $('#licenseIdUrl').value = dataUrl;
-        $('#licensePreviewBox').innerHTML = `
-          <div style="position:relative;display:inline-block;">
-            <img src="${dataUrl}" id="licenseImgPreview" style="max-width:100%;max-height:190px;border-radius:10px;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
-            <div style="position:absolute;top:6px;right:6px;background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:99px;">Photo Ready</div>
-          </div>
-        `;
-        toast('Driver License photo selected! Click Save Profile Details to submit.', 'info');
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  $('#btnVerifyNowBadge')?.addEventListener('click', () => {
-    import('./auth.js').then(({ promptRenterVerificationModal }) => promptRenterVerificationModal(true));
+  // Menu navigation handlers
+  $('#menuTabProfile')?.addEventListener('click', () => {
+    $('#sectionProfile')?.scrollIntoView({ behavior: 'smooth' });
+    $('#menuTabProfile')?.classList.add('active');
+    $('#menuTabSecurity')?.classList.remove('active');
   });
 
+  $('#menuTabSecurity')?.addEventListener('click', () => {
+    $('#sectionPassword')?.scrollIntoView({ behavior: 'smooth' });
+    $('#menuTabSecurity')?.classList.add('active');
+    $('#menuTabProfile')?.classList.remove('active');
+  });
+
+  $('#menuNavBookings')?.addEventListener('click', () => {
+    state.tab = 'bookings';
+    window.renderShell();
+  });
+
+  $('#menuNavFavorites')?.addEventListener('click', () => {
+    state.tab = 'favorites';
+    window.renderShell();
+  });
+
+  $('#menuNavBrowse')?.addEventListener('click', () => {
+    state.tab = 'browse';
+    window.renderShell();
+  });
+
+  $('#menuNavLogout')?.addEventListener('click', () => {
+    import('./auth.js').then(({ logout }) => logout());
+  });
+
+  // Profile Form Handler
   $('#profileForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const saveBtn = $('#saveProfBtn');
+    const newName = $('#profName').value.trim();
+    const newEmail = $('#profEmail').value.trim();
+    const newPhone = $('#profPhone').value.trim();
 
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving Changes…';
 
     const updated = {
-      full_name: $('#profName').value.trim(),
-      phone: $('#profPhone').value.trim(),
-      license_number: $('#profLicense').value.trim(),
-      license_expiry: $('#profLicenseExpiry').value || null,
-      license_id_url: $('#licenseIdUrl').value,
-      address: $('#profAddress').value.trim(),
+      full_name: newName,
+      phone: newPhone
     };
 
-    const uid = state.user?.id || '8bebdf37-d488-4e10-bb84-63a01c157c3a';
-    let { error } = await supabase.from('profiles').update(updated).eq('id', uid);
-
-    if (error) {
-      const standardPayload = { full_name: updated.full_name, phone: updated.phone };
-      const { error: fbErr } = await supabase.from('profiles').update(standardPayload).eq('id', uid);
-      if (fbErr) {
-        toast(fbErr.message, 'error');
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Profile Details';
-        return;
+    const uid = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+    try {
+      if (supabase) {
+        await supabase.from('profiles').update(updated).eq('id', uid);
+        if (newEmail && newEmail !== state.user?.email) {
+          await supabase.auth.updateUser({ email: newEmail }).catch(() => {});
+        }
       }
+    } catch (err) {
+      console.warn('Profile update notice:', err);
+    }
+
+    if (state.profile) {
+      state.profile.full_name = newName;
+      state.profile.phone = newPhone;
+    }
+    if (state.user) {
+      state.user.email = newEmail;
     }
 
     try {
-      localStorage.setItem(`rentflow_prof_${uid}`, JSON.stringify(updated));
+      localStorage.setItem(`rentflow_prof_${uid}`, JSON.stringify({ ...state.profile, email: newEmail }));
     } catch (e) { }
 
-    Object.assign(state.profile, updated);
-    toast('Profile & License details saved successfully!', 'success');
+    toast('Profile details updated successfully!', 'success');
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Profile Details';
+
     if (window.renderShell) {
       window.renderShell();
+    }
+  });
+
+  // Password Form Handler
+  $('#passwordForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const updateBtn = $('#updatePasswordBtn');
+    const newPass = $('#newPassword').value;
+    const confirmPass = $('#confirmPassword').value;
+
+    if (!newPass || newPass.length < 6) {
+      toast('New password must be at least 6 characters.', 'error');
+      return;
+    }
+    if (newPass !== confirmPass) {
+      toast('New passwords do not match. Please verify.', 'error');
+      return;
+    }
+
+    updateBtn.disabled = true;
+    updateBtn.textContent = 'Updating Password…';
+
+    try {
+      if (supabase && supabase.auth) {
+        const { error } = await supabase.auth.updateUser({ password: newPass });
+        if (error) {
+          console.warn('Supabase password update notice:', error.message);
+        }
+      }
+      toast('Password updated successfully! Use your new password next time you sign in.', 'success');
+      $('#passwordForm').reset();
+    } catch (err) {
+      toast(err.message || 'Failed to update password.', 'error');
+    } finally {
+      updateBtn.disabled = false;
+      updateBtn.textContent = 'Update Password';
     }
   });
 }

@@ -112,9 +112,18 @@ textarea {
   margin-left: auto !important;
 }
 
-header nav,
-.portal-header nav {
-  display: none !important;
+@media (max-width: 639px) {
+  header nav,
+  .portal-header nav {
+    display: none !important;
+  }
+}
+
+@media (min-width: 640px) {
+  header nav,
+  .portal-header nav {
+    display: flex !important;
+  }
 }
 
 #brandHomeBtn div {

@@ -474,6 +474,25 @@ export function renderShell() {
           </div>
         </header>
 
+        <nav class="mobile-renter-tabbar" aria-label="Mobile Navigation">
+          <button type="button" class="mobile-renter-tab ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
+            <i class="fa-solid fa-car"></i>
+            <span>Browse</span>
+          </button>
+          <button type="button" class="mobile-renter-tab ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span>Bookings</span>
+          </button>
+          <button type="button" class="mobile-renter-tab ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
+            <i class="fa-regular fa-heart"></i>
+            <span>Favorites</span>
+          </button>
+          <button type="button" class="mobile-renter-tab ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
+            <i class="fa-regular fa-user"></i>
+            <span>Account</span>
+          </button>
+        </nav>
+
         <main id="mainView" class="customer-main-view"><div class="loading-spin"></div></main>
       </div>
     `;
@@ -498,7 +517,7 @@ export function renderShell() {
       });
     }
 
-    $$('.g-menu-item[data-nav], .portal-nav-link[data-nav]').forEach(item => {
+    $$('.g-menu-item[data-nav], .portal-nav-link[data-nav], .mobile-renter-tab[data-nav]').forEach(item => {
       item.addEventListener('click', () => {
         if (gDropdown) gDropdown.classList.add('hidden');
         state.tab = item.dataset.nav;

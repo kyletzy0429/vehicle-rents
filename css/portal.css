@@ -6560,3 +6560,214 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENTER MENU & ACCOUNT SECURITY LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+.renter-account-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .renter-account-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.renter-menu-card {
+  background: #ffffff;
+  border: 1px solid var(--glass-border, #E2DCF0);
+  border-radius: 14px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 3px rgba(42, 35, 64, 0.04);
+  position: sticky;
+  top: 90px;
+}
+
+.renter-menu-user-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 18px;
+}
+
+.renter-menu-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #E9E3F7;
+  color: #5B4B8A;
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.renter-menu-user-name {
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2A2340;
+  line-height: 1.25;
+}
+
+.renter-menu-user-email {
+  font-size: 0.8rem;
+  color: #5E5778;
+  word-break: break-all;
+  margin-top: 2px;
+}
+
+.renter-menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.renter-menu-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8C86A3;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  padding-left: 10px;
+}
+
+.renter-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #5E5778;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+
+.renter-menu-item:hover {
+  background: #F5F2FB;
+  color: #5B4B8A;
+}
+
+.renter-menu-item.active {
+  background: #E9E3F7;
+  color: #5B4B8A;
+  font-weight: 700;
+}
+
+.renter-menu-item-logout {
+  color: #b24a5a;
+}
+
+.renter-menu-item-logout:hover {
+  background: #FCE8E6;
+  color: #b24a5a;
+}
+
+.renter-menu-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 14px 0 8px 0;
+}
+
+.account-card {
+  background: #ffffff;
+  border: 1px solid var(--glass-border, #E2DCF0);
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(42, 35, 64, 0.04);
+}
+
+.account-card-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.account-card-title {
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2A2340;
+  margin: 0 0 4px 0;
+}
+
+.account-card-desc {
+  font-size: 0.86rem;
+  color: #5E5778;
+  margin: 0;
+}
+
+.account-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .account-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mobile-renter-tabbar {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .mobile-renter-tabbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #ffffff;
+    border-bottom: 1px solid var(--glass-border, #E2DCF0);
+    padding: 8px 12px;
+    position: sticky;
+    top: 56px;
+    z-index: 39;
+    box-shadow: 0 1px 2px rgba(42, 35, 64, 0.03);
+  }
+
+  .mobile-renter-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border: none;
+    background: transparent;
+    color: var(--text-mid, #5E5778);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+
+  .mobile-renter-tab i {
+    font-size: 0.95rem;
+  }
+
+  .mobile-renter-tab.active {
+    color: var(--accent, #5B4B8A);
+    font-weight: 700;
+    background: #F5F2FB;
+  }
+}
+
