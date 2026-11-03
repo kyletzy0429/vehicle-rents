@@ -1279,3 +1279,238 @@ select option {
   border-color: rgba(226, 220, 240, 0.16);
   color: #f5f2fb;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   INSPECTION & DAMAGE ASSESSMENT INTERACTIVE COMPONENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Vehicle Return Inspection Choice Cards */
+.inspection-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.inspection-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--glass-border, #E2DCF0);
+  background: var(--bg-surface, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.inspection-choice-card:hover {
+  border-color: var(--accent, #5B4B8A);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 75, 138, 0.08);
+}
+
+.inspection-choice-card.selected {
+  border-color: var(--accent, #5B4B8A);
+  background: var(--bg-subtle, #F5F2FB);
+  box-shadow: 0 0 0 2px var(--accent-light, #E9E3F7);
+}
+
+.inspection-choice-card .choice-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.inspection-choice-card[data-damage="no"] .choice-icon {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+}
+
+.inspection-choice-card[data-damage="yes"] .choice-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.inspection-choice-card .choice-content {
+  flex: 1;
+}
+
+.inspection-choice-card .choice-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin-bottom: 2px;
+}
+
+.inspection-choice-card .choice-desc {
+  font-size: 0.75rem;
+  color: var(--text-mid);
+}
+
+[data-theme="dark"] .inspection-choice-card {
+  background: #1c1833;
+  border-color: rgba(226, 220, 240, 0.14);
+}
+
+[data-theme="dark"] .inspection-choice-card.selected {
+  background: #272244;
+  border-color: var(--accent);
+}
+
+/* Damage Severity Card Group */
+.severity-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.severity-card {
+  padding: 12px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--glass-border, #E2DCF0);
+  background: var(--bg-surface, #ffffff);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.severity-card:hover {
+  border-color: var(--accent, #5B4B8A);
+  transform: translateY(-1px);
+}
+
+.severity-card.selected {
+  border-color: var(--accent, #5B4B8A);
+  background: var(--bg-subtle, #F5F2FB);
+  box-shadow: 0 0 0 2px var(--accent-light, #E9E3F7);
+}
+
+.severity-card .sev-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin-bottom: 2px;
+}
+
+.severity-card .sev-sub {
+  font-size: 0.7rem;
+  color: var(--text-mid);
+  line-height: 1.2;
+}
+
+.severity-card.sev-minor.selected .sev-title { color: #059669; }
+.severity-card.sev-moderate.selected .sev-title { color: #d97706; }
+.severity-card.sev-severe.selected .sev-title { color: #dc2626; }
+
+[data-theme="dark"] .severity-card {
+  background: #1c1833;
+  border-color: rgba(226, 220, 240, 0.14);
+}
+
+[data-theme="dark"] .severity-card.selected {
+  background: #272244;
+  border-color: var(--accent);
+}
+
+/* Method Pill Selector */
+.payment-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.payment-chip {
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--glass-border, #E2DCF0);
+  background: var(--bg-surface, #ffffff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.payment-chip:hover {
+  border-color: var(--accent);
+}
+
+.payment-chip.selected {
+  border-color: var(--accent);
+  background: var(--bg-subtle, #F5F2FB);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light, #E9E3F7);
+}
+
+[data-theme="dark"] .payment-chip {
+  background: #1c1833;
+  border-color: rgba(226, 220, 240, 0.14);
+  color: #f5f2fb;
+}
+
+[data-theme="dark"] .payment-chip.selected {
+  background: #272244;
+  border-color: var(--accent);
+  color: #c4b5fd;
+}
+
+/* Payment Status Pill Group */
+.pay-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.pay-status-pill {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--glass-border, #E2DCF0);
+  background: var(--bg-surface, #ffffff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.pay-status-pill:hover {
+  border-color: var(--accent);
+}
+
+.pay-status-pill.selected {
+  border-color: #059669;
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+}
+
+.pay-status-pill.selected.status-billed {
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.08);
+  color: #d97706;
+}
+
+[data-theme="dark"] .pay-status-pill {
+  background: #1c1833;
+  border-color: rgba(226, 220, 240, 0.14);
+}

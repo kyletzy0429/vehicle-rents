@@ -1430,35 +1430,117 @@ export async function openReturnModal(bookingId) {
   }
   let b = null;
   try {
-    const { data } = await supabase.from('bookings').select('*, vehicles(name)').eq('id', bookingId).single();
+    const { data } = await supabase.from('bookings').select('*, vehicles(name, plate_number), profiles(full_name, phone)').eq('id', bookingId).single();
     if (data) b = data;
   } catch (e) {}
   if (!b) {
     b = getLocalBookings().find(item => String(item.id) === String(bookingId)) || { vehicles: { name: 'Vehicle' }, total_amount: 0 };
   }
 
+  const vName = b.vehicles?.name || 'Vehicle';
+  const vPlate = b.vehicles?.plate_number || 'N/A';
+  const cName = b.profiles?.full_name || getBookingCustomerName(b) || 'Customer';
+  const cPhone = b.profiles?.phone || getBookingCustomerPhone(b) || '';
+
   openModal(`
-    <div class="modal-head"><h3>Inspect Vehicle Condition</h3><div class="modal-close" id="mClose">Close</div></div>
-    <p class="muted" style="margin-bottom:14px;">${b.vehicles?.name || 'Vehicle'}</p>
-    <div class="field"><label>Condition notes</label><textarea id="condNotes" rows="3" placeholder="General condition, mileage, fuel level…"></textarea></div>
-    <div class="field">
-      <label>Any damage or issue?</label>
-      <div class="role-picker" id="damagePicker">
-        <div class="role-opt selected" data-damage="no">No</div>
-        <div class="role-opt" data-damage="yes">Yes</div>
+    <div class="modal-head" style="margin-bottom:16px;">
+      <div>
+        <h3 style="margin:0;font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-clipboard-check" style="color:var(--accent);"></i> Inspect Vehicle Condition
+        </h3>
+        <p class="muted" style="margin:3px 0 0;font-size:0.8rem;">Staff inspection portal · Verify vehicle condition before completing return.</p>
+      </div>
+      <div class="modal-close" id="mClose">Close</div>
+    </div>
+
+    <!-- Vehicle & Customer Banner -->
+    <div style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:12px 16px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+            <i class="fa-solid fa-car-side"></i>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:1rem;color:var(--text-hi);">${vName}</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span>Plate: <strong style="font-family:monospace;letter-spacing:0.5px;">${vPlate}</strong></span>
+              <span>·</span>
+              <span>Booking #${b.id}</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.85rem;font-weight:700;color:var(--text-hi);">${cName}</div>
+          <div style="font-size:0.75rem;color:var(--text-mid);">${cPhone || 'Verified Customer'}</div>
+        </div>
       </div>
     </div>
-    <div class="field hidden" id="chargeField"><label>Additional charges</label><input type="number" id="chargeAmt" min="0" step="0.01" placeholder="0.00" /></div>
-    <div class="field hidden" id="maintDaysField"><label>Maintenance Duration (Days)</label><input type="number" id="maintDays" min="1" max="90" value="3" placeholder="e.g. 3 days" /></div>
-    <button class="btn btn-primary btn-block" id="finalizeBtn">Finalize Return &amp; Generate Receipt</button>
+
+    <!-- Condition Notes -->
+    <div class="field" style="margin-bottom:16px;">
+      <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+        <i class="fa-solid fa-pen-to-square" style="color:var(--accent);"></i> Condition Notes
+      </label>
+      <textarea id="condNotes" rows="3" placeholder="General vehicle condition, fuel gauge match, odometer reading, interior cleanliness…" style="border-radius:10px;font-size:0.88rem;"></textarea>
+    </div>
+
+    <!-- Damage Assessment Selection -->
+    <div class="field" style="margin-bottom:16px;">
+      <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+        <i class="fa-solid fa-triangle-exclamation" style="color:var(--accent);"></i> Any damage or issue?
+      </label>
+      <div class="inspection-choice-grid" id="damagePicker">
+        <div class="inspection-choice-card selected" data-damage="no">
+          <div class="choice-icon">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div class="choice-content">
+            <div class="choice-title">No Damage</div>
+            <div class="choice-desc">Clean return · Ready for fleet</div>
+          </div>
+        </div>
+        <div class="inspection-choice-card" data-damage="yes">
+          <div class="choice-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="choice-content">
+            <div class="choice-title">Damage Reported</div>
+            <div class="choice-desc">Charges or fleet hold needed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Charges & Maintenance Duration (shown when damage is chosen) -->
+    <div class="hidden" id="damageDetailsBox" style="background:var(--bg-subtle,#F5F2FB);border:1px solid rgba(220,38,38,0.25);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:0.82rem;font-weight:800;color:#dc2626;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <i class="fa-solid fa-wrench"></i> Damage Assessment &amp; Fleet Hold
+      </div>
+      <div class="detail-grid" style="gap:12px;margin-bottom:8px;">
+        <div class="field" id="chargeField" style="margin:0;">
+          <label style="font-size:0.75rem;font-weight:600;">Additional Charges (₱)</label>
+          <input type="number" id="chargeAmt" min="0" step="0.01" placeholder="0.00" style="font-weight:700;border-radius:8px;" />
+        </div>
+        <div class="field" id="maintDaysField" style="margin:0;">
+          <label style="font-size:0.75rem;font-weight:600;">Maintenance Duration (Days)</label>
+          <input type="number" id="maintDays" min="1" max="90" value="3" placeholder="3" style="font-weight:700;border-radius:8px;" />
+        </div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-mid);display:flex;align-items:center;gap:4px;">
+        <i class="fa-solid fa-circle-info"></i> Setting maintenance duration holds vehicle from fleet until repair completes.
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="finalizeBtn" style="padding:14px;font-size:0.95rem;font-weight:700;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <i class="fa-solid fa-file-circle-check"></i> Finalize Return &amp; Generate Receipt
+    </button>
   `);
   $('#mClose')?.addEventListener('click', closeModal);
-  $$('#damagePicker .role-opt').forEach(opt => opt.addEventListener('click', () => {
-    $$('#damagePicker .role-opt').forEach(o => o.classList.remove('selected'));
+  $$('#damagePicker .inspection-choice-card').forEach(opt => opt.addEventListener('click', () => {
+    $$('#damagePicker .inspection-choice-card').forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
     const isDamaged = opt.dataset.damage === 'yes';
-    $('#chargeField').classList.toggle('hidden', !isDamaged);
-    $('#maintDaysField').classList.toggle('hidden', !isDamaged);
+    $('#damageDetailsBox')?.classList.toggle('hidden', !isDamaged);
   }));
 
   $('#finalizeBtn')?.addEventListener('click', async () => {
@@ -1580,131 +1662,198 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
   const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status));
 
   openModal(`
-    <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
-      <div class="modal-head" style="margin-bottom:14px;">
+    <div style="max-height:84vh;overflow-y:auto;padding-right:4px;">
+      <div class="modal-head" style="margin-bottom:16px;">
         <div>
-          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;margin:0;">
             <i class="fa-solid fa-car-burst" style="color:#ef4444;"></i> Record Vehicle Damage Pay
           </h3>
-          <span style="font-size:0.78rem;color:var(--text-mid);">Assess incident, apply fair-wear deductible coverage, and issue invoice.</span>
+          <p class="muted" style="margin:3px 0 0;font-size:0.8rem;">Assess incident findings, apply fair deductible coverage, and bill settlement.</p>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
-      <div class="field">
-        <label>Select Rental Booking</label>
-        <select id="dmgBookingSelect" style="font-size:0.85rem;">
+      <!-- Select Booking Dropdown -->
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-car-side" style="color:var(--accent);"></i> Select Rental Booking
+        </label>
+        <select id="dmgBookingSelect" class="clean-select" style="font-size:0.88rem;width:100%;border-radius:10px;">
           <option value="">-- Choose active or recent rental --</option>
           ${activeAndCompleted.map(b => `
             <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} data-vname="${b.vehicles?.name || 'Vehicle'}" data-vplate="${b.vehicles?.plate_number || ''}" data-cname="${b.profiles?.full_name || 'Customer'}" data-cphone="${b.profiles?.phone || ''}">
-              #${b.id} - ${b.vehicles?.name || 'Vehicle'} (${b.vehicles?.plate_number || 'No plate'}) · ${b.profiles?.full_name || 'Customer'}
+              #${b.id} · ${b.vehicles?.name || 'Vehicle'} (${b.vehicles?.plate_number || 'No plate'}) — ${b.profiles?.full_name || 'Customer'}
             </option>
           `).join('')}
         </select>
       </div>
 
-      <div class="detail-grid">
-        <div class="field">
-          <label>Vehicle Model</label>
-          <input type="text" id="dmgVehicleName" placeholder="e.g. Toyota Fortuner 2.8 V" required />
-        </div>
-        <div class="field">
-          <label>Plate Number</label>
-          <input type="text" id="dmgPlateNumber" placeholder="e.g. NBD-8842" />
-        </div>
-      </div>
-
-      <div class="detail-grid">
-        <div class="field">
-          <label>Customer Name</label>
-          <input type="text" id="dmgCustomerName" placeholder="Customer Name" required />
-        </div>
-        <div class="field">
-          <label>Contact Phone</label>
-          <input type="text" id="dmgCustomerPhone" placeholder="0917 xxx xxxx" />
-        </div>
-      </div>
-
-      <div class="detail-grid">
-        <div class="field">
-          <label>Damage Component</label>
-          <select id="dmgComponent">
-            <option value="Front Bumper & Lip" data-cost="2500">Front Bumper &amp; Lip</option>
-            <option value="Rear Bumper & Sensors" data-cost="2500">Rear Bumper &amp; Sensors</option>
-            <option value="Door Panel Dent / Ding" data-cost="3500">Door Panel Dent / Ding</option>
-            <option value="Windshield Chip / Crack" data-cost="2500">Windshield Chip / Crack (Deductible Capped)</option>
-            <option value="Side Mirror Housing / Glass" data-cost="1800">Side Mirror Housing / Glass</option>
-            <option value="Alloy Wheels / Tire Scuff" data-cost="1500">Alloy Wheels / Tire Scuff</option>
-            <option value="Headlight / Taillight Assembly" data-cost="4500">Headlight / Taillight Assembly</option>
-            <option value="Interior Stain / Steam Detailing" data-cost="1200">Interior Deep Stain / Detailing</option>
-            <option value="Lost Key Fob / Immobilizer" data-cost="4000">Lost Key Fob / Remote</option>
-            <option value="Custom Body Damage" data-cost="3000">Other Custom Body Damage</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Severity Level</label>
-          <select id="dmgSeverity">
-            <option value="minor" data-mult="1.0">Minor (Surface mark / spot repair)</option>
-            <option value="moderate" data-mult="1.4">Moderate (Deep scratch / small dent)</option>
-            <option value="severe" data-mult="2.0">Severe (Cracked component / replace)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Incident &amp; Inspection Description</label>
-        <textarea id="dmgDescription" rows="2" placeholder="Describe the damage location, depth, and inspection findings..."></textarea>
-      </div>
-
-      <div style="background:var(--glass-card);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div style="font-size:0.82rem;font-weight:800;color:var(--text-hi);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-calculator" style="color:var(--accent);"></i> Damage Pay &amp; Deductible Breakdown
-        </div>
-        <div class="detail-grid" style="margin-bottom:10px;">
-          <div class="field" style="margin:0;">
-            <label style="font-size:0.75rem;">Gross Repair Cost (₱)</label>
-            <input type="number" id="dmgRepairCost" value="2500" min="0" step="50" style="font-weight:700;" />
+      <!-- Selected Rental Summary Card -->
+      <div id="dmgBookingInfoCard" class="hidden" style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
+              <i class="fa-solid fa-car"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;font-size:0.95rem;color:var(--text-hi);" id="dispDmgVehicle">Vehicle</div>
+              <div style="font-size:0.75rem;color:var(--text-mid);">Plate: <strong id="dispDmgPlate" style="font-family:monospace;letter-spacing:0.5px;">---</strong></div>
+            </div>
           </div>
-          <div class="field" style="margin:0;">
-            <label style="font-size:0.75rem;">Deductible Policy Coverage (₱)</label>
-            <input type="number" id="dmgDeductible" value="1000" min="0" step="50" style="font-weight:700;color:#059669;" />
+          <div style="text-align:right;">
+            <div style="font-size:0.85rem;font-weight:700;color:var(--text-hi);" id="dispDmgCustomer">Customer</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);" id="dispDmgPhone">---</div>
           </div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px dashed var(--glass-border);">
-          <span style="font-size:0.85rem;font-weight:800;color:var(--text-hi);">Customer Amount Due:</span>
-          <strong id="dmgAmountDueDisplay" style="font-size:1.25rem;color:#dc2626;">₱1,500.00</strong>
+      </div>
+
+      <!-- Hidden inputs for code compatibility -->
+      <input type="hidden" id="dmgVehicleName" />
+      <input type="hidden" id="dmgPlateNumber" />
+      <input type="hidden" id="dmgCustomerName" />
+      <input type="hidden" id="dmgCustomerPhone" />
+
+      <!-- Damage Component -->
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-wrench" style="color:var(--accent);"></i> Damage Component
+        </label>
+        <select id="dmgComponent" class="clean-select" style="width:100%;font-size:0.88rem;border-radius:10px;">
+          <option value="Front Bumper & Lip" data-cost="2500">Front Bumper &amp; Lip (Base ₱2,500)</option>
+          <option value="Rear Bumper & Sensors" data-cost="2500">Rear Bumper &amp; Sensors (Base ₱2,500)</option>
+          <option value="Door Panel Dent / Ding" data-cost="3500">Door Panel Dent / Ding (Base ₱3,500)</option>
+          <option value="Windshield Chip / Crack" data-cost="2500">Windshield Chip / Crack (Deductible Capped ₱2,500)</option>
+          <option value="Side Mirror Housing / Glass" data-cost="1800">Side Mirror Housing / Glass (Base ₱1,800)</option>
+          <option value="Alloy Wheels / Tire Scuff" data-cost="1500">Alloy Wheels / Tire Scuff (Base ₱1,500)</option>
+          <option value="Headlight / Taillight Assembly" data-cost="4500">Headlight / Taillight Assembly (Base ₱4,500)</option>
+          <option value="Interior Stain / Steam Detailing" data-cost="1200">Interior Deep Stain / Detailing (Base ₱1,200)</option>
+          <option value="Lost Key Fob / Immobilizer" data-cost="4000">Lost Key Fob / Remote (Base ₱4,000)</option>
+          <option value="Custom Body Damage" data-cost="3000">Other Custom Body Damage (Base ₱3,000)</option>
+        </select>
+      </div>
+
+      <!-- Severity Level with Interactive Segmented Cards -->
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-gauge-high" style="color:var(--accent);"></i> Severity Level
+        </label>
+        <div class="severity-card-grid" id="dmgSeverityGrid">
+          <div class="severity-card sev-minor selected" data-sev="minor" data-mult="1.0">
+            <div class="sev-title">Minor (1.0x)</div>
+            <div class="sev-sub">Surface mark / spot repair</div>
+          </div>
+          <div class="severity-card sev-moderate" data-sev="moderate" data-mult="1.4">
+            <div class="sev-title">Moderate (1.4x)</div>
+            <div class="sev-sub">Deep scratch / small dent</div>
+          </div>
+          <div class="severity-card sev-severe" data-sev="severe" data-mult="2.0">
+            <div class="sev-title">Severe (2.0x)</div>
+            <div class="sev-sub">Cracked part / replace</div>
+          </div>
+        </div>
+        <select id="dmgSeverity" class="hidden">
+          <option value="minor" data-mult="1.0" selected>Minor (Surface mark / spot repair)</option>
+          <option value="moderate" data-mult="1.4">Moderate (Deep scratch / small dent)</option>
+          <option value="severe" data-mult="2.0">Severe (Cracked component / replace)</option>
+        </select>
+      </div>
+
+      <!-- Incident Description -->
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-file-lines" style="color:var(--accent);"></i> Incident &amp; Inspection Description
+        </label>
+        <textarea id="dmgDescription" rows="2" placeholder="Describe the damage location, depth, and inspection findings..." style="border-radius:10px;font-size:0.88rem;"></textarea>
+      </div>
+
+      <!-- Damage Pay & Deductible Breakdown Box -->
+      <div style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:0.8rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:0.04em;">
+            <i class="fa-solid fa-calculator" style="color:var(--accent);"></i> Damage Pay &amp; Deductible Breakdown
+          </span>
+          <span class="badge badge-subtle" style="font-size:0.72rem;font-weight:700;color:#059669;">
+            <i class="fa-solid fa-shield-check"></i> Zero-Surprise Policy
+          </span>
+        </div>
+        <div class="detail-grid" style="gap:12px;margin-bottom:12px;">
+          <div class="field" style="margin:0;">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);">Gross Repair Cost (₱)</label>
+            <input type="number" id="dmgRepairCost" value="2500" min="0" step="50" style="font-weight:700;border-radius:8px;" />
+          </div>
+          <div class="field" style="margin:0;">
+            <label style="font-size:0.75rem;font-weight:600;color:#059669;">Deductible Policy Coverage (₱)</label>
+            <input type="number" id="dmgDeductible" value="1000" min="0" step="50" style="font-weight:700;color:#059669;border-radius:8px;" />
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px dashed var(--glass-border,#E2DCF0);">
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-mid);font-weight:600;">Customer Net Amount Due</div>
+            <div style="font-size:0.7rem;color:#059669;">After ₱1,000 deductible coverage waiver</div>
+          </div>
+          <div style="text-align:right;">
+            <strong id="dmgAmountDueDisplay" style="font-size:1.35rem;font-weight:900;color:#dc2626;">₱1,500.00</strong>
+          </div>
         </div>
       </div>
 
-      <div class="detail-grid">
-        <div class="field">
-          <label>Payment Method</label>
-          <select id="dmgPaymentMethod">
-            <option value="GCash">GCash QR</option>
+      <!-- Payment Method & Settlement Status -->
+      <div class="detail-grid" style="gap:14px;margin-bottom:16px;">
+        <div class="field" style="margin:0;">
+          <label style="font-weight:700;font-size:0.8rem;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-wallet" style="color:var(--accent);"></i> Payment Method
+          </label>
+          <div class="payment-chip-grid" id="dmgPayMethodGrid">
+            <div class="payment-chip selected" data-method="GCash">
+              <i class="fa-solid fa-mobile-screen"></i> GCash
+            </div>
+            <div class="payment-chip" data-method="Visa Card">
+              <i class="fa-solid fa-credit-card"></i> Card
+            </div>
+            <div class="payment-chip" data-method="Bank Transfer">
+              <i class="fa-solid fa-building-columns"></i> Bank
+            </div>
+            <div class="payment-chip" data-method="Cash">
+              <i class="fa-solid fa-money-bill-wave"></i> Cash
+            </div>
+          </div>
+          <select id="dmgPaymentMethod" class="hidden">
+            <option value="GCash" selected>GCash QR</option>
             <option value="Visa Card">Visa Card (3D Secure)</option>
-            <option value="Apple Pay">Apple Pay</option>
-            <option value="Cash">Cash on Handover</option>
             <option value="Bank Transfer">Bank QR Ph / Transfer</option>
-            <option value="Mastercard">Mastercard</option>
+            <option value="Cash">Cash on Handover</option>
           </select>
         </div>
-        <div class="field">
-          <label>Payment Status</label>
-          <select id="dmgStatus">
-            <option value="billed">Billed (Unpaid / On Invoice)</option>
+
+        <div class="field" style="margin:0;">
+          <label style="font-weight:700;font-size:0.8rem;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);"></i> Settlement Status
+          </label>
+          <div class="pay-status-grid" id="dmgStatusGrid">
+            <div class="pay-status-pill selected" data-status="paid">
+              <i class="fa-solid fa-circle-check"></i> Paid Now
+            </div>
+            <div class="pay-status-pill status-billed" data-status="billed">
+              <i class="fa-solid fa-file-invoice"></i> On Invoice
+            </div>
+          </div>
+          <select id="dmgStatus" class="hidden">
             <option value="paid" selected>Paid &amp; Settled Immediately</option>
+            <option value="billed">Billed (Unpaid / On Invoice)</option>
           </select>
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <button type="button" class="btn btn-ghost btn-block" onclick="window.closeModal && window.closeModal();">Cancel</button>
-        <button type="button" class="btn btn-primary btn-block" id="btnSaveDamageRecord">
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:14px;">
+        <button type="button" class="btn btn-secondary" onclick="window.closeModal && window.closeModal();" style="border-radius:10px;padding:12px;font-weight:700;">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" id="btnSaveDamageRecord" style="border-radius:10px;padding:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">
           <i class="fa-solid fa-check"></i> Confirm &amp; Save Damage Pay
         </button>
       </div>
     </div>
-  `);
+  `, true);
 
   $('#mClose')?.addEventListener('click', closeModal);
 
@@ -1734,6 +1883,17 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
       vPlateInp.value = opt.dataset.vplate || '';
       cNameInp.value = opt.dataset.cname || '';
       cPhoneInp.value = opt.dataset.cphone || '';
+
+      const card = $('#dmgBookingInfoCard');
+      if (card) {
+        card.classList.remove('hidden');
+        $('#dispDmgVehicle').textContent = opt.dataset.vname || 'Vehicle';
+        $('#dispDmgPlate').textContent = opt.dataset.vplate || 'N/A';
+        $('#dispDmgCustomer').textContent = opt.dataset.cname || 'Customer';
+        $('#dispDmgPhone').textContent = opt.dataset.cphone || 'No phone';
+      }
+    } else {
+      $('#dmgBookingInfoCard')?.classList.add('hidden');
     }
   });
 
@@ -1747,6 +1907,31 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
     repairCostInp.value = Math.round(baseCost * mult);
     recalc();
   });
+
+  // Severity Card Clicks
+  $$('#dmgSeverityGrid .severity-card').forEach(card => card.addEventListener('click', () => {
+    $$('#dmgSeverityGrid .severity-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    sevSelect.value = card.dataset.sev;
+    const baseCost = Number(compSelect.options[compSelect.selectedIndex]?.dataset.cost || 2500);
+    const mult = Number(card.dataset.mult || 1.0);
+    repairCostInp.value = Math.round(baseCost * mult);
+    recalc();
+  }));
+
+  // Payment Method Chips
+  $$('#dmgPayMethodGrid .payment-chip').forEach(chip => chip.addEventListener('click', () => {
+    $$('#dmgPayMethodGrid .payment-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    $('#dmgPaymentMethod').value = chip.dataset.method;
+  }));
+
+  // Payment Status Pills
+  $$('#dmgStatusGrid .pay-status-pill').forEach(pill => pill.addEventListener('click', () => {
+    $$('#dmgStatusGrid .pay-status-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
+    $('#dmgStatus').value = pill.dataset.status;
+  }));
 
   sevSelect?.addEventListener('change', () => {
     const baseCost = Number(compSelect.options[compSelect.selectedIndex]?.dataset.cost || 2500);
@@ -1793,44 +1978,62 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
   const activeAndCompleted = allBookings.filter(b => ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status));
 
   openModal(`
-    <div style="max-height:82vh;overflow-y:auto;padding-right:4px;">
-      <div class="modal-head" style="margin-bottom:14px;">
+    <div style="max-height:84vh;overflow-y:auto;padding-right:4px;">
+      <div class="modal-head" style="margin-bottom:16px;">
         <div>
-          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;">
+          <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);display:flex;align-items:center;gap:8px;margin:0;">
             <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Add Additional Operational Fee
           </h3>
-          <span style="font-size:0.78rem;color:var(--text-mid);">Attach late fees, fuel shortage, expressway tolls, or detailing surcharges.</span>
+          <p class="muted" style="margin:3px 0 0;font-size:0.8rem;">Attach late fees, fuel shortage, expressway tolls, or detailing surcharges.</p>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
-      <div class="field">
-        <label>Select Rental Booking</label>
-        <select id="feeBookingSelect" style="font-size:0.85rem;">
+      <!-- Select Booking Dropdown -->
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-car-side" style="color:var(--accent);"></i> Select Rental Booking
+        </label>
+        <select id="feeBookingSelect" class="clean-select" style="font-size:0.88rem;width:100%;border-radius:10px;">
           <option value="">-- Choose active or recent rental --</option>
           ${activeAndCompleted.map(b => `
             <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} data-vname="${b.vehicles?.name || 'Vehicle'}" data-cname="${b.profiles?.full_name || 'Customer'}">
-              #${b.id} - ${b.vehicles?.name || 'Vehicle'} · ${b.profiles?.full_name || 'Customer'}
+              #${b.id} · ${b.vehicles?.name || 'Vehicle'} — ${b.profiles?.full_name || 'Customer'}
             </option>
           `).join('')}
         </select>
       </div>
 
-      <div class="detail-grid">
-        <div class="field">
-          <label>Customer Name</label>
-          <input type="text" id="feeCustomerName" placeholder="Customer Name" required />
-        </div>
-        <div class="field">
-          <label>Vehicle Name</label>
-          <input type="text" id="feeVehicleName" placeholder="Vehicle Name" required />
+      <!-- Selected Rental Summary Card -->
+      <div id="feeBookingInfoCard" class="hidden" style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
+              <i class="fa-solid fa-car"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;font-size:0.95rem;color:var(--text-hi);" id="dispFeeVehicle">Vehicle</div>
+              <div style="font-size:0.75rem;color:var(--text-mid);">Rental Vehicle</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.85rem;font-weight:700;color:var(--text-hi);" id="dispFeeCustomer">Customer</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Account Holder</div>
+          </div>
         </div>
       </div>
 
-      <div class="detail-grid">
-        <div class="field">
-          <label>Fee Category</label>
-          <select id="feeCategorySelect">
+      <!-- Hidden inputs for code compatibility -->
+      <input type="hidden" id="feeCustomerName" />
+      <input type="hidden" id="feeVehicleName" />
+
+      <!-- Fee Category & Amount -->
+      <div class="detail-grid" style="gap:12px;margin-bottom:14px;">
+        <div class="field" style="margin:0;">
+          <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-tag" style="color:var(--accent);"></i> Fee Category
+          </label>
+          <select id="feeCategorySelect" class="clean-select" style="width:100%;font-size:0.88rem;border-radius:10px;">
             <option value="late_return" data-amount="1000" data-label="Late Return Penalty (2 hrs)">Late Return Penalty (₱500/hr)</option>
             <option value="fuel_surcharge" data-amount="650" data-label="Fuel Tank Shortage Top-Up">Fuel Shortage Surcharge</option>
             <option value="excess_km" data-amount="750" data-label="Excess Mileage Surcharge">Excess Mileage (₱15/km over limit)</option>
@@ -1840,46 +2043,79 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
             <option value="custom" data-amount="500" data-label="Other Operational Surcharge">Other Custom Fee</option>
           </select>
         </div>
-        <div class="field">
-          <label>Fee Amount (₱)</label>
-          <input type="number" id="feeAmount" value="1000" min="0" step="50" required style="font-weight:700;color:var(--accent);" />
+        <div class="field" style="margin:0;">
+          <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-coins" style="color:var(--accent);"></i> Surcharge Amount (₱)
+          </label>
+          <input type="number" id="feeAmount" value="1000" min="0" step="50" required style="font-weight:700;color:var(--accent);font-size:1.1rem;border-radius:10px;" />
         </div>
       </div>
 
-      <div class="field">
-        <label>Reason &amp; Operational Notes</label>
-        <textarea id="feeNotes" rows="2" placeholder="e.g. Returned 2 hours past agreed cutoff time due to expressway traffic delay..."></textarea>
+      <!-- Reason & Notes -->
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-pen" style="color:var(--accent);"></i> Reason &amp; Operational Notes
+        </label>
+        <textarea id="feeNotes" rows="2" placeholder="e.g. Returned 2 hours past cutoff time due to heavy expressway delay..." style="border-radius:10px;font-size:0.88rem;"></textarea>
       </div>
 
-      <div class="detail-grid">
-        <div class="field">
-          <label>Payment Method Option</label>
-          <select id="feePaymentMethod">
-            <option value="Apple Pay">Apple Pay</option>
+      <!-- Payment Method & Settlement Status -->
+      <div class="detail-grid" style="gap:14px;margin-bottom:16px;">
+        <div class="field" style="margin:0;">
+          <label style="font-weight:700;font-size:0.8rem;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-wallet" style="color:var(--accent);"></i> Payment Method
+          </label>
+          <div class="payment-chip-grid" id="feePayMethodGrid">
+            <div class="payment-chip" data-method="GCash">
+              <i class="fa-solid fa-mobile-screen"></i> GCash
+            </div>
+            <div class="payment-chip selected" data-method="Visa Card">
+              <i class="fa-solid fa-credit-card"></i> Card
+            </div>
+            <div class="payment-chip" data-method="Bank Transfer">
+              <i class="fa-solid fa-building-columns"></i> Bank
+            </div>
+            <div class="payment-chip" data-method="Cash">
+              <i class="fa-solid fa-money-bill-wave"></i> Cash
+            </div>
+          </div>
+          <select id="feePaymentMethod" class="hidden">
             <option value="Visa Card" selected>Visa Card</option>
             <option value="GCash">GCash QR</option>
             <option value="Cash">Cash on Handover</option>
             <option value="Bank Transfer">Bank Transfer / QR Ph</option>
-            <option value="Mastercard">Mastercard</option>
           </select>
         </div>
-        <div class="field">
-          <label>Settlement Status</label>
-          <select id="feeStatus">
+
+        <div class="field" style="margin:0;">
+          <label style="font-weight:700;font-size:0.8rem;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);"></i> Settlement Status
+          </label>
+          <div class="pay-status-grid" id="feeStatusGrid">
+            <div class="pay-status-pill selected" data-status="paid">
+              <i class="fa-solid fa-circle-check"></i> Paid Now
+            </div>
+            <div class="pay-status-pill status-billed" data-status="billed">
+              <i class="fa-solid fa-file-invoice"></i> On Invoice
+            </div>
+          </div>
+          <select id="feeStatus" class="hidden">
             <option value="paid" selected>Paid &amp; Settled Immediately</option>
             <option value="billed">Billed (Pending Customer Payment)</option>
           </select>
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <button type="button" class="btn btn-ghost btn-block" onclick="window.closeModal && window.closeModal();">Cancel</button>
-        <button type="button" class="btn btn-primary btn-block" id="btnSaveFeeRecord">
-          <i class="fa-solid fa-check"></i> Add Fee to Rental
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:14px;">
+        <button type="button" class="btn btn-secondary" onclick="window.closeModal && window.closeModal();" style="border-radius:10px;padding:12px;font-weight:700;">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" id="btnSaveFeeRecord" style="border-radius:10px;padding:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <i class="fa-solid fa-plus"></i> Add Fee to Rental
         </button>
       </div>
     </div>
-  `);
+  `, true);
 
   $('#mClose')?.addEventListener('click', closeModal);
 
@@ -1894,6 +2130,15 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
     if (opt && opt.value) {
       cNameInp.value = opt.dataset.cname || '';
       vNameInp.value = opt.dataset.vname || '';
+
+      const card = $('#feeBookingInfoCard');
+      if (card) {
+        card.classList.remove('hidden');
+        $('#dispFeeVehicle').textContent = opt.dataset.vname || 'Vehicle';
+        $('#dispFeeCustomer').textContent = opt.dataset.cname || 'Customer';
+      }
+    } else {
+      $('#feeBookingInfoCard')?.classList.add('hidden');
     }
   });
 
@@ -1907,6 +2152,20 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
       amtInp.value = opt.dataset.amount;
     }
   });
+
+  // Payment Method Chips
+  $$('#feePayMethodGrid .payment-chip').forEach(chip => chip.addEventListener('click', () => {
+    $$('#feePayMethodGrid .payment-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    $('#feePaymentMethod').value = chip.dataset.method;
+  }));
+
+  // Payment Status Pills
+  $$('#feeStatusGrid .pay-status-pill').forEach(pill => pill.addEventListener('click', () => {
+    $$('#feeStatusGrid .pay-status-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
+    $('#feeStatus').value = pill.dataset.status;
+  }));
 
   $('#btnSaveFeeRecord')?.addEventListener('click', () => {
     const amt = Number(amtInp.value || 0);
@@ -1970,7 +2229,7 @@ export function openDamageAssessmentSlipModal(record) {
           </div>
         </div>
 
-        <div style="margin-bottom:12px;background:var(--bg-dark);padding:10px 12px;border-radius:8px;">
+        <div style="margin-bottom:12px;background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);padding:10px 14px;border-radius:10px;">
           <div style="font-size:0.72rem;color:var(--text-mid);text-transform:uppercase;font-weight:700;margin-bottom:4px;">DAMAGE FINDINGS</div>
           <div style="font-weight:700;color:#dc2626;font-size:0.88rem;">${record.component} (${record.severity?.toUpperCase() || 'MINOR'})</div>
           <p style="margin:4px 0 0 0;font-size:0.78rem;color:var(--text-mid);line-height:1.4;">${record.description}</p>
