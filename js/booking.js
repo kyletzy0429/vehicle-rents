@@ -179,7 +179,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
               <div class="system-driver-card">
                 <label class="system-driver-checkbox-label" for="driverHireCheckbox">
                   <input type="checkbox" id="driverHireCheckbox" />
-                  <span>Add Private Driver Service (+₱900.00 / day)</span>
+                  <span class="system-driver-text">Add Private Driver Service <span class="driver-price-tag">(+PHP 900 / day)</span></span>
                 </label>
               </div>
             ` : '<input type="checkbox" id="driverHireCheckbox" style="display:none;" />'}

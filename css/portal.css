@@ -204,19 +204,9 @@
   color: #f1f5f9;
 }
 
-/* Topbar User Pill */
+/* Topbar User Pill - Removed per user request */
 .topbar-user-pill {
-  height: 38px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px 0 5px;
-  border-radius: 9999px;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  transition: all 0.2s ease;
+  display: none !important;
 }
 
 .topbar-user-pill:hover {
@@ -6769,5 +6759,51 @@
     font-weight: 700;
     background: #F5F2FB;
   }
+}
+
+/* Driver Add-on Checkbox Row Fix */
+.system-driver-card {
+  background: #FFFFFF;
+  border: 1px solid var(--glass-border, #E2DCF0);
+  border-radius: var(--radius-lg, 14px);
+  padding: 14px 18px;
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(42, 35, 64, 0.03);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.system-driver-card:hover {
+  border-color: var(--accent, #5B4B8A);
+  background: #FAFAFD;
+}
+
+.system-driver-checkbox-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  color: var(--text-hi, #2A2340) !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  width: auto !important;
+  user-select: none;
+}
+
+.system-driver-checkbox-label input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1.5px solid var(--glass-border, #E2DCF0) !important;
+  border-radius: 4px !important;
+  accent-color: var(--accent, #5B4B8A) !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  flex-shrink: 0 !important;
 }
 

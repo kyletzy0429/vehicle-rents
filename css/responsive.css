@@ -85,18 +85,26 @@ textarea {
   padding: 10px 14px !important;
 }
 
-.main-topbar,
-.portal-header {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 10px 14px !important;
-  gap: 8px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  position: sticky;
-  top: 0;
-  z-index: 40;
+@media (max-width: 900px) {
+  .main-topbar,
+  .portal-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+}
+
+@media (min-width: 901px) {
+  .main-topbar {
+    display: none !important;
+  }
 }
 
 .portal-header-left {
@@ -293,18 +301,9 @@ textarea {
   font-size: 1.25rem !important;
 }
 
-/* Mobile User Controls */
-#topUserMenuBtn span {
-  display: none !important;
-}
-
+/* Mobile User Controls - Removed per user request */
 #topUserMenuBtn {
-  padding: 0 !important;
-  min-width: 36px !important;
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 50% !important;
-  justify-content: center !important;
+  display: none !important;
 }
 
 .sys-status-pill {
@@ -404,16 +403,8 @@ textarea {
     padding: 22px 24px 60px 24px !important;
   }
 
-  #topUserMenuBtn span {
-    display: inline !important;
-  }
-
   #topUserMenuBtn {
-    padding: 4px 12px 4px 6px !important;
-    min-width: auto !important;
-    width: auto !important;
-    height: auto !important;
-    border-radius: var(--radius-full) !important;
+    display: none !important;
   }
 
   .hero-title {
