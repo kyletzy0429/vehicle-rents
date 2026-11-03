@@ -2996,6 +2996,10 @@ let customerStatusFilter = 'all';
 let customerSearchQuery = '';
 
 export async function renderAdminCustomers(view) {
+  if (customerStatusFilter === 'no_license') {
+    customerStatusFilter = 'all';
+  }
+
   const [allProfiles, bookings] = await Promise.all([
     fetchMergedProfiles(),
     fetchMergedBookings()
@@ -3003,11 +3007,40 @@ export async function renderAdminCustomers(view) {
 
   const customers = allProfiles.filter(p => p.role === 'customer');
 
-  const customerList = (customers || []).map(c => {
-    const cBookings = (bookings || []).filter(b => b.customer_id === c.id || (b.profiles && b.profiles.full_name === c.full_name));
+  // Also include any renter who booked but might not be in allProfiles
+  const seenCustomerIds = new Set(customers.map(c => String(c.id)));
+  const extraRentersFromBookings = [];
+  (bookings || []).forEach(b => {
+    const bId = b.customer_id ? String(b.customer_id) : null;
+    const bName = getBookingCustomerName(b);
+    if (bId && !seenCustomerIds.has(bId) && !extraRentersFromBookings.some(x => String(x.id) === bId)) {
+      seenCustomerIds.add(bId);
+      extraRentersFromBookings.push({
+        id: bId,
+        full_name: bName,
+        phone: getBookingCustomerPhone(b),
+        address: b.meetup_venue || b.delivery_address || 'Meetup / Branch Venue',
+        license_number: b.driver_license || '',
+        license_expiry: b.driver_license_expiry || null,
+        license_id_url: b.driver_license_card_url || null,
+        role: 'customer',
+        created_at: b.created_at || new Date().toISOString()
+      });
+    }
+  });
+
+  const allEligibleCustomers = [...customers, ...extraRentersFromBookings];
+
+  // Map and filter: ONLY RENTERS WHO HAVE ALREADY BOOKED (totalBookings > 0)!
+  const customerList = allEligibleCustomers.map(c => {
+    const cBookings = (bookings || []).filter(b =>
+      String(b.customer_id) === String(c.id) ||
+      (b.profiles && b.profiles.full_name && b.profiles.full_name === c.full_name) ||
+      (b.customer_name && b.customer_name === c.full_name)
+    );
     const activeRental = cBookings.find(b => b.status === 'active');
-    const pendingBooking = cBookings.find(b => b.status === 'pending');
-    const approvedBooking = cBookings.find(b => b.status === 'approved');
+    const pendingBooking = cBookings.find(b => ['pending', 'pending_verification', 'awaiting_payment', 'cash_on_pickup'].includes(b.status));
+    const approvedBooking = cBookings.find(b => ['approved', 'confirmed', 'vehicle_released'].includes(b.status));
     const totalSpent = cBookings
       .filter(b => ['active', 'completed', 'approved', 'confirmed', 'vehicle_released'].includes(b.status))
       .reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
@@ -3017,10 +3050,14 @@ export async function renderAdminCustomers(view) {
     else if (approvedBooking) liveStatus = 'approved';
     else if (pendingBooking) liveStatus = 'pending';
 
-    const hasLicense = Boolean(c.license_number || c.license_id_url);
+    // Retrieve license from customer profile or from their rental booking
+    const bookingLicense = cBookings.find(b => b.driver_license)?.driver_license || '';
+    const licenseNum = c.license_number || bookingLicense || '';
+    const hasLicense = Boolean(licenseNum || c.license_id_url);
 
     return {
       ...c,
+      license_number: licenseNum,
       bookings: cBookings,
       totalBookings: cBookings.length,
       totalSpent,
@@ -3030,20 +3067,17 @@ export async function renderAdminCustomers(view) {
       liveStatus,
       hasLicense
     };
-  });
+  }).filter(c => c.totalBookings > 0); // Only renters who have already booked
 
   const activeRentersCount = customerList.filter(c => c.liveStatus === 'active_renter').length;
   const pendingCount = customerList.filter(c => c.liveStatus === 'pending').length;
   const verifiedLicenseCount = customerList.filter(c => c.hasLicense).length;
-  const noLicenseCount = customerList.filter(c => !c.hasLicense).length;
 
   const filteredCustomers = customerList.filter(c => {
     let matchesFilter = true;
     if (customerStatusFilter === 'with_license') matchesFilter = c.hasLicense;
-    else if (customerStatusFilter === 'no_license') matchesFilter = !c.hasLicense;
     else if (customerStatusFilter === 'active_renter') matchesFilter = c.liveStatus === 'active_renter';
     else if (customerStatusFilter === 'pending') matchesFilter = c.liveStatus === 'pending';
-    else if (customerStatusFilter === 'idle') matchesFilter = c.liveStatus === 'idle';
 
     const searchLower = customerSearchQuery.toLowerCase();
     const matchesSearch =
@@ -3058,59 +3092,58 @@ export async function renderAdminCustomers(view) {
     <div class="view">
       <div class="section-head">
         <div>
-          <h2>Customers &amp; Driver License Verification</h2>
-          <p>Manage customer profiles, verify driver's licenses, and track booking histories.</p>
+          <h2>Renters &amp; Customer Verification</h2>
+          <p>Verified renters with bookings, active rentals, and handover records.</p>
         </div>
       </div>
 
       <div class="grid grid-stats" style="margin-bottom:22px;">
         <div class="glass stat-card">
-          <div class="stat-label">Total Customers</div>
-          <div class="stat-value">${customerList.length}</div>
+          <div class="stat-label">Total Renters</div>
+          <div class="stat-value" style="color:var(--accent);">${customerList.length}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Customers with bookings</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="stat-label">Active Renters</div>
+          <div class="stat-value" style="color:#059669;">${activeRentersCount}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Currently out with vehicle</div>
         </div>
         <div class="glass stat-card">
           <div class="stat-label">With Driver License</div>
           <div class="stat-value" style="color:#059669;">${verifiedLicenseCount}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">License verified on file</div>
         </div>
         <div class="glass stat-card">
-          <div class="stat-label">No License Provided</div>
-          <div class="stat-value" style="color:#dc2626;">${noLicenseCount}</div>
-        </div>
-        <div class="glass stat-card">
-          <div class="stat-label">Active Renters</div>
-          <div class="stat-value" style="color:var(--accent);">${activeRentersCount}</div>
+          <div class="stat-label">Pending Bookings</div>
+          <div class="stat-value" style="color:#d97706;">${pendingCount}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Awaiting staff review</div>
         </div>
       </div>
 
       <div class="search-bar" style="margin-bottom:14px;">
         <div style="position:relative;flex:1;">
           <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;"></i>
-          <input type="text" id="custSearchInput" style="padding-left:40px;" placeholder="Search by name, phone, or license number..." value="${customerSearchQuery}" />
+          <input type="text" id="custSearchInput" style="padding-left:40px;" placeholder="Search renters by name, phone, or license number..." value="${customerSearchQuery}" />
         </div>
       </div>
 
       <div class="pill-row" id="custFilterPills" style="margin-bottom:18px;">
-        <div class="pill ${customerStatusFilter === 'all' ? 'active' : ''}" data-cfilter="all">All (${customerList.length})</div>
-        <div class="pill ${customerStatusFilter === 'with_license' ? 'active' : ''}" data-cfilter="with_license" style="${customerStatusFilter === 'with_license' ? 'background:#059669;color:#fff;border-color:#059669;' : 'border-color:#a7f3d0;color:#047857;background:#ecfdf5;'}">
-          With License (${verifiedLicenseCount})
-        </div>
-        <div class="pill ${customerStatusFilter === 'no_license' ? 'active' : ''}" data-cfilter="no_license" style="${customerStatusFilter === 'no_license' ? 'background:#dc2626;color:#fff;border-color:#dc2626;' : 'border-color:#fecdd3;color:#e11d48;background:#fff1f2;'}">
-          No License (${noLicenseCount})
-        </div>
+        <div class="pill ${customerStatusFilter === 'all' ? 'active' : ''}" data-cfilter="all">All Renters (${customerList.length})</div>
         <div class="pill ${customerStatusFilter === 'active_renter' ? 'active' : ''}" data-cfilter="active_renter">Active Renters (${activeRentersCount})</div>
         <div class="pill ${customerStatusFilter === 'pending' ? 'active' : ''}" data-cfilter="pending">Pending Requests (${pendingCount})</div>
+        <div class="pill ${customerStatusFilter === 'with_license' ? 'active' : ''}" data-cfilter="with_license">With License (${verifiedLicenseCount})</div>
       </div>
 
       <div class="row-list">
         ${filteredCustomers.length ? filteredCustomers.map(c => {
-    let badgeHTML = '<span class="badge badge-available">Idle</span>';
+    let badgeHTML = '<span class="badge badge-available">Booked Renter</span>';
     if (c.liveStatus === 'active_renter') badgeHTML = '<span class="badge badge-completed">Active Renter</span>';
     else if (c.liveStatus === 'approved') badgeHTML = '<span class="badge badge-approved">Approved</span>';
     else if (c.liveStatus === 'pending') badgeHTML = '<span class="badge badge-pending">Pending Request</span>';
 
     const licenseBadge = c.hasLicense
-      ? `<span class="badge badge-completed" style="font-size:0.75rem;">${c.license_number ? c.license_number : 'ID Photo Provided'}</span>`
-      : `<span class="badge badge-rejected" style="font-size:0.75rem;">No License Provided</span>`;
+      ? `<span class="badge badge-completed" style="font-size:0.75rem;"><i class="fa-solid fa-id-card"></i> ${c.license_number ? c.license_number : 'ID Provided'}</span>`
+      : '';
 
     const initials = (c.full_name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
@@ -3148,7 +3181,7 @@ export async function renderAdminCustomers(view) {
               </div>
             </div>
           `;
-  }).join('') : emptyState('', 'No customers match the filter.')}
+  }).join('') : emptyState('', 'No renters found with active or completed bookings.')}
       </div>
     </div>
   `;
@@ -3175,23 +3208,39 @@ export async function renderAdminCustomers(view) {
           </div>
           <div>
             <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);margin:0;">${c.full_name}</h3>
-            <span style="font-size:0.75rem;color:var(--text-mid);">Customer &amp; Driver License Record</span>
+            <span style="font-size:0.75rem;color:var(--text-mid);">Renter &amp; Driver License Record</span>
           </div>
         </div>
         <div class="modal-close" id="mClose"><i class="fa-solid fa-xmark"></i></div>
       </div>
 
       <form id="adminCustForm" style="margin-top:10px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;background:${c.hasLicense ? 'var(--green-soft)' : 'var(--coral-soft)'};border:1px solid ${c.hasLicense ? 'var(--green-border)' : 'var(--coral-border)'};border-radius:10px;padding:12px 14px;margin-bottom:16px;">
-          <div>
-            <div style="font-weight:700;font-size:0.9rem;color:${c.hasLicense ? '#047857' : '#e11d48'};">
-              ${c.hasLicense ? 'Driver License Provided' : 'No Driver License On File'}
-            </div>
-            <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">
-              ${c.hasLicense ? 'Customer has submitted license details.' : 'Customer has not submitted a valid license yet.'}
+        ${c.hasLicense ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:8px;background:rgba(5,150,105,0.12);color:#059669;display:flex;align-items:center;justify-content:center;font-size:1rem;">
+                <i class="fa-solid fa-id-card"></i>
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:0.88rem;color:var(--text-hi);">
+                  Driver License: <strong style="font-family:monospace;">${c.license_number}</strong>
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-mid);">
+                  Verified license details on file.
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ` : `
+          <div style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1rem;">
+              <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <div style="font-size:0.78rem;color:var(--text-mid);">
+              Physical driver's license card can be inspected in-person during vehicle handover.
+            </div>
+          </div>
+        `}
 
         <div class="detail-grid" style="margin-bottom:14px;">
           <div class="field">
@@ -3222,7 +3271,7 @@ export async function renderAdminCustomers(view) {
 
         <div class="field" style="margin-bottom:16px;">
           <label>Driver's License ID Photo Document</label>
-          <div style="background:var(--bg-dark);border:2px dashed var(--glass-border);border-radius:10px;padding:14px;text-align:center;">
+          <div style="background:var(--bg-subtle,#F5F2FB);border:2px dashed var(--glass-border,#E2DCF0);border-radius:10px;padding:14px;text-align:center;">
             <div id="admLimPreviewBox" style="margin-bottom:10px;">
               ${c.license_id_url ? `
                 <div style="position:relative;display:inline-block;">
@@ -3240,7 +3289,7 @@ export async function renderAdminCustomers(view) {
           </div>
         </div>
 
-        <div style="background:var(--bg-dark);border:1px solid var(--glass-border);border-radius:10px;padding:12px;margin-bottom:18px;font-size:0.82rem;display:flex;justify-content:space-around;">
+        <div style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:10px;padding:12px;margin-bottom:18px;font-size:0.82rem;display:flex;justify-content:space-around;">
           <div><span style="color:var(--text-mid);">Total Bookings:</span> <strong style="color:var(--text-hi);">${c.totalBookings}</strong></div>
           <div><span style="color:var(--text-mid);">Total Spent:</span> <strong style="color:#059669;">${fmtMoney(c.totalSpent)}</strong></div>
         </div>
