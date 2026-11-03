@@ -468,15 +468,9 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
                 </div>
               ` : ''}
 
-              <button type="submit" class="btn btn-primary btn-block" id="cleanSubmitBtn" style="padding:12px;margin-top:16px;">
+              <button type="submit" class="btn btn-primary btn-block" id="cleanSubmitBtn" style="padding:11px;margin-top:14px;">
                 ${mode === 'signup' ? 'Create account' : (mode === 'forgot' ? 'Send reset link' : 'Sign in')}
               </button>
-
-              ${mode === 'login' ? `
-                <button type="button" class="btn btn-ghost btn-block" id="btnGoogleAuth" style="padding:12px;margin-top:10px;">
-                  Continue with Google
-                </button>
-              ` : ''}
             </form>
 
             <div class="auth-split-footer-text">
@@ -519,12 +513,6 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
           if (passInp) passInp.value = 'password123';
         }
       });
-    });
-
-    // Bind Google Auth demo click
-    overlay.querySelector('#btnGoogleAuth')?.addEventListener('click', () => {
-      closeModal();
-      switchSystemRole(selectedRole || 'customer');
     });
 
     // Bind Eye toggle
