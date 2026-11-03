@@ -8,6 +8,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
+if (!vm.SourceTextModule) {
+  const { spawnSync } = await import('child_process');
+  const res = spawnSync(process.execPath, ['--experimental-vm-modules', __filename, ...process.argv.slice(2)], {
+    stdio: 'inherit'
+  });
+  process.exit(res.status ?? 0);
+}
+
 const jsFiles = [
   'js/admin.js',
   'js/app.js',

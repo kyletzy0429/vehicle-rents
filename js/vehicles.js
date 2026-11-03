@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
-import { state, getVehicleOverrides, saveVehicleOverride } from './state.js';
-import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, emptyState } from './utils.js';
+import { state, getVehicleOverrides, saveVehicleOverride, getLocalBookings } from './state.js';
+import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, emptyState } from './utils.js';
 import { openVehicleDetail } from './booking.js';
 
 export { getVehicleOverrides, saveVehicleOverride };
@@ -417,6 +417,15 @@ function formatDisplayDate(iso) {
 let heroCalYear = new Date().getFullYear();
 let heroCalMonth = new Date().getMonth();
 
+let availPickUpDate = '';
+let availReturnDate = '';
+let availVehicleType = 'all';
+let availChecked = false;
+let availError = '';
+let availFreeVehicleIds = null;
+let availTotalCount = 0;
+let availFreeCount = 0;
+
 export function renderBrowse(view) {
   const cats = ['all', ...state.categories.map(c => c.name)];
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -424,7 +433,11 @@ export function renderBrowse(view) {
   const isGeneric = !rawName || rawName === 'Guest Customer' || rawName === 'User' || rawName === 'Customer';
   const firstName = isGeneric ? 'Juan' : rawName.split(' ')[0];
 
-  const filtered = state.vehicles.filter(v => {
+  const availableVehicles = (availChecked && availFreeVehicleIds)
+    ? state.vehicles.filter(v => availFreeVehicleIds.has(String(v.id)))
+    : state.vehicles;
+
+  const filtered = availableVehicles.filter(v => {
     const vCat = getVehicleCategoryName(v).toLowerCase();
     const vName = (v.name || '').toLowerCase();
 
@@ -440,49 +453,103 @@ export function renderBrowse(view) {
     return true;
   });
 
-  const userBookings = (state.bookings && state.bookings.length) ? state.bookings : [];
-  const upcomingBooking = userBookings.find(b => ['approved', 'confirmed', 'active', 'vehicle_released', 'pending_verification', 'pending'].includes(b.status)) || {
-    id: 'demo-upcoming',
-    vehicle_name: 'Toyota Fortuner 2.8 V',
-    image_url: 'images/fortuner.webp',
-    start_date: '2026-11-14',
-    end_date: '2026-11-17',
-    location: 'Puerto Princesa Airport'
-  };
+  const numDays = (availPickUpDate && availReturnDate) ? daysBetween(availPickUpDate, availReturnDate) : 0;
 
   view.innerHTML = `
     <div class="view" style="max-width:1200px;margin:0 auto;padding:16px 8px 60px 8px;">
-      <!-- Eyebrow & Greeting (Matches 3-renter-portal.png) -->
+      <!-- Eyebrow & Greeting -->
       <div style="margin-bottom:24px;">
         <div class="portal-eyebrow">RENTER PORTAL</div>
         <h1 class="portal-heading">Good morning, ${firstName}</h1>
       </div>
 
-      <!-- ═══ UPCOMING BOOKING BANNER CARD (Matches 3-renter-portal.png) ═══ -->
-      <div class="upcoming-booking-banner" style="background:#ffffff;border:1px solid #E2DCF0;border-radius:14px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 1px 3px rgba(42,35,64,0.03);">
-        <div style="display:flex;align-items:center;gap:20px;flex:1;min-width:0;">
-          <div style="width:140px;height:90px;background:#ffffff;border:1px solid #E2DCF0;border-radius:12px;padding:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <img src="${upcomingBooking.image_url || 'images/fortuner.webp'}" alt="${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+      <!-- ═══ BOOKING AVAILABILITY CARD (Replaces upcoming booking banner) ═══ -->
+      <div class="booking-availability-card" style="background:#ffffff;border:1px solid var(--glass-border,#E2DCF0);border-radius:14px;padding:22px 26px;margin-bottom:32px;box-shadow:0 1px 3px rgba(42,35,64,0.03);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+          <h2 style="font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;color:var(--text-hi,#2A2340);margin:0;">
+            Booking availability
+          </h2>
+          <span style="font-size:0.85rem;color:var(--text-mid,#5E5778);">
+            Pick your dates to see which vehicles are free
+          </span>
+        </div>
+
+        <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:170px;">
+            <label for="availPickUp" style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-hi,#2A2340);margin-bottom:6px;">
+              Pick-up date
+            </label>
+            <input 
+              type="date" 
+              id="availPickUp" 
+              class="clean-input" 
+              value="${availPickUpDate}" 
+              style="width:100%;padding:10px 14px;border:1.5px solid var(--glass-border,#E2DCF0);border-radius:10px;font-size:0.88rem;background:var(--bg-surface,#ffffff);color:var(--text-hi,#2A2340);" 
+            />
           </div>
-          <div style="min-width:0;">
-            <span class="soft-pill soft-pill-lavender" style="margin-bottom:6px;display:inline-block;">Upcoming</span>
-            <h2 style="font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;color:#2A2340;margin:0 0 4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              ${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}
-            </h2>
-            <div style="font-size:0.88rem;color:#5E5778;">
-              ${fmtDate(upcomingBooking.start_date)} to ${fmtDate(upcomingBooking.end_date)} | ${upcomingBooking.location || 'Puerto Princesa Airport'}
-            </div>
+
+          <div style="flex:1;min-width:170px;">
+            <label for="availReturn" style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-hi,#2A2340);margin-bottom:6px;">
+              Return date
+            </label>
+            <input 
+              type="date" 
+              id="availReturn" 
+              class="clean-input" 
+              value="${availReturnDate}" 
+              style="width:100%;padding:10px 14px;border:1.5px solid var(--glass-border,#E2DCF0);border-radius:10px;font-size:0.88rem;background:var(--bg-surface,#ffffff);color:var(--text-hi,#2A2340);" 
+            />
+          </div>
+
+          <div style="flex:1;min-width:160px;">
+            <label for="availVehicleType" style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-hi,#2A2340);margin-bottom:6px;">
+              Vehicle type
+            </label>
+            <select 
+              id="availVehicleType" 
+              class="clean-select" 
+              style="width:100%;font-size:0.88rem;border-radius:10px;">
+              <option value="all" ${availVehicleType === 'all' ? 'selected' : ''}>All types</option>
+              <option value="sedan" ${availVehicleType === 'sedan' ? 'selected' : ''}>Sedan</option>
+              <option value="suv" ${availVehicleType === 'suv' ? 'selected' : ''}>SUV</option>
+              <option value="mpv" ${availVehicleType === 'mpv' ? 'selected' : ''}>MPV</option>
+              <option value="van" ${availVehicleType === 'van' ? 'selected' : ''}>Van</option>
+              <option value="motorcycle" ${availVehicleType === 'motorcycle' ? 'selected' : ''}>Motorcycle</option>
+            </select>
+          </div>
+
+          <div style="flex-shrink:0;">
+            <button 
+              type="button" 
+              class="btn btn-primary" 
+              id="btnCheckAvailability" 
+              style="padding:10px 22px;border-radius:10px;font-weight:700;white-space:nowrap;height:42px;">
+              Check availability
+            </button>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-          <button type="button" class="btn btn-ghost" id="btnShowBookingQr" style="padding:8px 20px;border-radius:8px;border:1px solid #E2DCF0;color:#5B4B8A;background:#ffffff;">Show QR</button>
-          <button type="button" class="btn btn-primary" id="btnViewUpcomingBooking" style="padding:8px 20px;border-radius:8px;">View booking</button>
+
+        <!-- Validation Error Message -->
+        <div id="availErrorMsg" style="display:${availError ? 'block' : 'none'};color:#dc2626;font-size:0.82rem;font-weight:600;margin-top:12px;">
+          ${availError || ''}
         </div>
+
+        <!-- Availability Results Bar -->
+        ${availChecked && !availError ? `
+          <div id="availResultsBar" style="display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-border,#E2DCF0);flex-wrap:wrap;">
+            <span class="badge" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:4px 12px;border-radius:9999px;font-weight:700;font-size:0.78rem;">
+              ${availFreeCount} of ${availTotalCount} available
+            </span>
+            <span style="font-size:0.85rem;color:var(--text-hi,#2A2340);font-weight:600;">
+              ${fmtDate(availPickUpDate)} to ${fmtDate(availReturnDate)} (${numDays} ${numDays === 1 ? 'day' : 'days'}). Vehicles already booked on these dates are hidden below.
+            </span>
+          </div>
+        ` : ''}
       </div>
 
-      <!-- ═══ BROWSE VEHICLES SECTION (Matches 3-renter-portal.png) ═══ -->
+      <!-- ═══ BROWSE VEHICLES SECTION ═══ -->
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;">
-        <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:#2A2340;margin:0;">Browse vehicles</h2>
+        <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--text-hi,#2A2340);margin:0;">Browse vehicles</h2>
         <span style="font-size:0.84rem;color:#8C86A3;">${filtered.length} results</span>
       </div>
 
@@ -500,7 +567,7 @@ export function renderBrowse(view) {
 
       <!-- 4-Column Vehicles Grid -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:20px;" id="vehicleGrid">
-        ${filtered.length ? filtered.map(vehicleCardHTML).join('') : emptyState('', 'No vehicles available under this category.')}
+        ${filtered.length ? filtered.map(vehicleCardHTML).join('') : emptyState('', availChecked ? 'No vehicles are free on these dates.' : 'No vehicles available under this category.')}
       </div>
     </div>
   `;
@@ -513,40 +580,119 @@ export function renderBrowse(view) {
     });
   });
 
-  // Attach card detail open
+  // Attach card detail open (passes chosen pickUp & return dates to openVehicleDetail)
   $$('#vehicleGrid .renter-vehicle-card, #vehicleGrid .vehicle-card', view).forEach(card => {
     card.addEventListener('click', () => {
-      openVehicleDetail(card.dataset.id);
+      openVehicleDetail(card.dataset.id, availPickUpDate, availReturnDate);
     });
   });
 
   $$('[data-book-btn]', view).forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      openVehicleDetail(btn.dataset.bookBtn);
+      openVehicleDetail(btn.dataset.bookBtn, availPickUpDate, availReturnDate);
     });
   });
 
-  // Upcoming booking action buttons
-  $('#btnShowBookingQr')?.addEventListener('click', () => {
-    openModal(`
-      <div class="modal-head">
-        <h3 style="font-family:'Fraunces',serif;font-size:1.25rem;color:#2A2340;margin:0;">Booking QR Pass</h3>
-        <div class="modal-close" onclick="window.closeModal && window.closeModal()">Close</div>
-      </div>
-      <div style="text-align:center;padding:24px 16px;">
-        <div style="width:180px;height:180px;background:#F5F2FB;border:2px dashed #B8AED6;border-radius:14px;margin:0 auto 16px auto;display:flex;align-items:center;justify-content:center;color:#5B4B8A;font-size:3.5rem;">
-          <i class="fa-solid fa-qrcode"></i>
-        </div>
-        <div style="font-weight:700;font-size:1.1rem;color:#2A2340;margin-bottom:4px;">${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}</div>
-        <div style="font-size:0.86rem;color:#5E5778;">Present this QR pass to staff counter during vehicle meetup.</div>
-      </div>
-    `);
-  });
+  // Check Availability button handler
+  $('#btnCheckAvailability')?.addEventListener('click', async () => {
+    const pickUp = $('#availPickUp')?.value;
+    const returnDate = $('#availReturn')?.value;
+    const vType = $('#availVehicleType')?.value || 'all';
 
-  $('#btnViewUpcomingBooking')?.addEventListener('click', () => {
-    state.tab = 'bookings';
-    window.renderShell();
+    const errBox = $('#availErrorMsg');
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    if (!pickUp || !returnDate) {
+      availError = 'Please select both pick-up and return dates.';
+      if (errBox) {
+        errBox.textContent = availError;
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (pickUp < todayStr) {
+      availError = 'Pick-up date cannot be in the past.';
+      if (errBox) {
+        errBox.textContent = availError;
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (returnDate < pickUp) {
+      availError = 'Return date must not be before pick-up date.';
+      if (errBox) {
+        errBox.textContent = availError;
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    availError = '';
+    availPickUpDate = pickUp;
+    availReturnDate = returnDate;
+    availVehicleType = vType;
+
+    // Get bookings from Supabase (one query for all vehicles) plus getLocalBookings()
+    let dbBookings = [];
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('vehicle_id, start_date, end_date, status')
+        .in('status', ['pending', 'approved', 'active', 'reserved'])
+        .lte('start_date', returnDate)
+        .gte('end_date', pickUp);
+      if (!error && Array.isArray(data)) {
+        dbBookings = data;
+      }
+    } catch (e) {
+      console.warn('Availability check Supabase notice:', e);
+    }
+
+    const localList = getLocalBookings().filter(b =>
+      ['pending', 'approved', 'active', 'reserved'].includes(b.status) &&
+      b.start_date && b.end_date
+    );
+
+    const allBookings = [
+      ...dbBookings.map(b => ({
+        vehicle_id: String(b.vehicle_id),
+        start_date: (b.start_date || '').slice(0, 10),
+        end_date: (b.end_date || '').slice(0, 10)
+      })),
+      ...localList.map(b => ({
+        vehicle_id: String(b.vehicle_id || b.vehicles?.id || ''),
+        start_date: (b.start_date || '').slice(0, 10),
+        end_date: (b.end_date || '').slice(0, 10)
+      }))
+    ];
+
+    // Filter free vehicles:
+    // A vehicle is NOT free if its status is "maintenance",
+    // or if it has a booking with status pending, approved, active or reserved
+    // where start_date <= chosen return date AND end_date >= chosen pick-up date.
+    const freeVehicles = state.vehicles.filter(v => {
+      if (v.status === 'maintenance') return false;
+      const isBooked = allBookings.some(b =>
+        b.vehicle_id === String(v.id) &&
+        b.start_date <= returnDate &&
+        b.end_date >= pickUp
+      );
+      return !isBooked;
+    });
+
+    availFreeVehicleIds = new Set(freeVehicles.map(v => String(v.id)));
+    availTotalCount = state.vehicles.length;
+    availFreeCount = freeVehicles.length;
+    availChecked = true;
+
+    if (vType && vType !== 'all') {
+      browseFilter = vType;
+    }
+
+    renderBrowse(view);
   });
 }
 
