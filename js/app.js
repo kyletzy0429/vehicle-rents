@@ -391,167 +391,6 @@ export function renderShell() {
   const isDark = getTheme() === 'dark';
   const unreadNotifs = getNotifications().filter(n => !n.read).length;
 
-  if (state.portal === 'customer') {
-    $('#app').innerHTML = `
-      <div style="min-height:100vh;background:var(--bg-canvas, #F5F2FB);overflow-x:hidden;width:100%;max-width:100vw;">
-        <header class="portal-header">
-          <div class="portal-header-left">
-            <button type="button" class="guest-menu-btn" id="guestMenuBtn" title="Navigation Menu" aria-label="Navigation Menu">
-              <i class="fa-solid fa-bars"></i>
-            </button>
-
-            <div style="cursor:pointer;display:flex;align-items:center;gap:10px;" id="brandHomeBtn">
-              <div class="sidebar-brand-icon">${companyName[0]}</div>
-              <span class="sidebar-brand-name">${companyName}</span>
-            </div>
-
-            <!-- Sleek Dropdown Menu (Screenshot 3 style) -->
-            <div class="guest-dropdown-menu hidden" id="guestDropdownMenu">
-              <div class="g-menu-items">
-                <button type="button" class="g-menu-item ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <span>Search Vehicles</span>
-                </button>
-                <button type="button" class="g-menu-item ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
-                  <i class="fa-solid fa-calendar-check"></i>
-                  <span>My Bookings</span>
-                </button>
-                <button type="button" class="g-menu-item ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
-                  <i class="fa-regular fa-heart"></i>
-                  <span>My Favorites</span>
-                </button>
-                <button type="button" class="g-menu-item ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
-                  <i class="fa-solid fa-circle-user"></i>
-                  <span>My Account</span>
-                </button>
-                <button type="button" class="g-menu-item" id="gMenuPricing">
-                  <i class="fa-solid fa-tag"></i>
-                  <span>Pricing &amp; Terms</span>
-                </button>
-                <button type="button" class="g-menu-item" id="gMenuSupport">
-                  <i class="fa-solid fa-headset"></i>
-                  <span>Support</span>
-                </button>
-              </div>
-              <div class="g-menu-divider"></div>
-              <div class="g-menu-user-row">
-                <div class="g-menu-user-info">
-                  <div class="g-menu-user-name">${displayName}</div>
-                  <div class="g-menu-user-sub">${state.user?.email || 'Renter Access'}</div>
-                </div>
-                <button type="button" class="btn btn-ghost btn-sm" id="gMenuLogout" style="color:#ef4444;border-radius:99px;font-size:0.75rem;padding:4px 10px;">Sign out</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Customer Header Center Navigation -->
-          <nav class="portal-header-nav" id="portalHeaderNav" aria-label="Customer Navigation">
-            <button type="button" class="portal-nav-link ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
-              Browse
-            </button>
-            <button type="button" class="portal-nav-link ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
-              My bookings
-            </button>
-            <button type="button" class="portal-nav-link ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
-              Favorites
-            </button>
-            <button type="button" class="portal-nav-link ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
-              Account
-            </button>
-          </nav>
-
-          <div class="portal-header-right">
-            <button type="button" id="topNotifBtn" class="topbar-icon-btn" title="View Notifications" aria-label="View Notifications" style="border:none;background:transparent;color:var(--text-mid);font-size:0.88rem;display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;">
-              <span>Notifications</span>
-              ${unreadNotifs > 0 ? `<div class="notif-badge">${unreadNotifs}</div>` : ''}
-            </button>
-
-            ${renderRoleSwitcherHTML(state.portal)}
-
-            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${displayName}" style="padding:0;border:none;background:transparent;cursor:pointer;">
-              <div class="topbar-user-avatar" style="width:34px;height:34px;border-radius:50%;background:#E9E3F7;color:#5B4B8A;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:0.82rem;">${initials}</div>
-            </button>
-          </div>
-        </header>
-
-        <nav class="mobile-renter-tabbar" aria-label="Mobile Navigation">
-          <button type="button" class="mobile-renter-tab ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
-            <i class="fa-solid fa-car"></i>
-            <span>Browse</span>
-          </button>
-          <button type="button" class="mobile-renter-tab ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
-            <i class="fa-solid fa-calendar-check"></i>
-            <span>Bookings</span>
-          </button>
-          <button type="button" class="mobile-renter-tab ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
-            <i class="fa-regular fa-heart"></i>
-            <span>Favorites</span>
-          </button>
-          <button type="button" class="mobile-renter-tab ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
-            <i class="fa-regular fa-user"></i>
-            <span>Account</span>
-          </button>
-        </nav>
-
-        <main id="mainView" class="customer-main-view"><div class="loading-spin"></div></main>
-      </div>
-    `;
-
-    $('#brandHomeBtn')?.addEventListener('click', () => { state.tab = 'browse'; renderShell(); });
-    $('#topThemeBtn')?.addEventListener('click', toggleTheme);
-    $('#topNotifBtn')?.addEventListener('click', openNotificationsModal);
-    $('#topUserMenuBtn')?.addEventListener('click', openUserMenuModal);
-    bindRoleSwitcherEvents();
-
-    const gMenuBtn = $('#guestMenuBtn');
-    const gDropdown = $('#guestDropdownMenu');
-    if (gMenuBtn && gDropdown) {
-      gMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        gDropdown.classList.toggle('hidden');
-      });
-      document.addEventListener('click', (e) => {
-        if (!gDropdown.contains(e.target) && e.target !== gMenuBtn) {
-          gDropdown.classList.add('hidden');
-        }
-      });
-    }
-
-    $$('.g-menu-item[data-nav], .portal-nav-link[data-nav], .mobile-renter-tab[data-nav]').forEach(item => {
-      item.addEventListener('click', () => {
-        if (gDropdown) gDropdown.classList.add('hidden');
-        state.tab = item.dataset.nav;
-        renderShell();
-      });
-    });
-
-    const gPricing = $('#gMenuPricing');
-    if (gPricing) {
-      gPricing.addEventListener('click', () => {
-        if (gDropdown) gDropdown.classList.add('hidden');
-        openPricingModal();
-      });
-    }
-
-    const gSupport = $('#gMenuSupport');
-    if (gSupport) {
-      gSupport.addEventListener('click', () => {
-        if (gDropdown) gDropdown.classList.add('hidden');
-        const curComp = getSystemSettings().company || DEFAULT_SETTINGS.company;
-        toast(`Support Hotline: ${curComp.phone || '+63 917 123 4567'} | Email: ${curComp.email || 'support@vehiclerental.ph'}`, 'info');
-      });
-    }
-
-    const gLogout = $('#gMenuLogout');
-    if (gLogout) {
-      gLogout.addEventListener('click', logout);
-    }
-
-    updateNotificationBadge();
-    renderTab();
-    return;
-  }
-
   $('#app').innerHTML = `
     <div class="app-shell">
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -564,7 +403,7 @@ export function renderShell() {
           </button>
         </div>
 
-        <div class="sidebar-section-tag">${state.portal === 'admin' ? 'ADMIN' : 'STAFF'}</div>
+        <div class="sidebar-section-tag">${state.portal === 'admin' ? 'ADMIN' : (state.portal === 'staff' ? 'STAFF' : 'RENTER')}</div>
 
         <nav class="sidebar-nav">
           ${tabs.map(t => `<div class="sidebar-nav-btn ${t.id === state.tab ? 'active' : ''}" data-tab="${t.id}">${t.label}</div>`).join('')}
@@ -619,7 +458,7 @@ export function renderShell() {
             </button>
           </div>
         </div>
-        <main id="mainView" class="admin-main-view"><div class="loading-spin"></div></main>
+        <main id="mainView" class="${state.portal === 'customer' ? 'customer-main-view' : 'admin-main-view'}"><div class="loading-spin"></div></main>
       </div>
     </div>
   `;

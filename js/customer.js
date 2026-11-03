@@ -49,212 +49,98 @@ export async function renderCustomerProfile(view) {
   const email = state.user?.email || p.email || 'mark.ramos@gmail.com';
 
   view.innerHTML = `
-    <div class="view" style="max-width:1100px;margin:0 auto;padding:16px 8px 60px 8px;">
+    <div class="view" style="max-width:680px;margin:0 auto;padding:12px 8px 60px 8px;">
       <!-- Eyebrow & Title -->
       <div style="margin-bottom:24px;">
         <div class="portal-eyebrow">RENTER PORTAL</div>
         <h1 class="portal-heading">Account &amp; Security</h1>
       </div>
 
-      <div class="renter-account-layout">
-        <!-- ═══ LEFT: RENTER MENU CARD ═══ -->
-        <aside class="renter-menu-card">
-          <div class="renter-menu-user-head">
-            <div class="renter-menu-avatar">${initials}</div>
-            <div class="renter-menu-user-details" style="min-width:0;">
-              <div class="renter-menu-user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.full_name || 'Renter Account'}</div>
-              <div class="renter-menu-user-email">${email}</div>
-              <span class="soft-pill soft-pill-lavender" style="margin-top:6px;display:inline-block;">Renter</span>
+      <div class="account-card" style="background:#ffffff;border:1px solid var(--glass-border, #E2DCF0);border-radius:14px;padding:32px;box-shadow:0 1px 3px rgba(42,35,64,0.04);">
+        <!-- User Info Header -->
+        <div style="display:flex;align-items:center;gap:16px;padding-bottom:24px;border-bottom:1px solid #f1f5f9;margin-bottom:24px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:#E9E3F7;color:#5B4B8A;font-family:var(--font-heading, 'Fraunces', serif);font-size:1.3rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${initials}
+          </div>
+          <div>
+            <h2 style="font-family:var(--font-heading, 'Fraunces', serif);font-size:1.25rem;font-weight:700;color:#2A2340;margin:0 0 4px 0;">${p.full_name || 'Renter Account'}</h2>
+            <div style="font-size:0.86rem;color:#5E5778;">Manage your login email and account password below.</div>
+          </div>
+        </div>
+
+        <!-- 1. Email Address Form -->
+        <form id="emailForm" style="margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid #f1f5f9;">
+          <div class="field">
+            <label for="profEmail" style="font-weight:600;font-size:0.88rem;color:#2A2340;margin-bottom:8px;display:block;">Email Address</label>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <input type="email" id="profEmail" value="${email}" placeholder="your.email@example.com" required style="flex:1;min-height:44px;padding:10px 14px;border-radius:8px;border:1.5px solid #E2DCF0;font-size:0.92rem;" />
+              <button type="submit" class="btn btn-primary" id="saveEmailBtn" style="padding:10px 22px;border-radius:8px;white-space:nowrap;">Save Email</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- 2. Change Password Form -->
+        <form id="passwordForm">
+          <h3 style="font-family:var(--font-heading, 'Fraunces', serif);font-size:1.15rem;font-weight:700;color:#2A2340;margin:0 0 16px 0;">Change Password</h3>
+          
+          <div class="field" style="margin-bottom:16px;">
+            <label for="currentPassword" style="font-weight:600;font-size:0.88rem;color:#2A2340;margin-bottom:6px;display:block;">Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Enter current password" required style="width:100%;min-height:44px;padding:10px 14px;border-radius:8px;border:1.5px solid #E2DCF0;font-size:0.92rem;" />
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;">
+            <div class="field">
+              <label for="newPassword" style="font-weight:600;font-size:0.88rem;color:#2A2340;margin-bottom:6px;display:block;">New Password</label>
+              <input type="password" id="newPassword" placeholder="Minimum 6 characters" minlength="6" required style="width:100%;min-height:44px;padding:10px 14px;border-radius:8px;border:1.5px solid #E2DCF0;font-size:0.92rem;" />
+            </div>
+            <div class="field">
+              <label for="confirmPassword" style="font-weight:600;font-size:0.88rem;color:#2A2340;margin-bottom:6px;display:block;">Confirm New Password</label>
+              <input type="password" id="confirmPassword" placeholder="Re-type new password" minlength="6" required style="width:100%;min-height:44px;padding:10px 14px;border-radius:8px;border:1.5px solid #E2DCF0;font-size:0.92rem;" />
             </div>
           </div>
 
-          <div class="renter-menu-nav">
-            <div class="renter-menu-section-label">RENTER MENU</div>
-            <button type="button" class="renter-menu-item active" id="menuTabProfile">
-              <i class="fa-regular fa-user"></i>
-              <span>Personal &amp; Email</span>
-            </button>
-            <button type="button" class="renter-menu-item" id="menuTabSecurity">
-              <i class="fa-solid fa-lock"></i>
-              <span>Change Password</span>
-            </button>
-
-            <div class="renter-menu-section-label" style="margin-top:16px;">QUICK ACCESS</div>
-            <button type="button" class="renter-menu-item" id="menuNavBookings">
-              <i class="fa-solid fa-calendar-check"></i>
-              <span>My Bookings</span>
-            </button>
-            <button type="button" class="renter-menu-item" id="menuNavFavorites">
-              <i class="fa-regular fa-heart"></i>
-              <span>My Favorites</span>
-            </button>
-            <button type="button" class="renter-menu-item" id="menuNavBrowse">
-              <i class="fa-solid fa-car"></i>
-              <span>Browse Vehicles</span>
-            </button>
-
-            <div class="renter-menu-divider"></div>
-            <button type="button" class="renter-menu-item renter-menu-item-logout" id="menuNavLogout">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i>
-              <span>Sign out</span>
+          <div style="display:flex;justify-content:flex-end;">
+            <button type="submit" class="btn btn-primary" id="updatePasswordBtn" style="padding:10px 24px;border-radius:8px;">
+              Update Password
             </button>
           </div>
-        </aside>
-
-        <!-- ═══ RIGHT: ACCOUNT & SECURITY FORMS ═══ -->
-        <main class="renter-account-content">
-          <!-- 1. Personal Information & Email -->
-          <div class="account-card" id="sectionProfile">
-            <div class="account-card-header">
-              <h2 class="account-card-title">Personal Information</h2>
-              <p class="account-card-desc">Update your name, contact email address, and mobile number.</p>
-            </div>
-
-            <form id="profileForm">
-              <div class="account-form-grid">
-                <div class="field">
-                  <label for="profName">Full Name</label>
-                  <input type="text" id="profName" value="${p.full_name ?? ''}" placeholder="Full Name" required />
-                </div>
-
-                <div class="field">
-                  <label for="profEmail">Email Address</label>
-                  <input type="email" id="profEmail" value="${email}" placeholder="your.email@example.com" required />
-                </div>
-              </div>
-
-              <div class="account-form-grid" style="margin-top:14px;">
-                <div class="field">
-                  <label for="profPhone">Phone Number</label>
-                  <input type="tel" id="profPhone" value="${p.phone ?? ''}" placeholder="0917 123 4567" required />
-                </div>
-                <div class="field">
-                  <label for="profRole">Account Role</label>
-                  <input type="text" id="profRole" value="Renter (Customer)" disabled style="background:#f8fafc;color:#8C86A3;cursor:not-allowed;" />
-                </div>
-              </div>
-
-              <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-                <button type="submit" class="btn btn-primary" id="saveProfBtn" style="padding:10px 24px;border-radius:8px;">
-                  Save Profile Details
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- 2. Change Password -->
-          <div class="account-card" id="sectionPassword" style="margin-top:24px;">
-            <div class="account-card-header">
-              <h2 class="account-card-title">Change Password</h2>
-              <p class="account-card-desc">Set a strong password of at least 6 characters to secure your renter account.</p>
-            </div>
-
-            <form id="passwordForm">
-              <div class="account-form-grid">
-                <div class="field">
-                  <label for="currentPassword">Current Password</label>
-                  <input type="password" id="currentPassword" placeholder="Enter current password" required />
-                </div>
-              </div>
-
-              <div class="account-form-grid" style="margin-top:14px;">
-                <div class="field">
-                  <label for="newPassword">New Password</label>
-                  <input type="password" id="newPassword" placeholder="Minimum 6 characters" minlength="6" required />
-                </div>
-                <div class="field">
-                  <label for="confirmPassword">Confirm New Password</label>
-                  <input type="password" id="confirmPassword" placeholder="Re-type new password" minlength="6" required />
-                </div>
-              </div>
-
-              <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-                <button type="submit" class="btn btn-primary" id="updatePasswordBtn" style="padding:10px 24px;border-radius:8px;">
-                  Update Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </main>
+        </form>
       </div>
     </div>
   `;
 
-  // Menu navigation handlers
-  $('#menuTabProfile')?.addEventListener('click', () => {
-    $('#sectionProfile')?.scrollIntoView({ behavior: 'smooth' });
-    $('#menuTabProfile')?.classList.add('active');
-    $('#menuTabSecurity')?.classList.remove('active');
-  });
-
-  $('#menuTabSecurity')?.addEventListener('click', () => {
-    $('#sectionPassword')?.scrollIntoView({ behavior: 'smooth' });
-    $('#menuTabSecurity')?.classList.add('active');
-    $('#menuTabProfile')?.classList.remove('active');
-  });
-
-  $('#menuNavBookings')?.addEventListener('click', () => {
-    state.tab = 'bookings';
-    window.renderShell();
-  });
-
-  $('#menuNavFavorites')?.addEventListener('click', () => {
-    state.tab = 'favorites';
-    window.renderShell();
-  });
-
-  $('#menuNavBrowse')?.addEventListener('click', () => {
-    state.tab = 'browse';
-    window.renderShell();
-  });
-
-  $('#menuNavLogout')?.addEventListener('click', () => {
-    import('./auth.js').then(({ logout }) => logout());
-  });
-
-  // Profile Form Handler
-  $('#profileForm')?.addEventListener('submit', async (e) => {
+  // Email Form Handler
+  $('#emailForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const saveBtn = $('#saveProfBtn');
-    const newName = $('#profName').value.trim();
+    const saveBtn = $('#saveEmailBtn');
     const newEmail = $('#profEmail').value.trim();
-    const newPhone = $('#profPhone').value.trim();
+    if (!newEmail) return;
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving Changes…';
-
-    const updated = {
-      full_name: newName,
-      phone: newPhone
-    };
+    saveBtn.textContent = 'Saving…';
 
     const uid = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
     try {
       if (supabase) {
-        await supabase.from('profiles').update(updated).eq('id', uid);
-        if (newEmail && newEmail !== state.user?.email) {
+        if (newEmail !== state.user?.email) {
           await supabase.auth.updateUser({ email: newEmail }).catch(() => {});
         }
+        await supabase.from('profiles').update({ email: newEmail }).eq('id', uid);
       }
     } catch (err) {
-      console.warn('Profile update notice:', err);
+      console.warn('Email update notice:', err);
     }
 
-    if (state.profile) {
-      state.profile.full_name = newName;
-      state.profile.phone = newPhone;
-    }
-    if (state.user) {
-      state.user.email = newEmail;
-    }
+    if (state.user) state.user.email = newEmail;
+    if (state.profile) state.profile.email = newEmail;
 
     try {
       localStorage.setItem(`rentflow_prof_${uid}`, JSON.stringify({ ...state.profile, email: newEmail }));
     } catch (e) { }
 
-    toast('Profile details updated successfully!', 'success');
+    toast('Email address updated successfully!', 'success');
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Save Profile Details';
+    saveBtn.textContent = 'Save Email';
 
     if (window.renderShell) {
       window.renderShell();
@@ -284,7 +170,7 @@ export async function renderCustomerProfile(view) {
       if (supabase && supabase.auth) {
         const { error } = await supabase.auth.updateUser({ password: newPass });
         if (error) {
-          console.warn('Supabase password update notice:', error.message);
+          console.warn('Supabase password update note:', error.message);
         }
       }
       toast('Password updated successfully! Use your new password next time you sign in.', 'success');
