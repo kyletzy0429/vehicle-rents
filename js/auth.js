@@ -405,7 +405,7 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
 
         <!-- LEFT HALF: Photo with Floating Bottom Prompt (Matches 2-sign-in.png) -->
         <div class="auth-split-left">
-          <img src="images/travel-vacation.jpg" alt="Travel scenery" class="auth-split-bg-img" />
+          <img src="images/hero-fleet.jpg" alt="Vehicle fleet" class="auth-split-bg-img" />
           <div class="auth-split-floating-card">
             <h3 class="auth-split-card-title">Your next trip starts with a confirmed vehicle.</h3>
             <p class="auth-split-card-sub">Sign in to manage bookings, favorites and receipts.</p>
@@ -418,12 +418,6 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
             <div class="auth-split-brand">
               <div class="lp-brand-icon"><i class="fa-solid fa-car-side"></i></div>
               <span class="lp-brand-text">Vehicle Rental System</span>
-            </div>
-
-            <!-- Top Mode Switcher: Sign in | Create account -->
-            <div class="auth-role-segmented-control" id="authFlowSegmented" style="margin-bottom:16px;">
-              <button type="button" class="auth-segment-pill ${mode === 'login' ? 'active' : ''}" id="flowTabLogin">Sign in</button>
-              <button type="button" class="auth-segment-pill ${mode === 'signup' ? 'active' : ''}" id="flowTabSignup">Create account</button>
             </div>
 
             <h2 class="auth-split-headline">${mode === 'signup' ? 'Create an account' : (mode === 'forgot' ? 'Reset password' : 'Welcome back')}</h2>
@@ -533,17 +527,7 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
       });
     });
 
-    // Bind mode links & tabs
-    overlay.querySelector('#flowTabLogin')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      mode = 'login';
-      renderModal();
-    });
-    overlay.querySelector('#flowTabSignup')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      mode = 'signup';
-      renderModal();
-    });
+    // Bind mode links
     overlay.querySelector('#cleanToSignup')?.addEventListener('click', (e) => {
       e.preventDefault();
       mode = 'signup';
