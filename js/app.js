@@ -365,6 +365,8 @@ export function openPricingModal() {
 
 
 export function renderShell() {
+  const comp = getSystemSettings().company || DEFAULT_SETTINGS.company;
+  const companyName = comp.name || 'Palawan Drive';
   const tabs = PORTAL_TABS[state.portal] || [];
   if (!state.tab || !tabs.find(t => t.id === state.tab)) state.tab = tabs[0]?.id;
 
@@ -536,15 +538,15 @@ export function renderShell() {
     <div class="app-shell">
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebarMenu">
-        <div class="sidebar-brand" style="display:flex;align-items:center;gap:10px;">
-          <div style="flex:1;">
-            <div style="font-weight:800;font-size:0.88rem;line-height:1.2;color:var(--text-hi);letter-spacing:-0.01em;">Vehicle Rental Management System</div>
-            <div style="font-size:0.7rem;color:var(--accent);font-weight:700;margin-top:2px;">${roleTitle} Portal</div>
-          </div>
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">${companyName[0]}</div>
+          <div class="sidebar-brand-name">${companyName}</div>
           <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close Menu" aria-label="Close Menu">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
+
+        <div class="sidebar-section-tag">${state.portal === 'admin' ? 'ADMIN' : 'STAFF'}</div>
 
         <nav class="sidebar-nav">
           ${tabs.map(t => `<div class="sidebar-nav-btn ${t.id === state.tab ? 'active' : ''}" data-tab="${t.id}">${t.label}</div>`).join('')}
