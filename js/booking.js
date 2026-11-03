@@ -470,7 +470,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         if (!calculatedBookingData) return;
         const data = calculatedBookingData;
 
-        let selectedPaymentMethod = 'card';
+        let selectedPaymentMethod = $('#bPaymentMethodGrid .pay-method-card.active')?.dataset.method || 'card';
         let uploadedProofDataUrl = null;
 
         const payStructure = $('#payStructureSelect');
@@ -478,24 +478,24 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
         // Sync Payment Structure UI
         $$('#bPayStructureSelector .selector-opt-card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.onclick = () => {
                 $$('#bPayStructureSelector .selector-opt-card').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
                 selectedDownpaymentPct = Number(card.dataset.pct || 100);
                 if (payStructure) payStructure.value = String(selectedDownpaymentPct);
                 renderPaymentDetail();
-            });
+            };
         });
 
         // Sync Payment Method UI
         $$('#bPaymentMethodGrid .pay-method-card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.onclick = () => {
                 $$('#bPaymentMethodGrid .pay-method-card').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
                 selectedPaymentMethod = card.dataset.method;
                 if (payMethodSelect) payMethodSelect.value = selectedPaymentMethod;
                 renderPaymentDetail();
-            });
+            };
         });
 
         function renderPaymentDetail() {
