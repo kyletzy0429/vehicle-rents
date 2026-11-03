@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
 import { state, getVehicleOverrides, saveVehicleOverride, getLocalBookings } from './state.js';
-import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, emptyState } from './utils.js';
+import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, emptyState, t } from './utils.js';
 import { openVehicleDetail } from './booking.js';
 
 export { getVehicleOverrides, saveVehicleOverride };
@@ -460,7 +460,7 @@ export function renderBrowse(view) {
       <!-- Eyebrow & Greeting -->
       <div style="margin-bottom:24px;">
         <div class="portal-eyebrow">RENTER PORTAL</div>
-        <h1 class="portal-heading">Good morning, ${firstName}</h1>
+        <h1 class="portal-heading">${t('welcome_back') || 'Welcome back'}, ${firstName}</h1>
       </div>
 
       <!-- ═══ BOOKING AVAILABILITY CARD (Replaces upcoming booking banner) ═══ -->
