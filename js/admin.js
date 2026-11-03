@@ -581,15 +581,15 @@ export async function openStaffPaymentReviewModal(bookingId) {
     <div class="modal-head">
       <div>
         <h3 style="margin:0;font-size:1.25rem;display:flex;align-items:center;gap:8px;">
-          <i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Review Payment &amp; Verify Receipt
+          <i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Review &amp; Verify Payment
         </h3>
-        <p class="muted" style="margin:2px 0 0;font-size:0.8rem;">Staff verification portal · Review customer receipt and transaction reference.</p>
+        <p class="muted" style="margin:2px 0 0;font-size:0.8rem;">Staff verification portal · Confirm transaction reference and booking details.</p>
       </div>
       <div class="modal-close" id="mReviewClose">Close</div>
     </div>
 
     <!-- Reservation Summary -->
-    <div style="background:rgba(241,245,249,0.7);border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:14px;">
+    <div style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:14px;margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div>
           <div style="font-weight:800;font-size:1.05rem;color:var(--text-hi);">${vehicleName}</div>
@@ -600,7 +600,7 @@ export async function openStaffPaymentReviewModal(bookingId) {
           <div style="font-size:1.2rem;font-weight:900;color:#059669;">${fmtMoney(b.total_amount)}</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;border-top:1px dashed #cbd5e1;padding-top:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;border-top:1px dashed var(--glass-border,#E2DCF0);padding-top:8px;">
         <div>Customer: <strong>${cName}</strong></div>
         <div>Contact: <strong>${cPhone || 'N/A'}</strong></div>
         <div>Rental Period: <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
@@ -608,62 +608,38 @@ export async function openStaffPaymentReviewModal(bookingId) {
       </div>
     </div>
 
-    <!-- Reference Number Verification Box -->
-    <div style="background:#fff;border:2px solid #3b82f6;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 4px 12px rgba(59,130,246,0.08);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-size:0.75rem;font-weight:800;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;">
-          <i class="fa-solid fa-hashtag"></i> Payment Method &amp; Reference Number
+    <!-- Reference Number & Payment Verification Box -->
+    <div style="background:var(--bg-surface,#fff);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:0.75rem;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.05em;">
+          Payment Method &amp; Reference Code
         </span>
-        <span class="badge badge-primary" style="font-size:0.75rem;">${payMethod}</span>
+        <span class="badge badge-primary" style="font-size:0.75rem;font-weight:700;">${payMethod}</span>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-subtle);padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-subtle,#F5F2FB);padding:12px 16px;border-radius:8px;border:1px solid var(--glass-border,#E2DCF0);">
         <div>
-          <div style="font-size:0.72rem;color:var(--text-mid);font-weight:600;">Transaction Ref No.:</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);font-weight:600;margin-bottom:2px;">Transaction Reference Number</div>
           <div style="font-family:monospace;font-size:1.15rem;font-weight:800;color:var(--text-hi);letter-spacing:1px;" id="dispRefNo">${payRef}</div>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" id="btnCopyRef">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnCopyRef" style="border-radius:6px;">
           <i class="fa-solid fa-copy"></i> Copy Ref
         </button>
       </div>
     </div>
 
-    <!-- Proof of Payment / Uploaded Receipt Image -->
-    <div style="margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:0.8rem;font-weight:700;color:var(--text-hi);">
-          <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Customer Receipt / Proof of Payment
-        </span>
-        ${proofImg ? `<span class="badge badge-confirmed" style="font-size:0.7rem;"><i class="fa-solid fa-circle-check"></i> Proof Attached</span>` : `<span class="badge badge-pending" style="font-size:0.7rem;">No Image Attached</span>`}
-      </div>
-      <div style="border:1px solid #e2e8f0;border-radius:12px;background:#0f172a;min-height:180px;max-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
-        ${proofImg ? `
-          <img src="${proofImg}" alt="Proof of Payment" style="max-height:290px;max-width:100%;object-fit:contain;cursor:zoom-in;" id="proofZoomImg" title="Click to view full image in new tab" />
-        ` : `
-          <div style="text-align:center;color:#94a3b8;padding:24px;">
-            <i class="fa-solid fa-image" style="font-size:2rem;margin-bottom:8px;opacity:0.6;"></i>
-            <div style="font-size:0.85rem;">No proof image uploaded by customer.</div>
-            <div style="font-size:0.75rem;opacity:0.8;">Please verify via banking app using Reference Number above.</div>
-          </div>
-        `}
-      </div>
-      ${proofImg ? `<div style="text-align:center;font-size:0.72rem;color:var(--text-mid);margin-top:4px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Click image to open high-resolution receipt</div>` : ''}
-    </div>
-
     ${b.review_notes ? `
-      <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:8px 12px;font-size:0.8rem;margin-bottom:14px;">
-        <strong>Previous Review Notes:</strong> ${b.review_notes}
+      <div style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);color:var(--text-hi,#2A2340);border-radius:8px;padding:10px 14px;font-size:0.82rem;margin-bottom:16px;">
+        <span style="color:var(--text-mid);font-weight:600;">Booking Notes:</span> <strong>${b.review_notes}</strong>
       </div>
     ` : ''}
 
-    <!-- Verification Decision Buttons -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-      <button class="btn btn-primary btn-stacked" id="btnApprovePaymentAction" style="background:#059669;border-color:#059669;padding:12px 10px;">
-        <div style="font-size:0.95rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Approve Payment</div>
-        <div style="font-size:0.72rem;opacity:0.9;font-weight:400;margin-top:2px;">Verified · Confirmed · Ready for Release</div>
+    <!-- Clean Verification Decision Buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+      <button class="btn btn-primary" id="btnApprovePaymentAction" style="background:#059669;border-color:#059669;padding:12px 14px;font-weight:700;font-size:0.92rem;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i class="fa-solid fa-check"></i> Approve Payment
       </button>
-      <button class="btn btn-danger btn-stacked" id="btnRejectPaymentAction" style="background:#dc2626;border-color:#dc2626;padding:12px 10px;">
-        <div style="font-size:0.95rem;font-weight:800;"><i class="fa-solid fa-circle-xmark"></i> Reject Payment</div>
-        <div style="font-size:0.72rem;opacity:0.9;font-weight:400;margin-top:2px;">Rejected · Awaiting Customer Resubmission</div>
+      <button class="btn btn-danger" id="btnRejectPaymentAction" style="background:#dc2626;border-color:#dc2626;padding:12px 14px;font-weight:700;font-size:0.92rem;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i class="fa-solid fa-xmark"></i> Reject Payment
       </button>
     </div>
   `, true);
@@ -674,13 +650,6 @@ export async function openStaffPaymentReviewModal(bookingId) {
     if (payRef && payRef !== 'NO REFERENCE RECORDED') {
       navigator.clipboard.writeText(payRef);
       toast(`Copied Reference: ${payRef}`, 'info');
-    }
-  });
-
-  $('#proofZoomImg')?.addEventListener('click', () => {
-    if (proofImg) {
-      const win = window.open();
-      win.document.write(`<img src="${proofImg}" style="max-width:100%;height:auto;display:block;margin:0 auto;" />`);
     }
   });
 
