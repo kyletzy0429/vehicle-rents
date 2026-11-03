@@ -935,6 +935,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             ? state.user.id 
             : '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
 
+        // Supabase DB constraint allows: 'pending', 'approved', 'active', 'completed', 'cancelled', 'rejected'
+        const dbStatus = (chosenMethod === 'card' && paidAmount > 0) ? 'approved' : 'pending';
+
         const cleanDbPayload = {
             customer_id: activeCustomerId,
             vehicle_id: Number(v.id),
@@ -945,7 +948,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             balance_due: balanceDue,
             payment_type: selectedDownpaymentPct === 100 ? 'full' : 'partial',
             downpayment_percent: selectedDownpaymentPct,
-            status: targetStatus,
+            status: dbStatus,
             review_notes: `Meetup: ${rLocation} (${rTime}) | Method: ${targetMethodName} | Ref: ${finalRefNum}`
         };
 

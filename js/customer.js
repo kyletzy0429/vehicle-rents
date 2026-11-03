@@ -1042,8 +1042,9 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
             method: methodName,
             paid_at: new Date().toISOString(),
           });
+          const dbBookingStatus = targetStatus === 'confirmed' ? 'approved' : 'pending';
           await supabase.from('bookings').update({
-            status: targetStatus,
+            status: dbBookingStatus,
             paid_amount: newTotalPaid,
             balance_due: newBalance,
             payment_type: newPaymentType,
