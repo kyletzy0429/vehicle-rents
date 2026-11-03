@@ -464,19 +464,21 @@ export function renderBrowse(view) {
       </div>
 
       <!-- ═══ BOOKING AVAILABILITY CARD (Replaces upcoming booking banner) ═══ -->
-      <div class="booking-availability-card" style="background:#ffffff;border:1px solid var(--glass-border,#E2DCF0);border-radius:14px;padding:22px 26px;margin-bottom:32px;box-shadow:0 1px 3px rgba(42,35,64,0.03);">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
-          <h2 style="font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;color:var(--text-hi,#2A2340);margin:0;">
-            Booking availability
-          </h2>
-          <span style="font-size:0.85rem;color:var(--text-mid,#5E5778);">
-            Pick your dates to see which vehicles are free
-          </span>
+      <div class="booking-availability-card" style="background:#ffffff;border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:14px 18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(42,35,64,0.03);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <h2 style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;color:var(--text-hi,#2A2340);margin:0;">
+              Booking dates
+            </h2>
+            <span style="font-size:0.78rem;color:var(--text-mid,#5E5778);">
+              Check vehicle availability
+            </span>
+          </div>
         </div>
 
-        <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
-          <div style="flex:1;min-width:170px;">
-            <label for="availPickUp" style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-hi,#2A2340);margin-bottom:6px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:145px;">
+            <label for="availPickUp" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-mid,#5E5778);margin-bottom:4px;">
               Pick-up date
             </label>
             <input 
@@ -484,12 +486,12 @@ export function renderBrowse(view) {
               id="availPickUp" 
               class="clean-input" 
               value="${availPickUpDate}" 
-              style="width:100%;padding:10px 14px;border:1.5px solid var(--glass-border,#E2DCF0);border-radius:10px;font-size:0.88rem;background:var(--bg-surface,#ffffff);color:var(--text-hi,#2A2340);" 
+              style="width:100%;height:38px;padding:6px 10px;border:1px solid var(--glass-border,#E2DCF0);border-radius:8px;font-size:0.85rem;background:var(--bg-surface,#ffffff);color:var(--text-hi,#2A2340);" 
             />
           </div>
 
-          <div style="flex:1;min-width:170px;">
-            <label for="availReturn" style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-hi,#2A2340);margin-bottom:6px;">
+          <div style="flex:1;min-width:145px;">
+            <label for="availReturn" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-mid,#5E5778);margin-bottom:4px;">
               Return date
             </label>
             <input 
@@ -497,18 +499,18 @@ export function renderBrowse(view) {
               id="availReturn" 
               class="clean-input" 
               value="${availReturnDate}" 
-              style="width:100%;padding:10px 14px;border:1.5px solid var(--glass-border,#E2DCF0);border-radius:10px;font-size:0.88rem;background:var(--bg-surface,#ffffff);color:var(--text-hi,#2A2340);" 
+              style="width:100%;height:38px;padding:6px 10px;border:1px solid var(--glass-border,#E2DCF0);border-radius:8px;font-size:0.85rem;background:var(--bg-surface,#ffffff);color:var(--text-hi,#2A2340);" 
             />
           </div>
 
-          <div style="flex:1;min-width:160px;">
-            <label for="availVehicleType" style="display:block;font-size:0.8rem;font-weight:700;color:var(--text-hi,#2A2340);margin-bottom:6px;">
+          <div style="flex:1;min-width:130px;">
+            <label for="availVehicleType" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-mid,#5E5778);margin-bottom:4px;">
               Vehicle type
             </label>
             <select 
               id="availVehicleType" 
               class="clean-select" 
-              style="width:100%;font-size:0.88rem;border-radius:10px;">
+              style="width:100%;height:38px;font-size:0.85rem;padding:6px 8px;border-radius:8px;border:1px solid var(--glass-border,#E2DCF0);">
               <option value="all" ${availVehicleType === 'all' ? 'selected' : ''}>All types</option>
               <option value="sedan" ${availVehicleType === 'sedan' ? 'selected' : ''}>Sedan</option>
               <option value="suv" ${availVehicleType === 'suv' ? 'selected' : ''}>SUV</option>
@@ -523,25 +525,25 @@ export function renderBrowse(view) {
               type="button" 
               class="btn btn-primary" 
               id="btnCheckAvailability" 
-              style="padding:10px 22px;border-radius:10px;font-weight:700;white-space:nowrap;height:42px;">
-              Check availability
+              style="padding:0 18px;border-radius:8px;font-weight:600;white-space:nowrap;height:38px;font-size:0.85rem;">
+              Check
             </button>
           </div>
         </div>
 
         <!-- Validation Error Message -->
-        <div id="availErrorMsg" style="display:${availError ? 'block' : 'none'};color:#dc2626;font-size:0.82rem;font-weight:600;margin-top:12px;">
+        <div id="availErrorMsg" style="display:${availError ? 'block' : 'none'};color:#dc2626;font-size:0.78rem;font-weight:600;margin-top:8px;">
           ${availError || ''}
         </div>
 
         <!-- Availability Results Bar -->
         ${availChecked && !availError ? `
-          <div id="availResultsBar" style="display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-border,#E2DCF0);flex-wrap:wrap;">
-            <span class="badge" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:4px 12px;border-radius:9999px;font-weight:700;font-size:0.78rem;">
+          <div id="availResultsBar" style="display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-border,#E2DCF0);flex-wrap:wrap;">
+            <span class="badge" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:3px 10px;border-radius:9999px;font-weight:700;font-size:0.75rem;">
               ${availFreeCount} of ${availTotalCount} available
             </span>
-            <span style="font-size:0.85rem;color:var(--text-hi,#2A2340);font-weight:600;">
-              ${fmtDate(availPickUpDate)} to ${fmtDate(availReturnDate)} (${numDays} ${numDays === 1 ? 'day' : 'days'}). Vehicles already booked on these dates are hidden below.
+            <span style="font-size:0.8rem;color:var(--text-hi,#2A2340);font-weight:600;">
+              ${fmtDate(availPickUpDate)} to ${fmtDate(availReturnDate)} (${numDays} ${numDays === 1 ? 'day' : 'days'})
             </span>
           </div>
         ` : ''}

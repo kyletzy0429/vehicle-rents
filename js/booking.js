@@ -128,32 +128,35 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
           <!-- ═══ STEP 2: DATES AND DRIVER (Matches 4-booking-process.png) ═══ -->
           <div class="step-content" id="stepSection2">
-            <!-- Card 1: Trip Details (Matches clean native date picker UI) -->
-            <div class="booking-section-card">
-              <h4 class="section-card-title">Trip details</h4>
-              <div class="booking-fields-grid">
+            <!-- Card 1: Trip Details (Minimized) -->
+            <div class="booking-section-card" style="padding:16px 20px;margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h4 class="section-card-title" style="margin:0;font-size:1.02rem;">Trip details</h4>
+                <span style="font-size:0.75rem;color:var(--text-mid);">Rental dates &amp; location</span>
+              </div>
+              <div class="booking-fields-grid" style="gap:10px;">
                 <div class="field">
-                  <label for="bStart">Pick-up date</label>
-                  <input type="date" id="bStart" min="${todayStr}" value="${initStart}" class="clean-input" required />
+                  <label for="bStart" style="font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-mid);">Pick-up date</label>
+                  <input type="date" id="bStart" min="${todayStr}" value="${initStart}" class="clean-input" style="height:36px;padding:4px 10px;font-size:0.85rem;" required />
                 </div>
                 <div class="field">
-                  <label for="bEnd">Return date</label>
-                  <input type="date" id="bEnd" min="${todayStr}" value="${initEnd}" class="clean-input" required />
+                  <label for="bEnd" style="font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-mid);">Return date</label>
+                  <input type="date" id="bEnd" min="${todayStr}" value="${initEnd}" class="clean-input" style="height:36px;padding:4px 10px;font-size:0.85rem;" required />
                 </div>
                 <div class="field">
-                  <label for="bLocation">Pick-up location</label>
-                  <input type="text" id="bLocation" value="${p.address || 'Puerto Princesa Airport'}" class="clean-input" />
+                  <label for="bLocation" style="font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-mid);">Pick-up location</label>
+                  <input type="text" id="bLocation" value="${p.address || 'Puerto Princesa Airport'}" class="clean-input" style="height:36px;padding:4px 10px;font-size:0.85rem;" />
                 </div>
                 <div class="field">
-                  <label for="bTime">Pick-up time</label>
-                  <input type="text" id="bTime" value="09:00 AM" class="clean-input" />
+                  <label for="bTime" style="font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-mid);">Pick-up time</label>
+                  <input type="text" id="bTime" value="09:00 AM" class="clean-input" style="height:36px;padding:4px 10px;font-size:0.85rem;" />
                 </div>
               </div>
             </div>
 
             <!-- Card 2: Driver Information -->
-            <div class="booking-section-card">
-              <h4 class="section-card-title">Driver information</h4>
+            <div class="booking-section-card" style="padding:16px 20px;margin-bottom:14px;">
+              <h4 class="section-card-title" style="margin:0 0 12px 0;font-size:1.02rem;">Driver information</h4>
               <div class="booking-fields-grid">
                 <div class="field">
                   <label for="renterName">Full name</label>
