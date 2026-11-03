@@ -476,9 +476,6 @@ export function renderShell() {
         </nav>
 
         <div class="sidebar-footer">
-          <div style="margin-bottom:8px;">
-            ${renderRoleSwitcherHTML(state.portal)}
-          </div>
           <div class="user-chip" id="userProfileChip" title="Click for User Menu" style="width:100%;cursor:pointer;">
             <div class="user-avatar">${initials}</div>
             <div class="user-meta" style="flex:1;">

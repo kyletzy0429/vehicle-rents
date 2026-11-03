@@ -660,7 +660,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
         <div class="pay-method-card ${selectedMethod === 'bank_qr' ? 'active' : ''}" data-method="bank_qr">
           <div class="pm-radio"><i class="fa-solid ${selectedMethod === 'bank_qr' ? 'fa-circle-check' : 'fa-circle'}"></i></div>
-          <div class="pm-icon pm-bank-icon"><i class="fa-solid fa-building-columns"></i></div>
+          <div class="pm-icon pm-bank-icon" style="background:#ffffff;display:flex;align-items:center;justify-content:center;"><img src="assets/qrph-logo.png" alt="QR Ph" style="width:28px;height:28px;object-fit:contain;" /></div>
           <div class="pm-info">
             <strong class="pm-name">Bank Transfer</strong>
             <span class="pm-desc">QR Ph &amp; InstaPay</span>
@@ -803,7 +803,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     } else if (selectedMethod === 'bank_qr') {
       container.innerHTML = `
         <div class="pay-detail-panel" style="text-align:center;">
-          <div class="pay-detail-heading" style="text-align:center;">Scan via Banking App (QR Ph / InstaPay)</div>
+          <div class="pay-detail-heading" style="display:flex;align-items:center;justify-content:center;gap:8px;"><img src="assets/qrph-logo.png" alt="QR Ph" style="height:20px;object-fit:contain;" /><span>Scan via Banking App (QR Ph / InstaPay)</span></div>
           <div style="margin-bottom:12px;text-align:left;">
             <label style="font-size:0.74rem;font-weight:700;color:var(--text-mid);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.04em;">Select Banking App:</label>
             <div class="bank-pill-group" id="custBankPillGroup">
