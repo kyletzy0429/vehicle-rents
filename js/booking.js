@@ -954,6 +954,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             const { data: createdBooking, error: bErr } = await supabase.from('bookings').insert(cleanDbPayload).select().single();
             if (bErr) {
                 console.error('Booking DB insert error:', bErr);
+                toast(`Database notice: ${bErr.message}`, 'error');
             } else if (createdBooking) {
                 newBooking = createdBooking;
                 console.log('Booking successfully created in Supabase:', newBooking.id);
@@ -991,6 +992,17 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
                 }
             } catch (payEx) {
                 console.error('Payment DB exception:', payEx);
+            }
+
+            // Also insert receipt record
+            try {
+                await supabase.from('receipts').insert({
+                    booking_id: Number(newBooking.id),
+                    receipt_number: finalRefNum,
+                    total_amount: paidAmount > 0 ? paidAmount : finalAmount
+                });
+            } catch (rErr) {
+                console.warn('Receipts insert notice:', rErr);
             }
         }
 
