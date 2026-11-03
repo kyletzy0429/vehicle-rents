@@ -1004,59 +1004,34 @@ export function renderBrowse(view) {
 
 export function vehicleCardHTML(v) {
   const exactImg = getExactVehicleImage(v);
-  const fuelType = v.fuel_type ?? 'Gasoline';
-  const hasAC = v.has_ac !== undefined ? v.has_ac : true;
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
   const favs = getFavorites();
   const isFav = favs.includes(v.id);
   const isAvailable = v.status === 'available';
   const seats = v.seats || (catName.toLowerCase().includes('motor') ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
-  const trans = v.transmission || 'Automatic';
-
-  let cleanDesc = (v.description || '')
-    .replace(/FOX Racing shocks,?\s*/gi, '')
-    .replace(/\b\d+-Seater\s+(Pickup Truck|SUV|Sedan|MPV|Subcompact Sedan|Modern Crossover MPV|Economy Sedan|Hatchback|Full-size Passenger Van)\.?\s*/gi, '')
-    .trim();
-  if (!cleanDesc) {
-    cleanDesc = `${trans} · ${fuelType} · Well-maintained and fully insured.`;
-  }
 
   return `
-    <div class="glass vehicle-card" data-id="${v.id}">
-      <div class="vehicle-card-image-wrap">
-        <span class="vehicle-stage-badge">${catName}</span>
-        <img class="vehicle-card-img" id="cardImg-${v.id}" src="${exactImg}" alt="${v.name}" onerror="this.src='${exactImg}'" loading="lazy" />
-        <button type="button" class="vehicle-fav-btn ${isFav ? 'active' : ''}" data-favid="${v.id}" title="${isFav ? 'Remove from Favorites' : 'Save to Favorites'}">
-          <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-        </button>
+    <div class="lp-vehicle-card vehicle-card" data-id="${v.id}">
+      <div class="lp-card-photo-panel">
+        <img class="lp-card-photo" id="cardImg-${v.id}" src="${exactImg}" alt="${v.name}" onerror="this.src='${exactImg}'" loading="lazy" />
       </div>
-      <div class="vehicle-card-content">
-        <h3 class="vehicle-card-name">${v.name}</h3>
-        
-        <div class="vehicle-specs-row">
-          <span class="v-spec-pill">${seats} Seats</span>
-          <span class="v-spec-pill">${trans}</span>
-          <span class="v-spec-pill">${fuelType}</span>
-          <span class="v-spec-pill">${hasAC ? 'Aircon' : 'Non-AC'}</span>
-        </div>
-
-        <p class="vehicle-card-desc">
-          ${cleanDesc}
-        </p>
-
-        <div class="vehicle-card-price-row">
-          <div class="vehicle-card-price">
-            ${fmtMoney(rate)} <span class="price-unit">/ day</span>
-          </div>
+      <div class="lp-card-body">
+        <div class="lp-card-header-row">
+          <h3 class="lp-card-title">${v.name}</h3>
           <span class="badge ${isAvailable ? 'badge-available' : 'badge-rented'}">
-            <span class="status-dot"></span>
             ${isAvailable ? 'Available' : 'Booked'}
           </span>
         </div>
-        <button type="button" class="btn btn-primary vehicle-book-pill-btn" data-book-btn="${v.id}">
-          <span>View Deal</span>
-        </button>
+        <p class="lp-card-specs">${catName}, ${seats} seats</p>
+        <div class="lp-card-footer-row">
+          <div class="lp-card-rate-text">
+            <strong>PHP ${fmtMoney(rate)}</strong> <small>/ day</small>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm vehicle-book-pill-btn" data-book-btn="${v.id}">
+            View
+          </button>
+        </div>
       </div>
     </div>
   `;

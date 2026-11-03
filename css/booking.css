@@ -2457,3 +2457,102 @@
   color: var(--accent);
   font-size: 0.85rem;
 }
+
+
+/* ==========================================================================
+   STAGE 3: 2-COLUMN BOOKING PROCESS WITH STICKY SUMMARY (4-booking-process.png)
+   ========================================================================== */
+.booking-process-2col {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 32px;
+  align-items: flex-start;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.booking-left-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.booking-sticky-summary {
+  position: sticky;
+  top: 90px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--glass-border, #E2DCF0);
+  border-radius: var(--radius-lg, 14px);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.booking-summary-img-panel {
+  background: #ffffff;
+  border-radius: 10px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.booking-summary-img {
+  max-height: 160px;
+  width: 100%;
+  object-fit: contain;
+}
+
+.booking-summary-title {
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-hi, #2A2340);
+  margin: 0 0 4px 0;
+}
+
+.booking-summary-sub {
+  font-size: 0.84rem;
+  color: var(--text-mid, #5E5778);
+  margin: 0 0 20px 0;
+}
+
+.booking-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--text-mid, #5E5778);
+}
+
+.booking-summary-row strong {
+  color: var(--text-hi, #2A2340);
+  font-weight: 600;
+}
+
+.booking-summary-divider {
+  height: 1px;
+  background: var(--glass-border, #E2DCF0);
+  margin: 16px 0;
+}
+
+.booking-summary-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-hi, #2A2340);
+}
+
+@media (max-width: 860px) {
+  .booking-process-2col {
+    grid-template-columns: 1fr;
+  }
+  .booking-sticky-summary {
+    position: static;
+  }
+}
+
