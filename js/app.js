@@ -3,6 +3,7 @@ import { state, PORTAL_TABS, DEFAULT_SETTINGS, getSystemSettings, DEMO_ACCOUNTS 
 import {
   $, $$, toast, openModal, closeModal,
   getTheme, toggleTheme, applyTheme,
+  getLang, setLang, t,
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
 import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole } from './auth.js';
@@ -13,6 +14,9 @@ import { openRentalExtensionModal } from './rental-extension.js';
 import { openVehicleDetail } from './booking.js';
 
 if (typeof window !== 'undefined') {
+  window.setLang = setLang;
+  window.getLang = getLang;
+  window.toggleTheme = toggleTheme;
   window.openRentalExtensionModal = openRentalExtensionModal;
   window.openVehicleDetail = openVehicleDetail;
   window.switchSystemRole = switchSystemRole;
@@ -29,9 +33,10 @@ if (typeof window !== 'undefined') {
 }
 
 export function renderRoleSwitcherHTML(currentRole) {
+  const lang = getLang();
   const roleLabels = {
-    customer: 'Renter',
-    staff: 'Staff',
+    customer: lang === 'fil' ? 'Umuupa' : 'Renter',
+    staff: lang === 'fil' ? 'Kawani' : 'Staff',
     admin: 'Admin'
   };
   const currentLabel = roleLabels[currentRole] || 'Role';
@@ -44,20 +49,20 @@ export function renderRoleSwitcherHTML(currentRole) {
       </button>
 
       <div class="role-dropdown-menu" id="roleDropdownMenu" style="display:none;">
-        <div class="role-menu-heading">Switch Role</div>
+        <div class="role-menu-heading">${lang === 'fil' ? 'Magpalit ng Role' : 'Switch Role'}</div>
         
         <div class="role-menu-item ${currentRole === 'customer' ? 'active' : ''}" data-role-choice="customer">
-          <span class="role-item-title">Renter</span>
+          <span class="role-item-title">${lang === 'fil' ? 'Umuupa (Renter)' : 'Renter'}</span>
           ${currentRole === 'customer' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
         </div>
 
         <div class="role-menu-item ${currentRole === 'staff' ? 'active' : ''}" data-role-choice="staff">
-          <span class="role-item-title">Staff</span>
+          <span class="role-item-title">${lang === 'fil' ? 'Kawani (Staff)' : 'Staff'}</span>
           ${currentRole === 'staff' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
         </div>
 
         <div class="role-menu-item ${currentRole === 'admin' ? 'active' : ''}" data-role-choice="admin">
-          <span class="role-item-title">Admin</span>
+          <span class="role-item-title">${lang === 'fil' ? 'Tagapangasiwa (Admin)' : 'Admin'}</span>
           ${currentRole === 'admin' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
         </div>
       </div>
@@ -99,6 +104,63 @@ export function bindRoleSwitcherEvents() {
       });
     }
   });
+}
+
+export function renderLangSwitcherHTML() {
+  const currentLang = getLang();
+  return `
+    <div class="lang-dropdown-container" id="langDropdownContainer">
+      <button type="button" class="lang-select-pill" id="langDropdownToggle" aria-haspopup="true" aria-expanded="false" title="Language / Wika">
+        <span>${currentLang.toUpperCase()}</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
+      </button>
+
+      <div class="lang-dropdown-menu" id="langDropdownMenu" style="display:none;">
+        <div class="lang-menu-item ${currentLang === 'en' ? 'active' : ''}" data-lang-choice="en">
+          <span>English (EN)</span>
+          ${currentLang === 'en' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
+        </div>
+        <div class="lang-menu-item ${currentLang === 'fil' ? 'active' : ''}" data-lang-choice="fil">
+          <span>Filipino (FIL)</span>
+          ${currentLang === 'fil' ? '<i class="fa-solid fa-check" style="font-size:0.75rem;color:var(--accent);margin-left:auto;"></i>' : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export function bindLangSwitcherEvents() {
+  const container = $('#langDropdownContainer');
+  if (!container) return;
+  const toggleBtn = container.querySelector('#langDropdownToggle');
+  const menu = container.querySelector('#langDropdownMenu');
+
+  if (toggleBtn && menu) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = menu.style.display === 'flex' || menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'flex';
+      toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+      toggleBtn.classList.toggle('active', !isOpen);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        menu.style.display = 'none';
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.classList.remove('active');
+      }
+    });
+
+    menu.querySelectorAll('[data-lang-choice]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const lang = item.dataset.langChoice;
+        menu.style.display = 'none';
+        if (lang) setLang(lang);
+      });
+    });
+  }
 }
 
 export function openUserMenuModal() {
@@ -377,14 +439,18 @@ export function openPricingModal() {
 export function renderShell() {
   const comp = getSystemSettings().company || DEFAULT_SETTINGS.company;
   const companyName = (comp.name && comp.name !== 'Vehicle Rental Management System') ? comp.name : 'Palawan Drive';
-  const tabs = PORTAL_TABS[state.portal] || [];
+  const rawTabs = PORTAL_TABS[state.portal] || [];
+  const tabs = rawTabs.map(tObj => ({
+    id: tObj.id,
+    label: t(tObj.id, tObj.label)
+  }));
   if (!state.tab || !tabs.find(t => t.id === state.tab)) state.tab = tabs[0]?.id;
 
   const rawName = state.profile?.full_name || '';
   const isGeneric = !rawName || rawName === 'Guest Customer' || rawName === 'User' || rawName === 'Customer';
-  const displayName = isGeneric ? 'Renter' : rawName;
+  const displayName = isGeneric ? t('renter', 'Renter') : rawName;
   const initials = isGeneric ? 'R' : displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  const firstName = isGeneric ? 'Renter' : displayName.split(' ')[0];
+  const firstName = isGeneric ? t('renter', 'Renter') : displayName.split(' ')[0];
   const roleTitle = getRoleDisplayName(state.portal);
   const activeTabObj = tabs.find(t => t.id === state.tab);
 
@@ -403,7 +469,7 @@ export function renderShell() {
           </button>
         </div>
 
-        <div class="sidebar-section-tag">${state.portal === 'admin' ? 'ADMIN' : (state.portal === 'staff' ? 'STAFF' : 'RENTER')}</div>
+        <div class="sidebar-section-tag">${state.portal === 'admin' ? t('admin').toUpperCase() : (state.portal === 'staff' ? t('staff').toUpperCase() : t('renter').toUpperCase())}</div>
 
         <nav class="sidebar-nav">
           ${tabs.map(t => `<div class="sidebar-nav-btn ${t.id === state.tab ? 'active' : ''}" data-tab="${t.id}">${t.label}</div>`).join('')}
@@ -417,10 +483,10 @@ export function renderShell() {
             <div class="user-avatar">${initials}</div>
             <div class="user-meta" style="flex:1;">
               <div class="user-name">${state.profile?.full_name || 'User'}</div>
-              <div class="user-role">${getRoleDisplayName(state.profile?.role)} · Menu</div>
+              <div class="user-role">${getRoleDisplayName(state.profile?.role)} · ${t('menu', 'Menu')}</div>
             </div>
           </div>
-          <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn" style="color:#dc2626;">Log Out</button>
+          <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn" style="color:#dc2626;">${t('logout', 'Log Out')}</button>
         </div>
       </aside>
 
@@ -435,10 +501,7 @@ export function renderShell() {
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            <div class="lang-select-pill" title="Language: English">
-              <span>EN</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
-            </div>
+            ${renderLangSwitcherHTML()}
 
             <button type="button" id="topThemeBtn" class="topbar-icon-btn" title="Toggle Light/Dark Mode" aria-label="Toggle Light/Dark Mode">
               <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : 'var(--accent)'};"></i>
@@ -484,6 +547,7 @@ export function renderShell() {
   $('#topNotifBtn')?.addEventListener('click', openNotificationsModal);
   $('#topUserMenuBtn')?.addEventListener('click', openUserMenuModal);
   bindRoleSwitcherEvents();
+  bindLangSwitcherEvents();
   const uChip = $('#userProfileChip');
   if (uChip) uChip.addEventListener('click', openUserMenuModal);
   $$('.sidebar-nav-btn').forEach(btn => btn.addEventListener('click', () => { closeSidebar(); state.tab = btn.dataset.tab; renderShell(); }));

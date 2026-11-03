@@ -69,35 +69,161 @@ export function closeModal() {
 window.closeModal = closeModal;
 
 export function getTheme() {
-  return 'light';
+  try {
+    return localStorage.getItem('rentflow_theme') || 'light';
+  } catch (e) {
+    return 'light';
+  }
+}
+
+export function applyTheme(theme) {
+  const currentTheme = theme || getTheme();
+  try {
+    localStorage.setItem('rentflow_theme', currentTheme);
+  } catch (e) {}
+
+  if (currentTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.body.removeAttribute('data-theme');
+  }
 }
 
 export function toggleTheme() {
-  toast('Soft Lavender theme active', 'info');
-}
-
-export function applyTheme() {
-  try {
-    localStorage.removeItem('rentflow_theme');
-  } catch (e) {}
-  document.documentElement.removeAttribute('data-theme');
-  document.body.removeAttribute('data-theme');
+  const next = getTheme() === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  toast(next === 'dark' ? 'Dark mode enabled' : 'Light mode enabled', 'info');
+  if (window.renderShell) {
+    window.renderShell();
+  }
 }
 applyTheme();
 
 export function getLang() {
-  return 'en';
+  try {
+    return localStorage.getItem('rentflow_lang') || 'en';
+  } catch (e) {
+    return 'en';
+  }
 }
 
-export function setLang() {
-  // English is the sole system language
+export function setLang(lang) {
+  const chosen = (lang === 'fil' || lang === 'tl') ? 'fil' : 'en';
+  try {
+    localStorage.setItem('rentflow_lang', chosen);
+  } catch (e) {}
+  toast(chosen === 'fil' ? 'Pinalitan ang wika sa Filipino' : 'Language switched to English', 'info');
+  if (window.renderShell) {
+    window.renderShell();
+  }
+}
+
+export const TRANSLATIONS = {
+  en: {
+    browse: 'Browse',
+    bookings: 'My bookings',
+    favorites: 'Favorites',
+    account: 'Account',
+    dashboard: 'Dashboard',
+    overview: 'Overview',
+    scanner: 'Scan QR',
+    requests: 'Requests',
+    active: 'Active rentals',
+    returns: 'Returns',
+    refunds: 'Refunds & Claims',
+    history: 'History',
+    vehicles: 'Vehicles',
+    rentals: 'Bookings',
+    customers: 'Customers',
+    reports: 'Reports',
+    users: 'Users',
+    categories: 'Categories & Rates',
+    settings: 'Settings',
+    logout: 'Log Out',
+    good_morning: 'Good morning',
+    good_afternoon: 'Good afternoon',
+    good_evening: 'Good evening',
+    upcoming: 'Upcoming',
+    show_qr: 'Show QR',
+    view_booking: 'View booking',
+    all: 'All',
+    sedan: 'Sedan',
+    suv: 'SUV',
+    mpv: 'MPV',
+    van: 'Van',
+    motorcycle: 'Motorcycle',
+    day: 'day',
+    days: 'days',
+    view: 'View',
+    few_left: 'Few left',
+    available_now: 'Available now',
+    rented_out: 'Rented out',
+    maintenance: 'Maintenance',
+    menu: 'Menu',
+    renter: 'Renter',
+    staff: 'Staff',
+    admin: 'Admin'
+  },
+  fil: {
+    browse: 'Mag-browse',
+    bookings: 'Aking Bookings',
+    favorites: 'Mga Paborito',
+    account: 'Aking Account',
+    dashboard: 'Dashboard',
+    overview: 'Pangkalahatan',
+    scanner: 'I-scan ang QR',
+    requests: 'Mga Kahilingan',
+    active: 'Aktibong Upa',
+    returns: 'Mga Pagbabalik',
+    refunds: 'Refund at Claims',
+    history: 'Kasaysayan',
+    vehicles: 'Mga Sasakyan',
+    rentals: 'Mga Booking',
+    customers: 'Mga Kliyente',
+    reports: 'Mga Ulat',
+    users: 'Mga Gumagamit',
+    categories: 'Kategorya at Presyo',
+    settings: 'Mga Setting',
+    logout: 'Mag-logout',
+    good_morning: 'Magandang umaga',
+    good_afternoon: 'Magandang hapon',
+    good_evening: 'Magandang gabi',
+    upcoming: 'Paparating',
+    show_qr: 'Ipakita ang QR',
+    view_booking: 'Tingnan ang booking',
+    all: 'Lahat',
+    sedan: 'Sedan',
+    suv: 'SUV',
+    mpv: 'MPV',
+    van: 'Van',
+    motorcycle: 'Motorsiklo',
+    day: 'araw',
+    days: 'mga araw',
+    view: 'Tingnan',
+    few_left: 'Kakaunti na lang',
+    available_now: 'Available ngayon',
+    rented_out: 'Naka-renta',
+    maintenance: 'Kinukumpuni',
+    menu: 'Menu',
+    renter: 'Umuupa',
+    staff: 'Kawani',
+    admin: 'Admin'
+  }
+};
+
+export function t(key, fallback = '') {
+  const lang = getLang();
+  return TRANSLATIONS[lang]?.[key] || fallback || key;
 }
 
 export function getRoleDisplayName(role) {
   const r = (role || '').toLowerCase();
-  if (r === 'admin') return 'Administrator';
-  if (r === 'staff') return 'Staff Member';
-  return 'Renter';
+  const lang = getLang();
+  if (r === 'admin') return lang === 'fil' ? 'Tagapangasiwa (Admin)' : 'Administrator';
+  if (r === 'staff') return lang === 'fil' ? 'Kawani (Staff)' : 'Staff Member';
+  return lang === 'fil' ? 'Umuupa (Renter)' : 'Renter';
 }
 
 export function getSystemAlerts() {
