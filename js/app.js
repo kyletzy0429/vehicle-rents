@@ -383,16 +383,16 @@ export function renderShell() {
 
   if (state.portal === 'customer') {
     $('#app').innerHTML = `
-      <div style="min-height:100vh;background:var(--bg-dark);overflow-x:hidden;width:100%;max-width:100vw;">
+      <div style="min-height:100vh;background:var(--bg-canvas, #F5F2FB);overflow-x:hidden;width:100%;max-width:100vw;">
         <header class="portal-header">
           <div class="portal-header-left">
             <button type="button" class="guest-menu-btn" id="guestMenuBtn" title="Navigation Menu" aria-label="Navigation Menu">
               <i class="fa-solid fa-bars"></i>
             </button>
 
-            <div style="cursor:pointer;" id="brandHomeBtn">
-              <div class="brand-title">Vehicle Rental Management System</div>
-              <div class="brand-portal-sub">RENTER PORTAL</div>
+            <div style="cursor:pointer;display:flex;align-items:center;gap:10px;" id="brandHomeBtn">
+              <div class="sidebar-brand-icon">${companyName[0]}</div>
+              <span class="sidebar-brand-name">${companyName}</span>
             </div>
 
             <!-- Sleek Dropdown Menu (Screenshot 3 style) -->
@@ -437,40 +437,29 @@ export function renderShell() {
           <!-- Customer Header Center Navigation -->
           <nav class="portal-header-nav" id="portalHeaderNav" aria-label="Customer Navigation">
             <button type="button" class="portal-nav-link ${state.tab === 'browse' ? 'active' : ''}" data-nav="browse">
-              <i class="fa-solid fa-magnifying-glass"></i> Browse Vehicles
+              Browse
             </button>
             <button type="button" class="portal-nav-link ${state.tab === 'bookings' ? 'active' : ''}" data-nav="bookings">
-              <i class="fa-solid fa-calendar-check"></i> My Bookings
+              My bookings
             </button>
             <button type="button" class="portal-nav-link ${state.tab === 'favorites' ? 'active' : ''}" data-nav="favorites">
-              <i class="fa-regular fa-heart"></i> Favorites
+              Favorites
             </button>
             <button type="button" class="portal-nav-link ${state.tab === 'account' ? 'active' : ''}" data-nav="account">
-              <i class="fa-regular fa-user"></i> My Account
+              Account
             </button>
           </nav>
 
           <div class="portal-header-right">
-            <div class="lang-select-pill" title="Language: English">
-              <span>EN</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
-            </div>
-
-            <button type="button" id="topThemeBtn" class="topbar-icon-btn" title="Toggle Light/Dark Mode" aria-label="Toggle Light/Dark Mode">
-              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : 'var(--accent)'};"></i>
-            </button>
-
-            <button type="button" id="topNotifBtn" class="topbar-icon-btn" title="View Notifications" aria-label="View Notifications">
-              <i class="fa-solid fa-bell" style="color:${isDark ? '#94a3b8' : '#475569'};"></i>
+            <button type="button" id="topNotifBtn" class="topbar-icon-btn" title="View Notifications" aria-label="View Notifications" style="border:none;background:transparent;color:var(--text-mid);font-size:0.88rem;display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;">
+              <span>Notifications</span>
               ${unreadNotifs > 0 ? `<div class="notif-badge">${unreadNotifs}</div>` : ''}
             </button>
 
             ${renderRoleSwitcherHTML(state.portal)}
 
-            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${displayName}">
-              <div class="topbar-user-avatar">${initials}</div>
-              <span class="topbar-user-name">${firstName}</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
+            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${displayName}" style="padding:0;border:none;background:transparent;cursor:pointer;">
+              <div class="topbar-user-avatar" style="width:34px;height:34px;border-radius:50%;background:#E9E3F7;color:#5B4B8A;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:0.82rem;">${initials}</div>
             </button>
           </div>
         </header>

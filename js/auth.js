@@ -50,9 +50,8 @@ export async function switchSystemRole(role, customerKey = null) {
    LANDING PAGE — Full public homepage before login
    ========================================================================== */
 export function renderLandingPage() {
-  const isDark = (localStorage.getItem('rentflow_theme') || 'light') === 'dark';
-  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
-  else document.documentElement.removeAttribute('data-theme');
+  document.documentElement.removeAttribute('data-theme');
+  document.body.removeAttribute('data-theme');
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date();
@@ -68,7 +67,7 @@ export function renderLandingPage() {
   ];
 
   $('#app').innerHTML = `
-    <div class="landing-page" data-theme="${isDark ? 'dark' : ''}">
+    <div class="landing-page">
       <!-- ═══ TOP NAVBAR (Fraunces + DM Sans, Flat, No blur) ═══ -->
       <nav class="lp-navbar-v2">
         <div class="lp-nav-inner">

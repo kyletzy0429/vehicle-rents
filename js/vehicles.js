@@ -420,618 +420,169 @@ let heroCalMonth = new Date().getMonth();
 export function renderBrowse(view) {
   const cats = ['all', ...state.categories.map(c => c.name)];
   const todayStr = new Date().toISOString().slice(0, 10);
-  const availableCount = state.vehicles.filter(v => v.status === 'available').length;
+  const rawName = state.profile?.full_name || '';
+  const isGeneric = !rawName || rawName === 'Guest Customer' || rawName === 'User' || rawName === 'Customer';
+  const firstName = isGeneric ? 'Juan' : rawName.split(' ')[0];
 
   const filtered = state.vehicles.filter(v => {
     const vCat = getVehicleCategoryName(v).toLowerCase();
     const vName = (v.name || '').toLowerCase();
 
-    // Category matching
-    let matchesCat = true;
     if (browseFilter !== 'all') {
       const f = browseFilter.toLowerCase();
-      if (f === 'compact suv') {
-        matchesCat = vCat.includes('compact') || vCat.includes('crossover') || vCat.includes('suv') || vName.includes('raize') || vName.includes('xpander') || vName.includes('rush') || vName.includes('creta') || vName.includes('sonet');
-      } else if (f === 'pickup') {
-        matchesCat = vCat.includes('pickup') || vName.includes('raptor') || vName.includes('ranger') || vName.includes('hilux') || vName.includes('strada') || vName.includes('d-max') || vName.includes('navara');
-      } else if (f === 'van') {
-        matchesCat = vCat.includes('van') || vName.includes('hiace') || vName.includes('commuter') || vName.includes('urvan') || vName.includes('grandia') || vName.includes('gl');
-      } else if (f === 'suv') {
-        matchesCat = vCat.includes('suv') || vName.includes('fortuner') || vName.includes('montero') || vName.includes('everest') || vName.includes('terra');
-      } else if (f === 'crossover') {
-        matchesCat = vCat.includes('crossover') || vCat.includes('mpv') || vName.includes('raize') || vName.includes('xpander') || vName.includes('veloz') || vName.includes('br-v') || vName.includes('stargazer');
-      } else if (f === 'sedan') {
-        matchesCat = vCat.includes('sedan') || vName.includes('vios') || vName.includes('city') || vName.includes('almera') || vName.includes('civic');
-      } else if (f === 'hatchback') {
-        matchesCat = vCat.includes('hatchback') || vCat.includes('economy') || vName.includes('wigo') || vName.includes('brio') || vName.includes('mirage') || vName.includes('swift');
-      } else if (f === 'motorcycles' || f === 'motorcycle') {
-        matchesCat = vCat.includes('motor') || vName.includes('click') || vName.includes('nmax') || vName.includes('adv') || vName.includes('pcx') || vName.includes('aerox');
-      } else {
-        matchesCat = vCat.includes(f) || vName.includes(f) || (v.categories?.name && v.categories.name.toLowerCase().includes(f));
-      }
+      if (f === 'sedan') return vCat.includes('sedan') || vName.includes('vios') || vName.includes('city');
+      if (f === 'suv') return vCat.includes('suv') || vName.includes('fortuner') || vName.includes('montero') || vName.includes('everest');
+      if (f === 'mpv') return vCat.includes('mpv') || vCat.includes('crossover') || vName.includes('xpander') || vName.includes('innova') || vName.includes('rush') || vName.includes('veloz');
+      if (f === 'van') return vCat.includes('van') || vName.includes('hiace') || vName.includes('commuter') || vName.includes('urvan');
+      if (f === 'motorcycle' || f === 'motorcycles') return vCat.includes('motor') || vName.includes('click') || vName.includes('nmax') || vName.includes('adv');
+      return vCat.includes(f) || vName.includes(f);
     }
-
-    const matchesSearch = v.name.toLowerCase().includes(browseSearch.toLowerCase());
-    const matchesStatus = browseStatusFilter === 'all' || v.status === browseStatusFilter;
-
-    // Location matching
-    let matchesLocation = true;
-    if (browseLocation !== 'all') {
-      matchesLocation = v.location ? v.location.toLowerCase().includes(browseLocation.toLowerCase()) : true;
-    }
-
-    // Price filter
-    const rate = getVehicleDailyRate(v);
-    const matchesPrice = rate <= browsePriceMax;
-
-    // Seats filter
-    const seats = Number(v.seats || (vCat.includes('motor') ? 2 : (vCat.includes('van') ? 14 : (vCat.includes('suv') || vCat.includes('mpv') ? 7 : 5))));
-    let matchesSeats = true;
-    if (browseSeatsFilter === '2-4') matchesSeats = seats >= 2 && seats <= 4;
-    else if (browseSeatsFilter === '5-7') matchesSeats = seats >= 5 && seats <= 7;
-    else if (browseSeatsFilter === '8+') matchesSeats = seats >= 8;
-
-    // Transmission filter
-    const trans = (v.transmission || 'Automatic').toLowerCase();
-    let matchesTrans = true;
-    if (browseTransFilter === 'Automatic') matchesTrans = trans.includes('auto') || trans.includes('cvt');
-    else if (browseTransFilter === 'Manual') matchesTrans = trans.includes('manual');
-
-    // Rating filter
-    const rating = Number(v.rating || 4.9);
-    let matchesRating = true;
-    if (browseRatingFilter !== 'all') matchesRating = rating >= parseFloat(browseRatingFilter);
-
-    return matchesCat && matchesSearch && matchesStatus && matchesLocation && matchesPrice && matchesSeats && matchesTrans && matchesRating;
+    return true;
   });
 
-  // Sorting
-  if (browseSort === 'price_low') {
-    filtered.sort((a, b) => getVehicleDailyRate(a) - getVehicleDailyRate(b));
-  } else if (browseSort === 'price_high') {
-    filtered.sort((a, b) => getVehicleDailyRate(b) - getVehicleDailyRate(a));
-  } else if (browseSort === 'rating') {
-    filtered.sort((a, b) => Number(b.rating || 4.9) - Number(a.rating || 4.9));
-  }
+  const userBookings = (state.bookings && state.bookings.length) ? state.bookings : [];
+  const upcomingBooking = userBookings.find(b => ['approved', 'confirmed', 'active', 'vehicle_released', 'pending_verification', 'pending'].includes(b.status)) || {
+    id: 'demo-upcoming',
+    vehicle_name: 'Toyota Fortuner 2.8 V',
+    image_url: 'images/fortuner.webp',
+    start_date: '2026-11-14',
+    end_date: '2026-11-17',
+    location: 'Puerto Princesa Airport'
+  };
 
   view.innerHTML = `
-    <div class="view">
-      <!-- Section Tag & Title -->
-      <div class="hero-availability-container" style="margin-bottom:14px;">
-        <div class="hero-tag">SEARCH VEHICLES</div>
-        <h1 class="hero-title" style="font-size:1.75rem;margin-bottom:6px;">Find your ideal ride</h1>
-        <p class="hero-subtitle" style="margin-bottom:16px;">Choose from our wide variety of well-maintained vehicles.</p>
+    <div class="view" style="max-width:1200px;margin:0 auto;padding:16px 8px 60px 8px;">
+      <!-- Eyebrow & Greeting (Matches 3-renter-portal.png) -->
+      <div style="margin-bottom:24px;">
+        <div class="portal-eyebrow">RENTER PORTAL</div>
+        <h1 class="portal-heading">Good morning, ${firstName}</h1>
+      </div>
 
-        <!-- Unified Single Card Search & Filter (Matching Reference Photo 1) -->
-        <div class="search-unified-card" style="position:relative;" id="searchUnifiedCard">
-          <!-- Top Row: Location, Pickup Date, Return Date, Action Button -->
-          <div class="search-unified-top">
-            <!-- Location Field -->
-            <div class="search-field-box">
-              <label class="search-field-label">
-                <i class="fa-solid fa-location-dot"></i> Location
-              </label>
-              <div class="unified-input-wrap">
-                <select id="searchLocation" class="unified-input-control">
-                  <option value="all" ${browseLocation === 'all' ? 'selected' : ''}>All Cities</option>
-                  <option value="puerto_princesa" ${browseLocation === 'puerto_princesa' ? 'selected' : ''}>Puerto Princesa</option>
-                  <option value="el_nido" ${browseLocation === 'el_nido' ? 'selected' : ''}>El Nido</option>
-                  <option value="coron" ${browseLocation === 'coron' ? 'selected' : ''}>Coron</option>
-                  <option value="san_vicente" ${browseLocation === 'san_vicente' ? 'selected' : ''}>San Vicente</option>
-                </select>
-                <i class="fa-solid fa-chevron-down unified-dropdown-icon"></i>
-              </div>
-            </div>
-
-            <!-- Pickup Date Field -->
-            <div class="search-field-box">
-              <label class="search-field-label">
-                <i class="fa-regular fa-calendar-days"></i> Pickup Date
-              </label>
-              <div class="unified-input-wrap hero-date-box" id="heroPickupBox" title="Click to choose Pick-up Date">
-                <span class="unified-date-val" id="heroPickupDisplay">${formatDisplayDate(browseStartDate)}</span>
-                <i class="fa-regular fa-calendar unified-trailing-icon"></i>
-              </div>
-            </div>
-
-            <!-- Return Date Field -->
-            <div class="search-field-box">
-              <label class="search-field-label">
-                <i class="fa-regular fa-calendar-days"></i> Return Date
-              </label>
-              <div class="unified-input-wrap hero-date-box" id="heroDropoffBox" title="Click to choose Return Date">
-                <span class="unified-date-val" id="heroDropoffDisplay">${formatDisplayDate(browseEndDate)}</span>
-                <i class="fa-regular fa-calendar unified-trailing-icon"></i>
-              </div>
-            </div>
-
-            <!-- Check Availability Button -->
-            <div class="search-field-box" style="justify-content:flex-end;">
-              <button type="button" class="btn unified-search-btn" id="heroSearchBtn">
-                Check Availability
-              </button>
+      <!-- ═══ UPCOMING BOOKING BANNER CARD (Matches 3-renter-portal.png) ═══ -->
+      <div class="upcoming-booking-banner" style="background:#ffffff;border:1px solid #E2DCF0;border-radius:14px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 1px 3px rgba(42,35,64,0.03);">
+        <div style="display:flex;align-items:center;gap:20px;flex:1;min-width:0;">
+          <div style="width:140px;height:90px;background:#ffffff;border:1px solid #E2DCF0;border-radius:12px;padding:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <img src="${upcomingBooking.image_url || 'images/fortuner.webp'}" alt="${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+          </div>
+          <div style="min-width:0;">
+            <span class="soft-pill soft-pill-lavender" style="margin-bottom:6px;display:inline-block;">Upcoming</span>
+            <h2 style="font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;color:#2A2340;margin:0 0 4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}
+            </h2>
+            <div style="font-size:0.88rem;color:#5E5778;">
+              ${fmtDate(upcomingBooking.start_date)} to ${fmtDate(upcomingBooking.end_date)} | ${upcomingBooking.location || 'Puerto Princesa Airport'}
             </div>
           </div>
-
-          <!-- Floating Dual-Month Calendar Popover -->
-          <div class="hero-date-popover" id="heroCalendarPopover" style="display:none;"></div>
-
-          <!-- Bottom Row: Category Pills + Sort & Filters (Inside Same Card) -->
-          <div class="search-unified-bottom">
-            <div class="search-pills-scroll" id="catPills">
-              ${displayCategoryPills.map(cat => `
-                <button type="button" class="category-pill ${browseFilter.toLowerCase() === cat.toLowerCase() ? 'active' : ''}" data-cat="${cat}">
-                  ${cat}
-                </button>
-              `).join('')}
-            </div>
-
-            <div class="search-secondary-actions">
-              <div class="search-sort-wrap">
-                <select id="searchSort" class="search-sort-select">
-                  <option value="featured" ${browseSort === 'featured' ? 'selected' : ''}>Featured</option>
-                  <option value="price_low" ${browseSort === 'price_low' ? 'selected' : ''}>Price: Low to High</option>
-                  <option value="price_high" ${browseSort === 'price_high' ? 'selected' : ''}>Price: High to Low</option>
-                  <option value="rating" ${browseSort === 'rating' ? 'selected' : ''}>Top Rated</option>
-                </select>
-                <i class="fa-solid fa-chevron-down search-sort-arrow"></i>
-              </div>
-
-              <button type="button" class="btn search-filters-toggle-btn ${showAdvancedFilters ? 'active' : ''}" id="btnToggleFilters" title="Toggle filters">
-                <i class="fa-solid fa-sliders"></i>
-                <span>Filters</span>
-                ${(browsePriceMax < 10000 || browseSeatsFilter !== 'all' || browseTransFilter !== 'all' || browseRatingFilter !== 'all') ? '<span class="filter-active-dot"></span>' : ''}
-              </button>
-            </div>
-          </div>
-
-          <!-- Expandable Advanced Filter Drawer (Inside Same Card) -->
-          <div class="search-filters-drawer ${showAdvancedFilters ? 'open' : ''}" id="searchFiltersDrawer">
-            <div class="filter-group filter-price-group">
-              <div class="filter-group-header">
-                <label class="filter-label"><i class="fa-solid fa-tag"></i> Max Price</label>
-                <span class="filter-live-val" id="priceDisplay">₱${browsePriceMax.toLocaleString()}/day</span>
-              </div>
-              <div class="filter-range-wrap">
-                <span class="range-bound">₱1k</span>
-                <input type="range" id="filterPriceMax" min="1000" max="10000" step="250" value="${browsePriceMax}" />
-                <span class="range-bound">₱10k</span>
-              </div>
-            </div>
-
-            <div class="filter-group">
-              <label class="filter-label"><i class="fa-solid fa-users"></i> Seats</label>
-              <select id="filterSeats" class="filter-select">
-                <option value="all" ${browseSeatsFilter === 'all' ? 'selected' : ''}>All</option>
-                <option value="2-4" ${browseSeatsFilter === '2-4' ? 'selected' : ''}>2-4 Seats</option>
-                <option value="5-7" ${browseSeatsFilter === '5-7' ? 'selected' : ''}>5-7 Seats</option>
-                <option value="8+" ${browseSeatsFilter === '8+' ? 'selected' : ''}>8+ Seats</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label class="filter-label"><i class="fa-solid fa-gears"></i> Transmission</label>
-              <select id="filterTrans" class="filter-select">
-                <option value="all" ${browseTransFilter === 'all' ? 'selected' : ''}>All</option>
-                <option value="Automatic" ${browseTransFilter === 'Automatic' ? 'selected' : ''}>Automatic</option>
-                <option value="Manual" ${browseTransFilter === 'Manual' ? 'selected' : ''}>Manual</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label class="filter-label"><i class="fa-solid fa-star"></i> Minimum Rating</label>
-              <select id="filterRating" class="filter-select">
-                <option value="all" ${browseRatingFilter === 'all' ? 'selected' : ''}>All</option>
-                <option value="4.5" ${browseRatingFilter === '4.5' ? 'selected' : ''}>4.5+ Stars</option>
-                <option value="4.0" ${browseRatingFilter === '4.0' ? 'selected' : ''}>4.0+ Stars</option>
-                <option value="3.5" ${browseRatingFilter === '3.5' ? 'selected' : ''}>3.5+ Stars</option>
-              </select>
-            </div>
-
-            <button type="button" class="btn btn-ghost filter-reset-btn" id="filterResetBtn" title="Reset all filters">
-              <i class="fa-solid fa-rotate-left"></i> Reset
-            </button>
-          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <button type="button" class="btn btn-ghost" id="btnShowBookingQr" style="padding:8px 20px;border-radius:8px;border:1px solid #E2DCF0;color:#5B4B8A;background:#ffffff;">Show QR</button>
+          <button type="button" class="btn btn-primary" id="btnViewUpcomingBooking" style="padding:8px 20px;border-radius:8px;">View booking</button>
         </div>
       </div>
 
-      <!-- Vehicle Cards Grid -->
-      <div class="grid grid-vehicles" id="vehicleGrid">
-        ${filtered.length ? filtered.map(vehicleCardHTML).join('') : emptyState('', 'No vehicles match your search or filter criteria.')}
+      <!-- ═══ BROWSE VEHICLES SECTION (Matches 3-renter-portal.png) ═══ -->
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;">
+        <h2 style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:#2A2340;margin:0;">Browse vehicles</h2>
+        <span style="font-size:0.84rem;color:#8C86A3;">${filtered.length} results</span>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;overflow-x:auto;" id="catPills">
+        ${['All', 'Sedan', 'SUV', 'MPV', 'Van', 'Motorcycle'].map(cat => {
+          const isActive = browseFilter.toLowerCase() === cat.toLowerCase() || (cat === 'All' && (!browseFilter || browseFilter === 'all'));
+          return `
+            <button type="button" class="category-pill-clean ${isActive ? 'active' : ''}" data-cat="${cat}" style="padding:8px 20px;border-radius:9999px;font-size:0.88rem;cursor:pointer;transition:all 0.15s ease;font-weight:${isActive ? '600' : '500'};border:${isActive ? 'none' : '1px solid #E2DCF0'};background:${isActive ? '#2A2340' : '#ffffff'};color:${isActive ? '#ffffff' : '#5E5778'};">
+              ${cat}
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- 4-Column Vehicles Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:20px;" id="vehicleGrid">
+        ${filtered.length ? filtered.map(vehicleCardHTML).join('') : emptyState('', 'No vehicles available under this category.')}
       </div>
     </div>
   `;
 
-  // Calendar popover logic
-  const pBox = $('#heroPickupBox');
-  const dBox = $('#heroDropoffBox');
-  const popover = $('#heroCalendarPopover');
-  const sCat = $('#heroCategorySelect');
-  const sBtn = $('#heroSearchBtn');
+  // Attach filter handlers
+  $$('.category-pill-clean', view).forEach(btn => {
+    btn.addEventListener('click', () => {
+      browseFilter = btn.dataset.cat.toLowerCase();
+      renderBrowse(view);
+    });
+  });
 
-  function renderHeroCalendar() {
-    if (!popover) return;
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const tierLow = 1422;
-    const tierMid = 1743;
-    const tierHigh = 2149;
+  // Attach card detail open
+  $$('#vehicleGrid .renter-vehicle-card, #vehicleGrid .vehicle-card', view).forEach(card => {
+    card.addEventListener('click', () => {
+      import('./booking.js').then(({ openVehicleDetail }) => {
+        openVehicleDetail(card.dataset.id);
+      });
+    });
+  });
 
-    function getHeroPriceTier(dateIso) {
-      const d = new Date(dateIso + 'T00:00:00').getDay();
-      if (d === 0 || d === 6) return { tier: 'high', price: tierHigh };
-      if (d === 5) return { tier: 'mid', price: tierMid };
-      return { tier: 'low', price: tierLow };
-    }
+  $$('[data-book-btn]', view).forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      import('./booking.js').then(({ openVehicleDetail }) => {
+        openVehicleDetail(btn.dataset.bookBtn);
+      });
+    });
+  });
 
-    function buildHeroMonthHTML(year, month) {
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const firstDay = new Date(year, month, 1).getDay();
-
-      let daysHTML = '';
-      for (let i = 0; i < firstDay; i++) {
-        daysHTML += `<div class="cal-day cal-day-empty"></div>`;
-      }
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const mStr = String(month + 1).padStart(2, '0');
-        const dStr = String(d).padStart(2, '0');
-        const dateIso = `${year}-${mStr}-${dStr}`;
-
-        const isPast = dateIso < todayStr;
-        const isStart = browseStartDate === dateIso;
-        const isEnd = browseEndDate === dateIso;
-        const isInRange = browseStartDate && browseEndDate && dateIso > browseStartDate && dateIso < browseEndDate;
-        const { tier } = getHeroPriceTier(dateIso);
-
-        if (isPast) {
-          daysHTML += `<div class="cal-day cal-day-past" data-date="${dateIso}">${d}</div>`;
-        } else {
-          let dayClass = `cal-day-price cal-day-price-${tier}`;
-          let tileStyle = '';
-          if (isStart || isEnd) {
-            dayClass += ' cal-day-selected';
-            if (isStart && isEnd) dayClass += ' cal-day-single';
-            else if (isStart) dayClass += ' cal-day-start';
-            else if (isEnd) dayClass += ' cal-day-end';
-            tileStyle = 'background-color:#1e293b !important; color:#ffffff !important; font-weight:800;';
-          } else if (isInRange) {
-            dayClass += ' cal-day-in-range';
-            tileStyle = 'background-color:#273549 !important; color:#ffffff !important; border-radius:0 !important;';
-          } else if (tier === 'low') {
-            tileStyle = 'background-color:#71deb5 !important; color:#0f172a !important; font-weight:700;';
-          } else if (tier === 'mid') {
-            tileStyle = 'background-color:#fbc072 !important; color:#0f172a !important; font-weight:700;';
-          } else if (tier === 'high') {
-            tileStyle = 'background-color:#fda4af !important; color:#0f172a !important; font-weight:700;';
-          }
-
-          daysHTML += `
-            <div class="cal-day ${dayClass}" style="${tileStyle}" data-date="${dateIso}" data-tier="${tier}" title="${monthNames[month]} ${d}, ${year}">
-              ${d}
-            </div>
-          `;
-        }
-      }
-
-      return `
-        <div class="cal-dual-panel">
-          <div class="cal-weekdays">
-            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+  // Upcoming booking action buttons
+  $('#btnShowBookingQr')?.addEventListener('click', () => {
+    import('./utils.js').then(({ openModal }) => {
+      openModal(`
+        <div class="modal-head">
+          <h3 style="font-family:'Fraunces',serif;font-size:1.25rem;color:#2A2340;margin:0;">Booking QR Pass</h3>
+          <div class="modal-close" onclick="document.querySelector('#modalOverlay')?.classList.remove('open')">Close</div>
+        </div>
+        <div style="text-align:center;padding:24px 16px;">
+          <div style="width:180px;height:180px;background:#F5F2FB;border:2px dashed #B8AED6;border-radius:14px;margin:0 auto 16px auto;display:flex;align-items:center;justify-content:center;color:#5B4B8A;font-size:3.5rem;">
+            <i class="fa-solid fa-qrcode"></i>
           </div>
-          <div class="cal-days-grid">${daysHTML}</div>
+          <div style="font-weight:700;font-size:1.1rem;color:#2A2340;margin-bottom:4px;">${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}</div>
+          <div style="font-size:0.86rem;color:#5E5778;">Present this QR pass to staff counter during vehicle meetup.</div>
         </div>
-      `;
-    }
-
-    const leftYear = heroCalYear;
-    const leftMonth = heroCalMonth;
-    let rightMonth = heroCalMonth + 1;
-    let rightYear = heroCalYear;
-    if (rightMonth > 11) { rightMonth = 0; rightYear++; }
-
-    const now = new Date();
-    const isPrevDisabled = (leftYear < now.getFullYear()) || (leftYear === now.getFullYear() && leftMonth <= now.getMonth());
-
-    popover.innerHTML = `
-      <div class="cal-dual-header">
-        <button type="button" class="cal-nav-btn" id="heroPrevMonth" ${isPrevDisabled ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}>
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <div class="cal-panel-title cal-panel-title-left">${monthNames[leftMonth]} ${leftYear}</div>
-        <div class="cal-panel-title cal-panel-title-right">${monthNames[rightMonth]} ${rightYear}</div>
-        <button type="button" class="cal-nav-btn" id="heroNextMonth">
-          <i class="fa-solid fa-chevron-right"></i>
-        </button>
-      </div>
-      <div class="cal-dual-months">
-        ${buildHeroMonthHTML(leftYear, leftMonth)}
-        ${buildHeroMonthHTML(rightYear, rightMonth)}
-      </div>
-      <div class="cal-price-legend">
-        <div class="cal-price-legend-item">
-          <span class="cal-legend-pill cal-pill-low">₱${tierLow.toLocaleString()}+</span>
-        </div>
-        <div class="cal-price-legend-item">
-          <span class="cal-legend-pill cal-pill-mid">₱${tierMid.toLocaleString()}+</span>
-        </div>
-        <div class="cal-price-legend-item">
-          <span class="cal-legend-pill cal-pill-high">₱${tierHigh.toLocaleString()}+</span>
-        </div>
-        <span class="cal-legend-note">Based on average prices of all cars.</span>
-      </div>
-    `;
-
-    $('#heroPrevMonth')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (isPrevDisabled) return;
-      heroCalMonth--;
-      if (heroCalMonth < 0) { heroCalMonth = 11; heroCalYear--; }
-      renderHeroCalendar();
+      `);
     });
-
-    $('#heroNextMonth')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      heroCalMonth++;
-      if (heroCalMonth > 11) { heroCalMonth = 0; heroCalYear++; }
-      renderHeroCalendar();
-    });
-
-    const dayCells = popover.querySelectorAll('.cal-day-price');
-    dayCells.forEach(cell => {
-      cell.addEventListener('mouseenter', () => {
-        if (browseStartDate && !browseEndDate) {
-          const hovered = cell.dataset.date;
-          if (hovered > browseStartDate) {
-            dayCells.forEach(c => {
-              const d = c.dataset.date;
-              if (d > browseStartDate && d <= hovered) {
-                c.classList.add('cal-day-hover-in-range');
-                c.style.backgroundColor = '#273549';
-                c.style.color = '#ffffff';
-                c.style.borderRadius = '0';
-              } else if (d > browseStartDate) {
-                c.classList.remove('cal-day-hover-in-range');
-                const t = c.dataset.tier;
-                if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
-                else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
-                else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
-                c.style.borderRadius = '8px';
-              }
-            });
-          }
-        }
-      });
-
-      cell.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const clicked = cell.dataset.date;
-        if (!browseStartDate || (browseStartDate && browseEndDate)) {
-          browseStartDate = clicked;
-          browseEndDate = '';
-          const pEl = $('#heroPickupDisplay');
-          if (pEl) pEl.textContent = formatDisplayDate(browseStartDate);
-          const dEl = $('#heroDropoffDisplay');
-          if (dEl) dEl.textContent = 'mm/dd/yyyy';
-          renderHeroCalendar();
-        } else if (clicked > browseStartDate) {
-          browseEndDate = clicked;
-          popover.style.display = 'none';
-          pBox?.classList.remove('active');
-          dBox?.classList.remove('active');
-          renderBrowse(view);
-          toast(`Dates selected: ${formatDisplayDate(browseStartDate)} to ${formatDisplayDate(browseEndDate)}`, 'success');
-        } else {
-          browseStartDate = clicked;
-          browseEndDate = '';
-          const pEl = $('#heroPickupDisplay');
-          if (pEl) pEl.textContent = formatDisplayDate(browseStartDate);
-          renderHeroCalendar();
-        }
-      });
-    });
-
-    popover.addEventListener('mouseleave', () => {
-      dayCells.forEach(c => {
-        const d = c.dataset.date;
-        if (d !== browseStartDate && d !== browseEndDate && !(browseStartDate && browseEndDate && d > browseStartDate && d < browseEndDate)) {
-          c.classList.remove('cal-day-hover-in-range');
-          const t = c.dataset.tier;
-          if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
-          else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
-          else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
-          c.style.borderRadius = '8px';
-        }
-      });
-    });
-  }
-
-  function openHeroCalendar(activeBox) {
-    if (!popover) return;
-    renderHeroCalendar();
-    popover.style.display = 'block';
-    if (activeBox === 'pickup') {
-      pBox?.classList.add('active');
-      dBox?.classList.remove('active');
-    } else {
-      dBox?.classList.add('active');
-      pBox?.classList.remove('active');
-    }
-  }
-
-  pBox?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (popover && popover.style.display === 'block' && pBox.classList.contains('active')) {
-      popover.style.display = 'none';
-      pBox.classList.remove('active');
-    } else {
-      openHeroCalendar('pickup');
-    }
   });
 
-  dBox?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (popover && popover.style.display === 'block' && dBox.classList.contains('active')) {
-      popover.style.display = 'none';
-      dBox.classList.remove('active');
-    } else {
-      openHeroCalendar('dropoff');
-    }
+  $('#btnViewUpcomingBooking')?.addEventListener('click', () => {
+    state.tab = 'bookings';
+    window.renderShell();
   });
-
-  document.addEventListener('click', (e) => {
-    if (popover && popover.style.display === 'block') {
-      if (!popover.contains(e.target) && !pBox?.contains(e.target) && !dBox?.contains(e.target)) {
-        popover.style.display = 'none';
-        pBox?.classList.remove('active');
-        dBox?.classList.remove('active');
-      }
-    }
-  });
-
-  const locSelect = $('#searchLocation');
-  if (locSelect) {
-    locSelect.addEventListener('change', () => {
-      browseLocation = locSelect.value;
-      renderBrowse(view);
-    });
-  }
-
-  const sortSelect = $('#searchSort');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', () => {
-      browseSort = sortSelect.value;
-      renderBrowse(view);
-    });
-  }
-
-  const filterToggleBtn = $('#btnToggleFilters');
-  const filterDrawer = $('#searchFiltersDrawer');
-  if (filterToggleBtn) {
-    filterToggleBtn.addEventListener('click', () => {
-      showAdvancedFilters = !showAdvancedFilters;
-      if (filterDrawer) filterDrawer.classList.toggle('open', showAdvancedFilters);
-      filterToggleBtn.classList.toggle('active', showAdvancedFilters);
-    });
-  }
-
-  if (sBtn) {
-    sBtn.addEventListener('click', () => {
-      if (browseStartDate && browseEndDate && browseEndDate < browseStartDate) {
-        toast('Drop-out date must be on or after Pick-up date.', 'error');
-        return;
-      }
-      renderBrowse(view);
-      toast('Availability checked! Updated fleet listing.', 'info');
-    });
-  }
-
-  $$('#catPills .category-pill').forEach(p => p.addEventListener('click', () => {
-    browseFilter = p.dataset.cat.toLowerCase();
-    renderBrowse(view);
-  }));
-
-  // Bind Advanced Filter Controls
-  const priceInput = $('#filterPriceMax');
-  const priceDisplay = $('#priceDisplay');
-  if (priceInput) {
-    priceInput.addEventListener('input', (e) => {
-      browsePriceMax = Number(e.target.value);
-      if (priceDisplay) priceDisplay.textContent = `₱${browsePriceMax.toLocaleString()}/day`;
-    });
-    priceInput.addEventListener('change', () => {
-      renderBrowse(view);
-    });
-  }
-
-  const seatsSelect = $('#filterSeats');
-  if (seatsSelect) {
-    seatsSelect.addEventListener('change', (e) => {
-      browseSeatsFilter = e.target.value;
-      renderBrowse(view);
-    });
-  }
-
-  const transSelect = $('#filterTrans');
-  if (transSelect) {
-    transSelect.addEventListener('change', (e) => {
-      browseTransFilter = e.target.value;
-      renderBrowse(view);
-    });
-  }
-
-  const ratingSelect = $('#filterRating');
-  if (ratingSelect) {
-    ratingSelect.addEventListener('change', (e) => {
-      browseRatingFilter = e.target.value;
-      renderBrowse(view);
-    });
-  }
-
-  const resetBtn = $('#filterResetBtn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      browseFilter = 'all';
-      browseSearch = '';
-      browseStatusFilter = 'all';
-      browsePriceMax = 10000;
-      browseSeatsFilter = 'all';
-      browseTransFilter = 'all';
-      browseRatingFilter = 'all';
-      browseLocation = 'all';
-      browseSort = 'featured';
-      browseStartDate = '';
-      browseEndDate = '';
-      renderBrowse(view);
-    });
-  }
-
-  $$('#vehicleGrid .vehicle-card').forEach(card => card.addEventListener('click', () => {
-    openVehicleDetail(Number(card.dataset.id), browseStartDate, browseEndDate);
-  }));
-
-  $$('#vehicleGrid .vehicle-book-pill-btn').forEach(btn => btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openVehicleDetail(Number(btn.dataset.bookBtn), browseStartDate, browseEndDate);
-  }));
-
-  $$('#vehicleGrid .vehicle-fav-btn').forEach(btn => btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleFavorite(Number(btn.dataset.favid));
-  }));
-
-
 }
 
 export function vehicleCardHTML(v) {
   const exactImg = getExactVehicleImage(v);
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
-  const favs = getFavorites();
-  const isFav = favs.includes(v.id);
   const isAvailable = v.status === 'available';
   const seats = v.seats || (catName.toLowerCase().includes('motor') ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
 
   return `
-    <div class="lp-vehicle-card vehicle-card" data-id="${v.id}">
-      <div class="lp-card-photo-panel">
-        <img class="lp-card-photo" id="cardImg-${v.id}" src="${exactImg}" alt="${v.name}" onerror="this.src='${exactImg}'" loading="lazy" />
+    <div class="renter-vehicle-card vehicle-card" data-id="${v.id}" style="background:#ffffff;border:1px solid #E2DCF0;border-radius:14px;padding:16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(42,35,64,0.03);cursor:pointer;transition:transform 0.15s ease, border-color 0.15s ease;">
+      <div style="height:140px;background:#ffffff;display:flex;align-items:center;justify-content:center;padding:10px;margin-bottom:12px;">
+        <img src="${exactImg}" alt="${v.name}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy" />
       </div>
-      <div class="lp-card-body">
-        <div class="lp-card-header-row">
-          <h3 class="lp-card-title">${v.name}</h3>
-          <span class="badge ${isAvailable ? 'badge-available' : 'badge-rented'}">
-            ${isAvailable ? 'Available' : 'Booked'}
-          </span>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+        <h3 style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:#2A2340;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${v.name}</h3>
+        <span class="soft-pill ${isAvailable ? 'soft-pill-mint' : 'soft-pill-amber'}">
+          ${isAvailable ? 'Available' : 'Few left'}
+        </span>
+      </div>
+      <p style="font-size:0.82rem;color:#8C86A3;margin:0 0 14px 0;">${catName}, ${seats} seats</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <div>
+          <span style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;color:#2A2340;">PHP ${fmtMoney(rate)}</span>
+          <span style="font-size:0.78rem;color:#8C86A3;">/ day</span>
         </div>
-        <p class="lp-card-specs">${catName}, ${seats} seats</p>
-        <div class="lp-card-footer-row">
-          <div class="lp-card-rate-text">
-            <strong>PHP ${fmtMoney(rate)}</strong> <small>/ day</small>
-          </div>
-          <button type="button" class="btn btn-ghost btn-sm vehicle-book-pill-btn" data-book-btn="${v.id}">
-            View
-          </button>
-        </div>
+        <button type="button" class="btn btn-ghost btn-sm vehicle-book-pill-btn" data-book-btn="${v.id}" style="padding:6px 18px;border-radius:8px;border:1px solid #E2DCF0;color:#5E5778;background:#ffffff;">
+          View
+        </button>
       </div>
     </div>
   `;
