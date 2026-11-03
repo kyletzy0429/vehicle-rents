@@ -1,7 +1,7 @@
 // Contract Checker for Vehicle Rental Management System
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import vm from 'vm';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,10 +29,11 @@ console.log('--- CONTRACT CHECKER: V8 AST SYNTAX & CRITICAL HANDLERS ---');
 for (const file of jsFiles) {
   const filePath = path.join(rootDir, file);
   try {
-    execSync(`node --check "${filePath}"`, { stdio: 'pipe' });
+    const code = fs.readFileSync(filePath, 'utf8');
+    new vm.SourceTextModule(code, { identifier: file });
     console.log(`[OK] ${file}`);
   } catch (err) {
-    console.error(`CONTRACT BROKEN in ${file}: V8 Syntax Error`);
+    console.error(`CONTRACT BROKEN in ${file}: V8 Syntax Error -> ${err.message}`);
     totalErrors++;
   }
 }

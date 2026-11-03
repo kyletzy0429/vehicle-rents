@@ -84,20 +84,6 @@ export function applyTheme() {
   document.body.removeAttribute('data-theme');
 }
 applyTheme();
-  toast(`Switched to ${next === 'dark' ? 'Dark' : 'Light'} Mode`, 'info');
-}
-
-export function applyTheme() {
-  const theme = getTheme();
-  if (theme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.body.setAttribute('data-theme', 'dark');
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-    document.body.removeAttribute('data-theme');
-  }
-}
-applyTheme();
 
 export function getLang() {
   return 'en';
