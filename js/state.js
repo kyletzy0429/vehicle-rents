@@ -264,6 +264,15 @@ export function saveLocalBooking(b) {
       list.unshift(b);
     }
     localStorage.setItem('rentflow_local_bookings', JSON.stringify(list));
+
+    if (state.bookings) {
+      const inState = state.bookings.find(x => String(x.id) === String(bookingId));
+      if (inState) {
+        inState.status = status;
+        if (typeof extraOrNotes === 'string') inState.review_notes = extraOrNotes;
+        else if (extraOrNotes && typeof extraOrNotes === 'object') Object.assign(inState, extraOrNotes);
+      }
+    }
   } catch (e) {
     console.warn('saveLocalBooking error:', e);
   }

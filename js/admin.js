@@ -50,9 +50,9 @@ export async function renderStaffDashboard(view) {
       <div class="section-head" style="margin-bottom:20px;">
         <div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Operations Dashboard</h2>
+            <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:var(--text-hi);">Operations Dashboard</h2>
           </div>
-          <p style="color:#64748b;font-size:0.85rem;margin:0;">
+          <p style="color:var(--text-mid);font-size:0.85rem;margin:0;">
             Manager: <strong>${state.profile?.full_name || 'Sarah Manager'}</strong> · Real-time booking queue, dispatches, returns, and vehicle status.
           </p>
         </div>
@@ -91,45 +91,50 @@ export async function renderStaffDashboard(view) {
           <div class="stat-label" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Vehicle Availability</span>
           </div>
-          <div class="stat-value" style="color:#7c3aed;">${availableVehicles} <span style="font-size:0.85rem;color:#64748b;font-weight:500;">/ ${totalVehicles}</span></div>
+          <div class="stat-value" style="color:#7c3aed;">${availableVehicles} <span style="font-size:0.85rem;color:var(--text-mid);font-weight:500;">/ ${totalVehicles}</span></div>
           <div class="stat-sub">${rentedVehicles} Rented · ${maintenanceVehicles} Service</div>
         </div>
       </div>
 
       <!-- Quick Action Shortcuts -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-bottom:24px;">
-        <button type="button" class="btn btn-ghost" id="quickNavRequests" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Review Requests</div>
-            <div style="font-size:0.75rem;color:#64748b;">${pendingBookings.length} pending review</div>
+        <button type="button" class="quick-action-card" id="quickNavRequests">
+          <div class="qact-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div class="qact-text">
+            <div class="qact-title">Review Requests</div>
+            <div class="qact-sub">${pendingBookings.length} pending review</div>
           </div>
         </button>
 
-        <button type="button" class="btn btn-ghost" id="quickNavActive" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Collect Balance</div>
-            <div style="font-size:0.75rem;color:#64748b;">Pickup balance collection</div>
+        <button type="button" class="quick-action-card" id="quickNavActive">
+          <div class="qact-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+          <div class="qact-text">
+            <div class="qact-title">Collect Balance</div>
+            <div class="qact-sub">Pickup balance collection</div>
           </div>
         </button>
 
-        <button type="button" class="btn btn-ghost" id="quickNavReturns" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Process Return</div>
-            <div style="font-size:0.75rem;color:#64748b;">Inspect &amp; release deposits</div>
+        <button type="button" class="quick-action-card" id="quickNavReturns">
+          <div class="qact-icon"><i class="fa-solid fa-car-side"></i></div>
+          <div class="qact-text">
+            <div class="qact-title">Process Return</div>
+            <div class="qact-sub">Inspect &amp; release deposits</div>
           </div>
         </button>
 
-        <button type="button" class="btn btn-ghost" id="quickNavRefunds" style="justify-content:flex-start;background:#fff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:12px;">
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">Refund Claims</div>
-            <div style="font-size:0.75rem;color:#64748b;">${refundClaims.length} pending transfer</div>
+        <button type="button" class="quick-action-card" id="quickNavRefunds">
+          <div class="qact-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+          <div class="qact-text">
+            <div class="qact-title">Refund Claims</div>
+            <div class="qact-sub">${refundClaims.length} pending transfer</div>
           </div>
         </button>
 
-        <button type="button" class="btn btn-ghost" id="quickVerifyPass" style="justify-content:flex-start;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(99,102,241,0.08));border:1.5px dashed #a78bfa;padding:12px 14px;border-radius:12px;">
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:0.88rem;color:var(--accent);"><i class="fa-solid fa-qrcode" style="margin-right:4px;"></i> Verify QR Pass</div>
-            <div style="font-size:0.75rem;color:#64748b;">Venue scan &amp; check-in</div>
+        <button type="button" class="quick-action-card" id="quickVerifyPass" style="border:1.5px dashed var(--accent);">
+          <div class="qact-icon" style="background:var(--accent-light);color:var(--accent);"><i class="fa-solid fa-qrcode"></i></div>
+          <div class="qact-text">
+            <div class="qact-title" style="color:var(--accent);">Verify QR Pass</div>
+            <div class="qact-sub">Venue scan &amp; check-in</div>
           </div>
         </button>
       </div>
@@ -139,7 +144,7 @@ export async function renderStaffDashboard(view) {
         <!-- Priority Booking Approval Queue -->
         <div class="glass card" style="padding:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0;">
+            <h3 style="font-size:1rem;font-weight:800;color:var(--text-hi);margin:0;">
               Incoming Priority Requests
             </h3>
             <span class="badge ${pendingBookings.length > 0 ? 'badge-pending' : 'badge-available'}">
@@ -153,15 +158,15 @@ export async function renderStaffDashboard(view) {
               const cPhone = getBookingCustomerPhone(b);
               const v = b.vehicles || {};
               return `
-                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
                   <div style="flex:1;min-width:0;">
-                    <div style="font-weight:800;font-size:0.92rem;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <div style="font-weight:800;font-size:0.92rem;color:var(--text-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                       ${v.name || 'Vehicle'} <span class="muted" style="font-size:0.75rem;">(${v.plate_number || 'N/A'})</span>
                     </div>
                     <div style="font-size:0.8rem;color:var(--accent);font-weight:700;margin-top:2px;">
-                      ${cName} ${cPhone ? `<span style="color:#64748b;font-weight:400;">(${cPhone})</span>` : ''}
+                      ${cName} ${cPhone ? `<span style="color:var(--text-mid);font-weight:400;">(${cPhone})</span>` : ''}
                     </div>
-                    <div style="font-size:0.76rem;color:#64748b;margin-top:2px;">
+                    <div style="font-size:0.76rem;color:var(--text-mid);margin-top:2px;">
                       ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong>
                     </div>
                   </div>
@@ -177,8 +182,8 @@ export async function renderStaffDashboard(view) {
               `;
             }).join('') : `
               <div class="empty-box" style="padding:28px 14px;">
-                <div style="font-weight:700;color:#0f172a;margin-top:6px;">All Booking Requests Processed</div>
-                <p style="font-size:0.8rem;color:#64748b;margin:4px 0 0 0;">New customer booking requests will appear here in real-time.</p>
+                <div style="font-weight:700;color:var(--text-hi);margin-top:6px;">All Booking Requests Processed</div>
+                <p style="font-size:0.8rem;color:var(--text-mid);margin:4px 0 0 0;">New customer booking requests will appear here in real-time.</p>
               </div>
             `}
           </div>
@@ -186,7 +191,7 @@ export async function renderStaffDashboard(view) {
 
         <!-- Fleet Status Breakdown & Live Operations -->
         <div class="glass card" style="padding:20px;">
-          <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 14px 0;">
+          <h3 style="font-size:1rem;font-weight:800;color:var(--text-hi);margin:0 0 14px 0;">
             Vehicle Operations Status
           </h3>
 
@@ -194,7 +199,7 @@ export async function renderStaffDashboard(view) {
             <div>
               <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:4px;">
                 <span style="color:#059669;font-weight:700;">Ready &amp; Available</span>
-                <span style="color:#0f172a;">${availableVehicles} of ${totalVehicles} units</span>
+                <span style="color:var(--text-hi);">${availableVehicles} of ${totalVehicles} units</span>
               </div>
               <div style="width:100%;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
                 <div style="width:${totalVehicles > 0 ? (availableVehicles / totalVehicles) * 100 : 0}%;height:100%;background:#059669;border-radius:99px;"></div>
@@ -204,7 +209,7 @@ export async function renderStaffDashboard(view) {
             <div>
               <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:4px;">
                 <span style="color:var(--accent);font-weight:700;">Rented On Road</span>
-                <span style="color:#0f172a;">${rentedVehicles} units</span>
+                <span style="color:var(--text-hi);">${rentedVehicles} units</span>
               </div>
               <div style="width:100%;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
                 <div style="width:${totalVehicles > 0 ? (rentedVehicles / totalVehicles) * 100 : 0}%;height:100%;background:var(--accent);border-radius:99px;"></div>
@@ -214,7 +219,7 @@ export async function renderStaffDashboard(view) {
             <div>
               <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:4px;">
                 <span style="color:#d97706;font-weight:700;">Periodic Maintenance</span>
-                <span style="color:#0f172a;">${maintenanceVehicles} units</span>
+                <span style="color:var(--text-hi);">${maintenanceVehicles} units</span>
               </div>
               <div style="width:100%;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
                 <div style="width:${totalVehicles > 0 ? (maintenanceVehicles / totalVehicles) * 100 : 0}%;height:100%;background:#d97706;border-radius:99px;"></div>
@@ -222,11 +227,11 @@ export async function renderStaffDashboard(view) {
             </div>
           </div>
 
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
-            <div style="font-size:0.8rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em;">
+          <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:10px;padding:12px;">
+            <div style="font-size:0.8rem;font-weight:800;color:var(--text-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em;">
               Shift Manager Checklist
             </div>
-            <div style="font-size:0.8rem;color:#334155;display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:0.8rem;color:var(--text-hi);display:flex;flex-direction:column;gap:6px;">
               <div>Inspect incoming vehicles before refunding deposit.</div>
               <div>Validate customer license ID at meetup release.</div>
               <div>Collect remaining balance prior to vehicle handover.</div>
@@ -237,7 +242,7 @@ export async function renderStaffDashboard(view) {
 
       <!-- Recent Rental Operations Feed -->
       <div class="glass card" style="padding:20px;">
-        <h3 style="font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 14px 0;">
+        <h3 style="font-size:1rem;font-weight:800;color:var(--text-hi);margin:0 0 14px 0;">
           Recent Rental Operations Feed
         </h3>
         <div style="display:flex;flex-direction:column;gap:8px;">
@@ -245,10 +250,10 @@ export async function renderStaffDashboard(view) {
             const cName = getBookingCustomerName(b);
             const vName = b.vehicles?.name || 'Vehicle';
             return `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;font-size:0.84rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:8px;font-size:0.84rem;">
                 <div>
-                  <strong style="color:#0f172a;">${cName}</strong>
-                  <span style="color:#64748b;">— booked ${vName}</span>
+                  <strong style="color:var(--text-hi);">${cName}</strong>
+                  <span style="color:var(--text-mid);">— booked ${vName}</span>
                   <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">
                     ${fmtDate(b.start_date)} to ${fmtDate(b.end_date)} · <strong style="color:#059669;">${fmtMoney(b.total_amount)}</strong>
                   </div>
@@ -623,7 +628,7 @@ export async function renderStaffRequests(view) {
                 ${b.proof_image ? ` · <span style="color:#059669;font-weight:600;"><i class="fa-solid fa-receipt"></i> Proof Uploaded</span>` : ''}
               </div>
               ${b.vehicles && b.vehicles.status !== 'available' ? `<div class="item-sub" style="color:var(--coral);">Vehicle currently ${b.vehicles.status}</div>` : ''}
-              ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.78rem;margin-top:4px;"><strong>Note:</strong> ${b.review_notes}</div>` : ''}
+              ${b.review_notes ? `<div class="item-sub" style="color:var(--text-mid);font-size:0.78rem;margin-top:4px;"><strong>Note:</strong> ${b.review_notes}</div>` : ''}
             </div>
             ${badgeHTML}
             <div class="item-actions">
@@ -728,11 +733,11 @@ export async function openStaffPaymentReviewModal(bookingId) {
     <div style="background:rgba(241,245,249,0.7);border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div>
-          <div style="font-weight:800;font-size:1.05rem;color:#0f172a;">${vehicleName}</div>
-          <div style="font-size:0.8rem;color:#64748b;">Plate: <strong>${plateNo}</strong></div>
+          <div style="font-weight:800;font-size:1.05rem;color:var(--text-hi);">${vehicleName}</div>
+          <div style="font-size:0.8rem;color:var(--text-mid);">Plate: <strong>${plateNo}</strong></div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:700;">Total Amount</div>
+          <div style="font-size:0.75rem;color:var(--text-mid);text-transform:uppercase;font-weight:700;">Total Amount</div>
           <div style="font-size:1.2rem;font-weight:900;color:#059669;">${fmtMoney(b.total_amount)}</div>
         </div>
       </div>
@@ -752,10 +757,10 @@ export async function openStaffPaymentReviewModal(bookingId) {
         </span>
         <span class="badge badge-primary" style="font-size:0.75rem;">${payMethod}</span>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f8fafc;padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-subtle);padding:10px 14px;border-radius:8px;border:1px solid #cbd5e1;">
         <div>
-          <div style="font-size:0.72rem;color:#64748b;font-weight:600;">Transaction Ref No.:</div>
-          <div style="font-family:monospace;font-size:1.15rem;font-weight:800;color:#0f172a;letter-spacing:1px;" id="dispRefNo">${payRef}</div>
+          <div style="font-size:0.72rem;color:var(--text-mid);font-weight:600;">Transaction Ref No.:</div>
+          <div style="font-family:monospace;font-size:1.15rem;font-weight:800;color:var(--text-hi);letter-spacing:1px;" id="dispRefNo">${payRef}</div>
         </div>
         <button type="button" class="btn btn-secondary btn-sm" id="btnCopyRef">
           <i class="fa-solid fa-copy"></i> Copy Ref
@@ -766,7 +771,7 @@ export async function openStaffPaymentReviewModal(bookingId) {
     <!-- Proof of Payment / Uploaded Receipt Image -->
     <div style="margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:0.8rem;font-weight:700;color:#334155;">
+        <span style="font-size:0.8rem;font-weight:700;color:var(--text-hi);">
           <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Customer Receipt / Proof of Payment
         </span>
         ${proofImg ? `<span class="badge badge-confirmed" style="font-size:0.7rem;"><i class="fa-solid fa-circle-check"></i> Proof Attached</span>` : `<span class="badge badge-pending" style="font-size:0.7rem;">No Image Attached</span>`}
@@ -782,7 +787,7 @@ export async function openStaffPaymentReviewModal(bookingId) {
           </div>
         `}
       </div>
-      ${proofImg ? `<div style="text-align:center;font-size:0.72rem;color:#64748b;margin-top:4px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Click image to open high-resolution receipt</div>` : ''}
+      ${proofImg ? `<div style="text-align:center;font-size:0.72rem;color:var(--text-mid);margin-top:4px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Click image to open high-resolution receipt</div>` : ''}
     </div>
 
     ${b.review_notes ? `
@@ -793,11 +798,11 @@ export async function openStaffPaymentReviewModal(bookingId) {
 
     <!-- Verification Decision Buttons -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-      <button class="btn btn-primary" id="btnApprovePaymentAction" style="background:#059669;border-color:#059669;padding:12px 10px;text-align:center;">
+      <button class="btn btn-primary btn-stacked" id="btnApprovePaymentAction" style="background:#059669;border-color:#059669;padding:12px 10px;">
         <div style="font-size:0.95rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Approve Payment</div>
         <div style="font-size:0.72rem;opacity:0.9;font-weight:400;margin-top:2px;">Verified · Confirmed · Ready for Release</div>
       </button>
-      <button class="btn btn-danger" id="btnRejectPaymentAction" style="background:#dc2626;border-color:#dc2626;padding:12px 10px;text-align:center;">
+      <button class="btn btn-danger btn-stacked" id="btnRejectPaymentAction" style="background:#dc2626;border-color:#dc2626;padding:12px 10px;">
         <div style="font-size:0.95rem;font-weight:800;"><i class="fa-solid fa-circle-xmark"></i> Reject Payment</div>
         <div style="font-size:0.72rem;opacity:0.9;font-weight:400;margin-top:2px;">Rejected · Awaiting Customer Resubmission</div>
       </button>
@@ -841,11 +846,18 @@ export async function openStaffPaymentReviewModal(bookingId) {
         paid_at: new Date().toISOString()
       });
 
-      await supabase.from('bookings').update({
+      const { error: updateErr } = await supabase.from('bookings').update({
         status: 'confirmed',
         reviewed_by: currentUserId,
         review_notes: 'Payment verified and approved by staff.'
       }).eq('id', bookingId);
+      if (updateErr) {
+        await supabase.from('bookings').update({
+          status: 'approved',
+          reviewed_by: currentUserId,
+          review_notes: 'Payment verified and approved by staff.'
+        }).eq('id', bookingId);
+      }
     } catch (e) {
       console.warn('DB approve payment notice:', e);
     }
@@ -873,11 +885,18 @@ export async function openStaffPaymentReviewModal(bookingId) {
     });
 
     try {
-      await supabase.from('bookings').update({
+      const { error: rejErr } = await supabase.from('bookings').update({
         status: 'awaiting_payment',
         reviewed_by: currentUserId,
         review_notes: reason
       }).eq('id', bookingId);
+      if (rejErr) {
+        await supabase.from('bookings').update({
+          status: 'rejected',
+          reviewed_by: currentUserId,
+          review_notes: reason
+        }).eq('id', bookingId);
+      }
     } catch (e) {
       console.warn('DB reject payment notice:', e);
     }
@@ -905,7 +924,7 @@ export async function openStaffReleasePaymentModal(bookingId) {
   const v = b.vehicles || {};
   const cName = getBookingCustomerName(b);
   const cPhone = getBookingCustomerPhone(b);
-  const cLicense = state.profile?.license_number || b.driver_license || 'Physical Card Verified at Counter';
+  const cLicense = state.profile?.license_number || b.driver_license || 'Physical Card Verified at Meetup';
 
   const totalAmount = Number(b.total_amount || 0);
   const paidOnline = Number(b.paid_amount || 0);
@@ -917,23 +936,23 @@ export async function openStaffReleasePaymentModal(bookingId) {
         <i class="fa-solid fa-money-bill-transfer" style="color:#059669;"></i>
         Vehicle Release &amp; Payment Recording
       </div>
-      <div class="modal-close" id="mClose" onclick="window.closeModal()">✕</div>
+      <div class="modal-close" id="mClose" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></div>
     </div>
 
-    <div style="margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+    <div style="margin-bottom:14px;background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:12px;padding:14px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
         <div>
-          <div style="font-weight:800;font-size:1.05rem;color:#0f172a;">${v.name || 'Vehicle'}</div>
-          <div style="font-size:0.78rem;color:#64748b;">Plate: <strong>${v.plate_number ? maskPlate(v.plate_number) : 'Unassigned'}</strong> · Category: ${v.categories?.name || 'Standard'}</div>
+          <div style="font-weight:800;font-size:1.05rem;color:var(--text-hi);">${v.name || 'Vehicle'}</div>
+          <div style="font-size:0.78rem;color:var(--text-mid);">Plate: <strong>${v.plate_number ? maskPlate(v.plate_number) : 'Unassigned'}</strong> · Category: ${v.categories?.name || 'Standard'}</div>
         </div>
         <span class="badge badge-primary" style="font-size:0.75rem;">${b.ref_number || ('#' + b.id)}</span>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;border-top:1px dashed #cbd5e1;padding-top:10px;">
-        <div><span style="color:#64748b;">Renter:</span> <strong>${cName}</strong></div>
-        <div><span style="color:#64748b;">Contact:</span> <strong>${cPhone || 'N/A'}</strong></div>
-        <div><span style="color:#64748b;">Schedule:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
-        <div><span style="color:#64748b;">Driver License:</span> <strong>${cLicense}</strong></div>
+        <div><span style="color:var(--text-mid);">Renter:</span> <strong>${cName}</strong></div>
+        <div><span style="color:var(--text-mid);">Contact:</span> <strong>${cPhone || 'N/A'}</strong></div>
+        <div><span style="color:var(--text-mid);">Schedule:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+        <div><span style="color:var(--text-mid);">Driver License:</span> <strong>${cLicense}</strong></div>
       </div>
     </div>
 
@@ -943,11 +962,11 @@ export async function openStaffReleasePaymentModal(bookingId) {
         Payment Status &amp; Turnover Breakdown
       </div>
 
-      <div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:#334155;">
+      <div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:var(--text-hi);">
         <span>Total Booking Amount:</span>
         <strong>${fmtMoney(totalAmount)}</strong>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:#334155;">
+      <div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:6px;color:var(--text-hi);">
         <span>Reservation Deposit Paid Online:</span>
         <strong style="color:${paidOnline > 0 ? '#059669' : '#64748b'};">${fmtMoney(paidOnline)} ${paidOnline > 0 ? '(Verified)' : '(₱0.00)'}</strong>
       </div>
@@ -958,17 +977,17 @@ export async function openStaffReleasePaymentModal(bookingId) {
     </div>
 
     <!-- Staff Collection Verification Checklist -->
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-      <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:8px;">Staff Turnover Checklist:</div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#1e293b;cursor:pointer;margin-bottom:8px;">
+    <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:0.8rem;font-weight:800;color:var(--text-hi);margin-bottom:8px;">Staff Turnover Checklist:</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-hi);cursor:pointer;margin-bottom:8px;">
         <input type="checkbox" id="chkStaffCashReceived" checked style="width:16px;height:16px;accent-color:#059669;" />
         <span>Cash payment of <strong>${fmtMoney(balanceToCollect)}</strong> physically received at branch counter</span>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#1e293b;cursor:pointer;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-hi);cursor:pointer;margin-bottom:8px;">
         <input type="checkbox" id="chkStaffLicenseVerified" checked style="width:16px;height:16px;accent-color:#059669;" />
         <span>Physical driver's license presented and verified</span>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#1e293b;cursor:pointer;margin:0;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-hi);cursor:pointer;margin:0;">
         <input type="checkbox" id="chkStaffKeyHandover" checked style="width:16px;height:16px;accent-color:#059669;" />
         <span>Vehicle walkaround check complete and key handed over to customer</span>
       </label>
@@ -1096,7 +1115,7 @@ export async function renderStaffActive(view) {
                   ${b.payment_method ? ` · <span class="badge badge-primary" style="font-size:0.7rem;">${b.payment_method}</span>` : ''}
                   ${b.payment_ref ? ` · Ref: <code>${b.payment_ref}</code>` : ''}
                 </div>
-                ${b.review_notes ? `<div class="item-sub" style="color:#64748b;font-size:0.75rem;margin-top:2px;">${b.review_notes}</div>` : ''}
+                ${b.review_notes ? `<div class="item-sub" style="color:var(--text-mid);font-size:0.75rem;margin-top:2px;">${b.review_notes}</div>` : ''}
               </div>
               ${badgeHTML}
               <div class="item-actions">
@@ -1334,13 +1353,13 @@ export async function renderStaffReturns(view, activeSubTab = 'returns') {
             return `
               <div class="glass item-row" style="padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:12px;">
                 <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:280px;">
-                  <div style="width:88px;height:64px;border-radius:10px;overflow:hidden;background:#f8fafc;border:1px solid #e2e8f0;flex-shrink:0;">
+                  <div style="width:88px;height:64px;border-radius:10px;overflow:hidden;background:var(--bg-surface);border:1px solid var(--glass-border);flex-shrink:0;">
                     <img src="${getExactVehicleImage(b.vehicles || {})}" style="width:100%;height:100%;object-fit:cover;" />
                   </div>
                   <div>
                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
                       <strong style="font-size:1.02rem;color:var(--text-hi);">${b.vehicles?.name || 'Vehicle'}</strong>
-                      <span style="font-family:monospace;font-size:0.75rem;padding:2px 7px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;color:#475569;font-weight:600;">
+                      <span style="font-family:monospace;font-size:0.75rem;padding:2px 7px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;color:var(--text-mid);font-weight:600;">
                         ${maskPlate(b.vehicles?.plate_number || 'N/A')}
                       </span>
                       ${isOverdue 
@@ -2397,22 +2416,22 @@ export async function renderAdminDashboard(view) {
 
       <div class="grid grid-2" style="gap:20px;">
         <div class="glass card" style="padding:20px;">
-          <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Top Earning Vehicles</h3>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;">Top Earning Vehicles</h3>
           <div style="overflow-x:auto;">
             <table style="width:100%;font-size:0.85rem;border-collapse:collapse;">
               <thead>
                 <tr style="border-bottom:1px solid #e2e8f0;text-align:left;">
-                  <th style="padding:8px 0;color:#64748b;font-weight:600;">Vehicle</th>
-                  <th style="padding:8px 0;color:#64748b;font-weight:600;">Category</th>
-                  <th style="padding:8px 0;color:#64748b;font-weight:600;text-align:center;">Rentals</th>
-                  <th style="padding:8px 0;color:#64748b;font-weight:600;text-align:right;">Total Revenue</th>
+                  <th style="padding:8px 0;color:var(--text-mid);font-weight:600;">Vehicle</th>
+                  <th style="padding:8px 0;color:var(--text-mid);font-weight:600;">Category</th>
+                  <th style="padding:8px 0;color:var(--text-mid);font-weight:600;text-align:center;">Rentals</th>
+                  <th style="padding:8px 0;color:var(--text-mid);font-weight:600;text-align:right;">Total Revenue</th>
                 </tr>
               </thead>
               <tbody>
                 ${topEarners.map(({ vehicle: v, totalEarnings, rentalCount }) => `
                   <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:10px 0;font-weight:700;color:#0f172a;">${v.name}</td>
-                    <td style="padding:10px 0;color:#64748b;">${v.categories?.name ?? 'Standard'}</td>
+                    <td style="padding:10px 0;font-weight:700;color:var(--text-hi);">${v.name}</td>
+                    <td style="padding:10px 0;color:var(--text-mid);">${v.categories?.name ?? 'Standard'}</td>
                     <td style="padding:10px 0;text-align:center;font-weight:600;">${rentalCount}</td>
                     <td style="padding:10px 0;text-align:right;font-weight:700;color:#059669;">${fmtMoney(totalEarnings)}</td>
                   </tr>
@@ -2423,7 +2442,7 @@ export async function renderAdminDashboard(view) {
         </div>
 
         <div class="glass card" style="padding:20px;">
-          <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Recent Customer Activity</h3>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;">Recent Customer Activity</h3>
           <div style="display:flex;flex-direction:column;gap:10px;">
             ${recentActivities.length ? recentActivities.map(b => {
     const cName = getBookingCustomerName(b);
@@ -2437,8 +2456,8 @@ export async function renderAdminDashboard(view) {
     return `
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:0.85rem;">
                   <div>
-                    <div style="font-weight:700;color:#0f172a;">${cName}</div>
-                    <div style="color:#64748b;font-size:0.8rem;">${actionText} · <span style="color:#94a3b8;">${fmtDate(b.created_at)}</span></div>
+                    <div style="font-weight:700;color:var(--text-hi);">${cName}</div>
+                    <div style="color:var(--text-mid);font-size:0.8rem;">${actionText} · <span style="color:#94a3b8;">${fmtDate(b.created_at)}</span></div>
                   </div>
                   <span class="badge badge-${b.status}" style="font-size:0.7rem;">${b.status}</span>
                 </div>
@@ -2591,15 +2610,15 @@ export function openVehicleForm(id) {
       </div>
     </div>
     <div class="field">
-      <label style="font-weight:700;color:#0f172a;">Vehicle Photo</label>
-      <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:16px;text-align:center;margin-top:4px;">
+      <label style="font-weight:700;color:var(--text-hi);">Vehicle Photo</label>
+      <div style="background:var(--bg-subtle);border:2px dashed #cbd5e1;border-radius:12px;padding:16px;text-align:center;margin-top:4px;">
         <div id="vImgPreviewBox" style="margin-bottom:10px;">
           ${(v?.image_url || getExactVehicleImage(v || {})) ? `
             <img src="${v?.image_url || getExactVehicleImage(v || {})}" id="vImgPreview" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid #cbd5e1;object-fit:cover;" />
           ` : `
             <div style="padding:12px 6px;">
-              <div style="font-size:0.85rem;font-weight:700;color:#334155;">Upload Vehicle Photo</div>
-              <div style="font-size:0.75rem;color:#64748b;">Select image file from your computer (JPG, PNG, WEBP)</div>
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text-hi);">Upload Vehicle Photo</div>
+              <div style="font-size:0.75rem;color:var(--text-mid);">Select image file from your computer (JPG, PNG, WEBP)</div>
             </div>
           `}
         </div>
@@ -2777,7 +2796,7 @@ export async function renderAdminCategories(view) {
 export function openCategoryForm(id) {
   const c = id ? state.categories.find(c => c.id === id) : null;
   openModal(`
-    <div class="modal-head"><h3>${c ? 'Edit' : 'Add'} Category</h3><div class="modal-close" id="mClose">✕</div></div>
+    <div class="modal-head"><h3>${c ? 'Edit' : 'Add'} Category</h3><div class="modal-close" id="mClose"><i class="fa-solid fa-xmark"></i></div></div>
     <div class="field"><label>Name</label><input id="cName" value="${c?.name ?? ''}" placeholder="Economy" /></div>
     <div class="field"><label>Daily rate</label><input id="cRate" type="number" step="0.01" value="${c?.daily_rate ?? ''}" placeholder="35.00" /></div>
     <div class="field"><label>Description</label><textarea id="cDesc" rows="2">${c?.description ?? ''}</textarea></div>
@@ -2984,7 +3003,7 @@ export async function renderAdminCustomers(view) {
             <span style="font-size:0.75rem;color:var(--text-mid);">Customer &amp; Driver License Record</span>
           </div>
         </div>
-        <div class="modal-close" id="mClose">✕</div>
+        <div class="modal-close" id="mClose"><i class="fa-solid fa-xmark"></i></div>
       </div>
 
       <form id="adminCustForm" style="margin-top:10px;">
@@ -3182,13 +3201,13 @@ export async function renderAdminUsers(view) {
             ${filteredUsers.length ? filteredUsers.map(u => `
               <tr>
                 <td>
-                  <div style="font-weight:700;color:#0f172a;">${u.full_name}${u.id === state.user?.id ? ' <span class="muted">(you)</span>' : ''}</div>
+                  <div style="font-weight:700;color:var(--text-hi);">${u.full_name}${u.id === state.user?.id ? ' <span class="muted">(you)</span>' : ''}</div>
                 </td>
                 <td>${u.phone ? `<span style="font-weight:600;">${u.phone}</span>` : '<span class="muted">—</span>'}</td>
-                <td style="font-size:0.82rem;color:#475569;">${u.email ?? '—'}</td>
-                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;color:#475569;">${u.address ?? 'Main Branch Hub'}</td>
+                <td style="font-size:0.82rem;color:var(--text-mid);">${u.email ?? '—'}</td>
+                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.8rem;color:var(--text-mid);">${u.address ?? 'Main Branch Hub'}</td>
                 <td><span class="badge badge-${u.role === 'admin' ? 'approved' : 'pending'}">${u.role === 'admin' ? 'Administrator' : 'Staff'}</span></td>
-                <td style="font-size:0.8rem;color:#64748b;">${fmtDate(u.created_at)}</td>
+                <td style="font-size:0.8rem;color:var(--text-mid);">${fmtDate(u.created_at)}</td>
                 <td>
                   <select data-role-select="${u.id}" ${(u.id === state.user?.id || !canManageUsers) ? 'disabled' : ''} style="font-size:0.8rem;padding:4px 8px;">
                     <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>Staff</option>
@@ -3230,20 +3249,20 @@ export async function renderAdminUsers(view) {
     openModal(`
       <div class="modal-head">
         <div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;">Driver's License Photo Verification</h3>
+          <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);">Driver's License Photo Verification</h3>
           <span class="muted" style="font-size:0.78rem;">Customer: ${u.full_name} · License: ${u.license_number ?? 'N/A'}</span>
         </div>
-        <div class="modal-close" onclick="window.closeModal()">✕</div>
+        <div class="modal-close" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></div>
       </div>
       <div style="text-align:center;padding:10px 0;">
         <img src="${u.license_id_url}" style="max-width:100%;max-height:360px;border-radius:12px;border:2px solid var(--accent);box-shadow:0 8px 24px rgba(0,0,0,0.15);" />
       </div>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:12px;" class="detail-grid">
-        <div><label>Customer Name</label><div style="font-weight:700;color:#0f172a;">${u.full_name}</div></div>
-        <div><label>Contact Phone</label><div style="font-weight:600;color:#0f172a;">${u.phone ?? '—'}</div></div>
+      <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:10px;padding:14px;margin-top:12px;" class="detail-grid">
+        <div><label>Customer Name</label><div style="font-weight:700;color:var(--text-hi);">${u.full_name}</div></div>
+        <div><label>Contact Phone</label><div style="font-weight:600;color:var(--text-hi);">${u.phone ?? '—'}</div></div>
         <div><label>License No.</label><div style="font-weight:700;font-family:monospace;color:var(--accent);">${u.license_number ?? '—'}</div></div>
-        <div><label>Expiry Date</label><div style="font-weight:600;color:#0f172a;">${u.license_expiry ? fmtDate(u.license_expiry) : '—'}</div></div>
-        <div style="grid-column:1/-1;"><label>Address</label><div style="font-weight:600;color:#0f172a;">${u.address ?? '—'}</div></div>
+        <div><label>Expiry Date</label><div style="font-weight:600;color:var(--text-hi);">${u.license_expiry ? fmtDate(u.license_expiry) : '—'}</div></div>
+        <div style="grid-column:1/-1;"><label>Address</label><div style="font-weight:600;color:var(--text-hi);">${u.address ?? '—'}</div></div>
       </div>
       <button class="btn btn-primary btn-block" onclick="window.closeModal()" style="margin-top:14px;">Done</button>
     `);
@@ -3284,7 +3303,7 @@ export async function openAdminPaymentOverrideModal(bookingId) {
       <strong>Administrator Authority:</strong> You can directly adjust reservation lifecycle states and verify/unverify payments regardless of automated checks.
     </div>
 
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.82rem;">
+    <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.82rem;">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
         <span>Booking ID: <code style="font-weight:700;">${String(b.id).slice(0, 8)}...</code></span>
         <span class="badge badge-primary">${b.payment_method || 'GCash QR'}</span>
@@ -3477,7 +3496,7 @@ export async function renderAdminRentals(view) {
                   <td>
                     <span class="badge badge-primary" style="font-size:0.7rem;margin-bottom:2px;display:inline-block;">${payMethod}</span>
                     <span class="badge badge-${payStatus}" style="font-size:0.7rem;display:inline-block;">${payStatus}</span>
-                    ${b.payment_ref ? `<div style="font-family:monospace;font-size:0.75rem;font-weight:700;color:#0f172a;margin-top:2px;">Ref: ${b.payment_ref}</div>` : ''}
+                    ${b.payment_ref ? `<div style="font-family:monospace;font-size:0.75rem;font-weight:700;color:var(--text-hi);margin-top:2px;">Ref: ${b.payment_ref}</div>` : ''}
                   </td>
                   <td>
                     ${b.proof_image ? `
@@ -3606,10 +3625,10 @@ export async function renderAdminReports(view) {
 
       <div class="grid grid-2" style="gap:20px;margin-bottom:22px;">
         <div class="glass card">
-          <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Vehicle Utilization Breakdown</h3>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;">Vehicle Utilization Breakdown</h3>
           <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:6px;">
-              <span style="font-weight:600;color:#0f172a;">Active Rental Utilization</span>
+              <span style="font-weight:600;color:var(--text-hi);">Active Rental Utilization</span>
               <span style="font-weight:700;color:var(--accent);">${utilizationPercent}%</span>
             </div>
             <div style="background:#e2e8f0;border-radius:6px;height:12px;overflow:hidden;">
@@ -3634,39 +3653,39 @@ export async function renderAdminReports(view) {
         </div>
 
         <div class="glass card">
-          <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Reservation Breakdown</h3>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;">Reservation Breakdown</h3>
           ${statusCounts.map(s => `
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
               <span class="badge badge-${s.status}" style="width:90px;justify-content:center;font-size:0.7rem;">${s.status}</span>
               <div style="flex:1;background:#e2e8f0;border-radius:6px;height:8px;overflow:hidden;">
                 <div style="width:${Math.min(100, s.count * 15)}%;height:100%;background:var(--accent);border-radius:6px;"></div>
               </div>
-              <span style="width:24px;text-align:right;font-weight:700;font-size:0.85rem;color:#0f172a;">${s.count}</span>
+              <span style="width:24px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--text-hi);">${s.count}</span>
             </div>
           `).join('')}
         </div>
       </div>
 
       <div class="glass card">
-        <h3 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;">Top Earning Vehicles Report</h3>
+        <h3 style="font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;">Top Earning Vehicles Report</h3>
         <div style="overflow-x:auto;">
           <table style="width:100%;font-size:0.85rem;border-collapse:collapse;">
             <thead>
               <tr style="border-bottom:1px solid #e2e8f0;text-align:left;">
-                <th style="padding:8px 0;color:#64748b;font-weight:600;">Vehicle Name</th>
-                <th style="padding:8px 0;color:#64748b;font-weight:600;">Category</th>
-                <th style="padding:8px 0;color:#64748b;font-weight:600;">Plate No.</th>
-                <th style="padding:8px 0;color:#64748b;font-weight:600;text-align:center;">Total Rentals</th>
-                <th style="padding:8px 0;color:#64748b;font-weight:600;">Status</th>
-                <th style="padding:8px 0;color:#64748b;font-weight:600;text-align:right;">Total Revenue</th>
+                <th style="padding:8px 0;color:var(--text-mid);font-weight:600;">Vehicle Name</th>
+                <th style="padding:8px 0;color:var(--text-mid);font-weight:600;">Category</th>
+                <th style="padding:8px 0;color:var(--text-mid);font-weight:600;">Plate No.</th>
+                <th style="padding:8px 0;color:var(--text-mid);font-weight:600;text-align:center;">Total Rentals</th>
+                <th style="padding:8px 0;color:var(--text-mid);font-weight:600;">Status</th>
+                <th style="padding:8px 0;color:var(--text-mid);font-weight:600;text-align:right;">Total Revenue</th>
               </tr>
             </thead>
             <tbody>
               ${topVehicles.length ? topVehicles.map(v => `
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                  <td style="padding:10px 0;font-weight:700;color:#0f172a;">${v.name}</td>
-                  <td style="padding:10px 0;color:#64748b;">${v.category}</td>
-                  <td style="padding:10px 0;color:#64748b;font-family:monospace;">${maskPlate(v.plate)}</td>
+                  <td style="padding:10px 0;font-weight:700;color:var(--text-hi);">${v.name}</td>
+                  <td style="padding:10px 0;color:var(--text-mid);">${v.category}</td>
+                  <td style="padding:10px 0;color:var(--text-mid);font-family:monospace;">${maskPlate(v.plate)}</td>
                   <td style="padding:10px 0;text-align:center;font-weight:600;">${v.rentals}</td>
                   <td style="padding:10px 0;"><span class="badge badge-${v.status}">${v.status}</span></td>
                   <td style="padding:10px 0;text-align:right;font-weight:700;color:#059669;">${fmtMoney(v.revenue)}</td>
@@ -3686,10 +3705,10 @@ export async function openLogServiceModal(vehicleId) {
   openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;">Log Maintenance Work Order</h3>
+        <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);">Log Maintenance Work Order</h3>
         <span class="muted" style="font-size:0.78rem;">${v.name} · Plate: ${v.plate_number || '—'}</span>
       </div>
-      <div class="modal-close" id="mClose">✕</div>
+      <div class="modal-close" id="mClose"><i class="fa-solid fa-xmark"></i></div>
     </div>
 
     <div class="field">
@@ -3816,12 +3835,12 @@ export async function openServiceHistoryModal(vehicleId) {
   const modal = openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">Maintenance &amp; Complete Works</h3>
+        <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);">Maintenance &amp; Complete Works</h3>
         <span class="muted" style="font-size:0.78rem;">${v.name} · Plate: ${v.plate_number || '—'}</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         ${statusBadge}
-        <div class="modal-close" id="mClose">✕</div>
+        <div class="modal-close" id="mClose"><i class="fa-solid fa-xmark"></i></div>
       </div>
     </div>
 
@@ -3837,13 +3856,13 @@ export async function openServiceHistoryModal(vehicleId) {
       </div>
     ` : ''}
 
-    <div class="receipt" style="margin-bottom:16px;background:#f8fafc;">
-      <div class="receipt-row"><span>Active Work Orders</span><span style="font-weight:700;color:#0f172a;">${activeOrders.length} order(s)</span></div>
+    <div class="receipt" style="margin-bottom:16px;background:var(--bg-subtle);">
+      <div class="receipt-row"><span>Active Work Orders</span><span style="font-weight:700;color:var(--text-hi);">${activeOrders.length} order(s)</span></div>
       <div class="receipt-row"><span>Completed Work Orders</span><span style="font-weight:700;color:#059669;">${completedOrders.length} finished job(s)</span></div>
       <div class="receipt-row receipt-total"><span>Total Maintenance Invested</span><span style="color:var(--accent);">${fmtMoney(totalCostSpent)}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;color:#0f172a;font-size:0.92rem;">
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;color:var(--text-hi);font-size:0.92rem;">
       <span>Active Maintenance Work Orders</span>
       <button class="btn btn-primary btn-sm" id="btnLogNewSrv" style="background:#0284c7;border-color:#0284c7;font-size:0.75rem;">Log Work Order</button>
     </h4>
@@ -3855,36 +3874,36 @@ export async function openServiceHistoryModal(vehicleId) {
             <span style="font-weight:800;font-size:0.9rem;color:#9a3412;">${h.service_type}</span>
             <span class="badge ${h.service_status === 'in_service' ? 'badge-in_service' : 'badge-scheduled_maint'}">${h.service_status.replace('_', ' ')}</span>
           </div>
-          <div style="font-size:0.8rem;color:#475569;margin-bottom:6px;">
+          <div style="font-size:0.8rem;color:var(--text-mid);margin-bottom:6px;">
             Shop: <strong>${h.serviced_by || 'Auto Repair Shop'}</strong> · Started: ${fmtDate(h.start_date)} · Est. Cost: <strong>${fmtMoney(h.cost)}</strong>
           </div>
-          ${h.description ? `<p style="font-size:0.78rem;color:#64748b;margin:0 0 10px 0;line-height:1.4;">${h.description}</p>` : ''}
+          ${h.description ? `<p style="font-size:0.78rem;color:var(--text-mid);margin:0 0 10px 0;line-height:1.4;">${h.description}</p>` : ''}
           <button class="btn btn-primary btn-sm" data-complete-srv-id="${h.id}" style="background:#059669;border-color:#059669;color:#fff;">
             Complete Work Order &amp; Release Vehicle
           </button>
         </div>
       `).join('') : `
-        <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:14px;text-align:center;color:#64748b;font-size:0.82rem;">
+        <div style="background:var(--bg-subtle);border:1px dashed #cbd5e1;border-radius:10px;padding:14px;text-align:center;color:var(--text-mid);font-size:0.82rem;">
           No active repairs or maintenance needed for this vehicle.
         </div>
       `}
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.92rem;">
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.92rem;">
       Complete Works &amp; Service History
     </h4>
 
     <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
       ${completedOrders.length ? completedOrders.map(h => `
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:0.82rem;">
+        <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:10px;padding:10px 12px;font-size:0.82rem;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-            <span style="font-weight:700;color:#0f172a;">${h.service_type}</span>
+            <span style="font-weight:700;color:var(--text-hi);">${h.service_type}</span>
             <span style="font-weight:700;color:#059669;">${fmtMoney(h.cost)}</span>
           </div>
-          <div style="color:#64748b;font-size:0.76rem;">
+          <div style="color:var(--text-mid);font-size:0.76rem;">
             Completed on ${fmtDate(h.completion_date || h.created_at)} by <strong>${h.serviced_by || 'Casa / Shop'}</strong>
           </div>
-          ${h.description ? `<div style="font-size:0.75rem;color:#475569;margin-top:2px;">${h.description}</div>` : ''}
+          ${h.description ? `<div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">${h.description}</div>` : ''}
         </div>
       `).join('') : `
         <div style="padding:10px;text-align:center;color:#94a3b8;font-size:0.8rem;">No completed service history recorded yet.</div>
@@ -4016,7 +4035,7 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
   if (tab === 'company') {
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+        <h3 style="font-size:1.05rem;font-weight:800;color:var(--text-hi);margin-bottom:16px;">
           Company Profile &amp; Contact Details
         </h3>
         
@@ -4062,7 +4081,7 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
   } else if (tab === 'policy') {
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+        <h3 style="font-size:1.05rem;font-weight:800;color:var(--text-hi);margin-bottom:16px;">
           Rental Policies &amp; Penalty Terms
         </h3>
 
@@ -4116,7 +4135,7 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
   } else if (tab === 'notifs') {
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+        <h3 style="font-size:1.05rem;font-weight:800;color:var(--text-hi);margin-bottom:16px;">
           System Notification Preferences
         </h3>
 
@@ -4173,7 +4192,7 @@ export function renderSettingsSubTabContent(tab, comp, pol, notif, appr) {
     const currentAccent = appr.accentColor || '#7c3aed';
     return `
       <div class="setting-card">
-        <h3 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:16px;">
+        <h3 style="font-size:1.05rem;font-weight:800;color:var(--text-hi);margin-bottom:16px;">
           Appearance &amp; System Theme
         </h3>
 
@@ -4586,17 +4605,17 @@ function renderVerifiedPassCard(b, onScanAgain, onDismiss) {
         <span class="badge badge-completed" style="font-size:0.78rem;">
           <i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> PASS VERIFIED · ${b.status.toUpperCase()}
         </span>
-        <span style="font-family:monospace;font-weight:800;color:#0f172a;font-size:0.88rem;">
+        <span style="font-family:monospace;font-weight:800;color:var(--text-hi);font-size:0.88rem;">
           ${b.ref_number || ('#' + b.id)}
         </span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;color:#1e293b;margin-bottom:14px;">
-        <div><span style="color:#64748b;">Customer:</span> <strong>${cName}</strong></div>
-        <div><span style="color:#64748b;">Phone:</span> <strong>${cPhone || 'N/A'}</strong></div>
-        <div><span style="color:#64748b;">Vehicle:</span> <strong>${v.name || 'Vehicle'}</strong></div>
-        <div><span style="color:#64748b;">Plate:</span> <strong>${v.plate_number ? maskPlate(v.plate_number) : 'N/A'}</strong></div>
-        <div><span style="color:#64748b;">Rental Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
-        <div><span style="color:#64748b;">Payment:</span> <strong style="color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)} Paid</strong></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;color:var(--text-hi);margin-bottom:14px;">
+        <div><span style="color:var(--text-mid);">Customer:</span> <strong>${cName}</strong></div>
+        <div><span style="color:var(--text-mid);">Phone:</span> <strong>${cPhone || 'N/A'}</strong></div>
+        <div><span style="color:var(--text-mid);">Vehicle:</span> <strong>${v.name || 'Vehicle'}</strong></div>
+        <div><span style="color:var(--text-mid);">Plate:</span> <strong>${v.plate_number ? maskPlate(v.plate_number) : 'N/A'}</strong></div>
+        <div><span style="color:var(--text-mid);">Rental Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+        <div><span style="color:var(--text-mid);">Payment:</span> <strong style="color:#059669;">${fmtMoney(b.paid_amount || b.total_amount)} Paid</strong></div>
         <div style="grid-column:span 2;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;margin-top:4px;">
           ${isPartial
             ? `<span style="color:#d97706;font-weight:700;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> Remaining Balance Due: ${fmtMoney(b.balance_due)}</span> (Collect before key handover)`
@@ -4627,7 +4646,7 @@ export function openVenuePassVerificationModal(bookings = []) {
           <i class="fa-solid fa-qrcode"></i>
         </div>
         <div>
-          <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;">Venue Express QR Pass Verification</h3>
+          <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:var(--text-hi);">Venue Express QR Pass Verification</h3>
           <span class="muted" style="font-size:0.78rem;">Live camera scanning, image upload, and fast check-in</span>
         </div>
       </div>
@@ -4671,7 +4690,7 @@ export function openVenuePassVerificationModal(bookings = []) {
           </button>
         </div>
       </div>
-      <div id="qrModalCamNotice" style="text-align:center;font-size:0.75rem;color:#64748b;margin-bottom:12px;">
+      <div id="qrModalCamNotice" style="text-align:center;font-size:0.75rem;color:var(--text-mid);margin-bottom:12px;">
         Supports smartphone cameras, laptop webcams &amp; physical barcode/QR scans.
       </div>
     </div>
@@ -4680,8 +4699,8 @@ export function openVenuePassVerificationModal(bookings = []) {
     <div id="qrModalUploadSection" style="display:none;margin-bottom:16px;">
       <div class="qr-dropzone" id="qrModalDropzone">
         <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.2rem;color:var(--accent);margin-bottom:8px;display:block;"></i>
-        <div style="font-weight:700;font-size:0.88rem;color:#0f172a;margin-bottom:4px;">Upload or Drop QR Code Photo</div>
-        <div style="font-size:0.75rem;color:#64748b;margin-bottom:12px;">Choose a photo or screenshot from the customer's phone</div>
+        <div style="font-weight:700;font-size:0.88rem;color:var(--text-hi);margin-bottom:4px;">Upload or Drop QR Code Photo</div>
+        <div style="font-size:0.75rem;color:var(--text-mid);margin-bottom:12px;">Choose a photo or screenshot from the customer's phone</div>
         <input type="file" id="qrModalFileInput" accept="image/*" style="display:none;" />
         <button type="button" class="btn btn-ghost btn-sm" id="qrModalFileSelectBtn" style="border:1px solid #cbd5e1;background:#fff;">
           <i class="fa-solid fa-folder-open" style="margin-right:6px;"></i> Choose Image File
@@ -4692,7 +4711,7 @@ export function openVenuePassVerificationModal(bookings = []) {
     <!-- Manual Code Section -->
     <div id="qrModalManualSection" style="display:none;margin-bottom:16px;">
       <div class="field" style="margin:0;">
-        <label style="font-weight:700;font-size:0.82rem;color:#334155;">Enter Booking Reference / Pass Code</label>
+        <label style="font-weight:700;font-size:0.82rem;color:var(--text-hi);">Enter Booking Reference / Pass Code</label>
         <div style="display:flex;gap:8px;">
           <input type="text" id="venuePassInput" placeholder="e.g. BK-..., REF-..., or Booking ID" style="flex:1;font-size:0.95rem;font-family:monospace;padding:10px 12px;" />
           <button type="button" class="btn btn-primary" id="btnLookupPass"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Verify</button>
@@ -4702,7 +4721,7 @@ export function openVenuePassVerificationModal(bookings = []) {
 
     <!-- Result Area -->
     <div id="venuePassResult" style="min-height:100px;">
-      <div style="text-align:center;padding:20px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+      <div style="text-align:center;padding:20px 16px;background:var(--bg-subtle);border:1.5px dashed #cbd5e1;border-radius:12px;color:var(--text-mid);">
         <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
         <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or code entry…</div>
         <div style="font-size:0.75rem;margin-top:4px;">Start camera scanner above, upload a QR photo, or enter reference code.</div>
@@ -4950,7 +4969,7 @@ export function openVenuePassVerificationModal(bookings = []) {
       scanAnother.onclick = () => {
         input.value = '';
         result.innerHTML = `
-          <div style="text-align:center;padding:20px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+          <div style="text-align:center;padding:20px 16px;background:var(--bg-subtle);border:1.5px dashed #cbd5e1;border-radius:12px;color:var(--text-mid);">
             <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
             <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or code entry…</div>
             <div style="font-size:0.75rem;margin-top:4px;">Start camera scanner above, upload a QR photo, or enter reference code.</div>
@@ -5000,10 +5019,10 @@ export async function renderStaffScanner(view) {
       <div class="section-head" style="margin-bottom:20px;">
         <div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Venue QR Pass Scanner</h2>
+            <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:var(--text-hi);">Venue QR Pass Scanner</h2>
             <span class="badge badge-completed" style="font-size:0.72rem;"><i class="fa-solid fa-bolt" style="margin-right:4px;"></i> Live Operations</span>
           </div>
-          <p style="color:#64748b;font-size:0.85rem;margin:0;">
+          <p style="color:var(--text-mid);font-size:0.85rem;margin:0;">
             Scan customer QR venue passes with camera, upload photos/screenshots, or verify reference codes for fast vehicle handover.
           </p>
         </div>
@@ -5013,10 +5032,10 @@ export async function renderStaffScanner(view) {
         <!-- Scanner Column -->
         <div class="glass card qr-scanner-card" style="padding:22px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">
+            <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:var(--text-hi);">
               <i class="fa-solid fa-qrcode" style="color:var(--accent);margin-right:6px;"></i> Scan Customer Pass
             </h3>
-            <span style="font-size:0.75rem;color:#64748b;">Zero-delay venue check-in</span>
+            <span style="font-size:0.75rem;color:var(--text-mid);">Zero-delay venue check-in</span>
           </div>
 
           <!-- Mode Tabs -->
@@ -5056,7 +5075,7 @@ export async function renderStaffScanner(view) {
                 </button>
               </div>
             </div>
-            <div id="pageQrCamNotice" style="text-align:center;font-size:0.75rem;color:#64748b;margin-bottom:12px;">
+            <div id="pageQrCamNotice" style="text-align:center;font-size:0.75rem;color:var(--text-mid);margin-bottom:12px;">
               Supports smartphone rear/front cameras, laptop webcams &amp; QR guns.
             </div>
           </div>
@@ -5065,8 +5084,8 @@ export async function renderStaffScanner(view) {
           <div id="pageQrUploadSection" style="display:none;margin-bottom:16px;">
             <div class="qr-dropzone" id="pageQrDropzone">
               <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.2rem;color:var(--accent);margin-bottom:8px;display:block;"></i>
-              <div style="font-weight:700;font-size:0.88rem;color:#0f172a;margin-bottom:4px;">Upload or Drop QR Code Photo</div>
-              <div style="font-size:0.75rem;color:#64748b;margin-bottom:12px;">Select image or screenshot of the venue pass</div>
+              <div style="font-weight:700;font-size:0.88rem;color:var(--text-hi);margin-bottom:4px;">Upload or Drop QR Code Photo</div>
+              <div style="font-size:0.75rem;color:var(--text-mid);margin-bottom:12px;">Select image or screenshot of the venue pass</div>
               <input type="file" id="pageQrFileInput" accept="image/*" style="display:none;" />
               <button type="button" class="btn btn-ghost btn-sm" id="pageQrFileSelectBtn" style="border:1px solid #cbd5e1;background:#fff;">
                 <i class="fa-solid fa-folder-open" style="margin-right:6px;"></i> Choose Image File
@@ -5077,7 +5096,7 @@ export async function renderStaffScanner(view) {
           <!-- Manual Code Section -->
           <div id="pageQrManualSection" style="display:none;margin-bottom:16px;">
             <div class="field" style="margin:0;">
-              <label style="font-weight:700;font-size:0.82rem;color:#334155;">Enter Booking Reference / Pass Code</label>
+              <label style="font-weight:700;font-size:0.82rem;color:var(--text-hi);">Enter Booking Reference / Pass Code</label>
               <div style="display:flex;gap:8px;">
                 <input type="text" id="pagePassInput" placeholder="e.g. BK-..., REF-..., or Booking ID" style="flex:1;font-size:0.95rem;font-family:monospace;padding:10px 12px;" />
                 <button type="button" class="btn btn-primary" id="btnPageLookup"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Verify</button>
@@ -5087,7 +5106,7 @@ export async function renderStaffScanner(view) {
 
           <!-- Result Area -->
           <div id="pagePassResult">
-            <div style="text-align:center;padding:24px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+            <div style="text-align:center;padding:24px 16px;background:var(--bg-subtle);border:1.5px dashed #cbd5e1;border-radius:12px;color:var(--text-mid);">
               <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
               <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or reference code…</div>
               <div style="font-size:0.75rem;margin-top:4px;">Point camera, upload photo, or enter reference code.</div>
@@ -5099,8 +5118,8 @@ export async function renderStaffScanner(view) {
         <div class="glass card" style="padding:22px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div>
-              <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">Awaiting Handover &amp; Pickups</h3>
-              <span style="font-size:0.75rem;color:#64748b;">Approved reservations ready for key release</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:var(--text-hi);">Awaiting Handover &amp; Pickups</h3>
+              <span style="font-size:0.75rem;color:var(--text-mid);">Approved reservations ready for key release</span>
             </div>
             <span class="badge ${pendingHandovers.length > 0 ? 'badge-pending' : 'badge-completed'}">${pendingHandovers.length} records</span>
           </div>
@@ -5113,10 +5132,10 @@ export async function renderStaffScanner(view) {
               return `
                 <div class="item-card" style="padding:12px 14px;border:1px solid #e2e8f0;background:#fff;border-radius:10px;cursor:pointer;" data-queue-ref="${b.ref_number || b.id}">
                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                    <div style="font-weight:700;font-size:0.86rem;color:#0f172a;">${v.name || 'Vehicle'}</div>
+                    <div style="font-weight:700;font-size:0.86rem;color:var(--text-hi);">${v.name || 'Vehicle'}</div>
                     <span class="badge badge-${b.status}" style="font-size:0.7rem;">${b.status.toUpperCase()}</span>
                   </div>
-                  <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">
+                  <div style="font-size:0.78rem;color:var(--text-mid);margin-bottom:4px;">
                     <span>Customer: <strong>${cName}</strong></span> · <span>Plate: ${maskPlate(v.plate_number)}</span>
                   </div>
                   <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;">
@@ -5357,7 +5376,7 @@ export async function renderStaffScanner(view) {
       scanAnother.onclick = () => {
         if (input) input.value = '';
         result.innerHTML = `
-          <div style="text-align:center;padding:24px 16px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;color:#64748b;">
+          <div style="text-align:center;padding:24px 16px;background:var(--bg-subtle);border:1.5px dashed #cbd5e1;border-radius:12px;color:var(--text-mid);">
             <i class="fa-solid fa-barcode" style="font-size:1.8rem;margin-bottom:6px;color:#94a3b8;display:block;"></i>
             <div style="font-size:0.85rem;font-weight:600;">Awaiting scan or reference code…</div>
             <div style="font-size:0.75rem;margin-top:4px;">Point camera, upload photo, or enter reference code.</div>

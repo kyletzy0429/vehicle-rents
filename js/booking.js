@@ -77,258 +77,420 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   const p = { ...(state.profile || {}), ...savedProfile };
 
   const modal = openModal(`
-    <div class="modal-head">
-      <div>
-        <h3 style="font-size:1.25rem;font-weight:800;color:#0f172a;">${v.name}</h3>
-        <span class="muted" style="font-size:0.78rem;">${catName} · Plate: ${maskPlate(v.plate_number)}</span>
-      </div>
-      <div class="modal-close" id="mClose">Close</div>
-    </div>
-
-    <div class="booking-stepper">
-      <div class="step-item active" id="stepNode1" data-step="1">
-        <span class="step-num">1</span>
-        <span class="step-title">Vehicle</span>
-      </div>
-      <div class="step-divider" id="stepDiv1"></div>
-      <div class="step-item" id="stepNode2" data-step="2">
-        <span class="step-num">2</span>
-        <span class="step-title">Dates &amp; Driver</span>
-      </div>
-      <div class="step-divider" id="stepDiv2"></div>
-      <div class="step-item" id="stepNode3" data-step="3">
-        <span class="step-num">3</span>
-        <span class="step-title">Fill-up &amp; Payment</span>
-      </div>
-    </div>
-
-    <div class="step-content" id="stepSection1">
-      <div class="angle-viewer" style="margin-bottom:16px;">
-        <div class="angle-viewer-img-wrap" style="height:250px;border-radius:12px;overflow:hidden;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;">
-          <img id="detailCarImg" class="angle-viewer-img" src="${exactImg}" alt="${v.name}" style="width:100%;height:100%;object-fit:cover;" />
-        </div>
-      </div>
-
-      <p class="muted" style="margin-bottom:14px;line-height:1.5;color:#475569;">
-        ${(v.description || '').replace(/FOX Racing shocks,?\s*/gi, '').replace(/\b\d+-Seater\s+(Pickup Truck|SUV|Sedan|MPV|Subcompact Sedan|Modern Crossover MPV|Economy Sedan|Hatchback|Full-size Passenger Van)\.?\s*/gi, '').trim() || 'Comfortable, fuel-efficient, and well-maintained rental vehicle.'}
-      </p>
-
-      <div class="detail-grid" style="margin-bottom:16px;background:#f8fafc;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;">
-        <div>
-          <label>Availability Status</label>
-          <div><span class="badge ${statusBadgeClass}">${badgeContent}</span></div>
-        </div>
-        <div>
-          <label>Daily Rental Rate</label>
-          <div style="font-weight:800;font-size:1.05rem;color:var(--accent);">${fmtMoney(rate)} <span style="font-size:0.75rem;font-weight:500;color:#64748b;">/ day</span></div>
-        </div>
-        <div>
-          <label>Passenger Capacity</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${isMotorcycle ? '2 Passengers' : (v.seats ?? '5 Passengers')}</div>
-        </div>
-        <div>
-          <label>Transmission</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${v.transmission ?? 'Automatic'}</div>
-        </div>
-        <div>
-          <label>Fuel Type</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${fuelType}</div>
-        </div>
-        <div>
-          <label>${isMotorcycle ? 'Included Gear' : 'Air Conditioning'}</label>
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;">${isMotorcycle ? 'Helmet Included' : (hasAC ? 'Air Conditioned' : 'Non-AC')}</div>
-        </div>
-      </div>
-
-
-      <div style="display:flex;gap:10px;margin-top:14px;">
-        <button type="button" class="btn btn-primary btn-block" id="btnGoStep2">
-          Proceed to Schedule &amp; Driver
-        </button>
-      </div>
-    </div>
-
-    <div class="step-content hidden" id="stepSection2">
-      <h4 style="margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#0f172a;">
-        1. Select Rental Dates
-      </h4>
-      
-      <!-- Hertz / Booking.com Style Interactive Date Bar -->
-      <div class="cal-booking-inputs-bar">
-        <div class="cal-input-card active" id="calCardPickup" title="Click to choose Pick-up Date">
-          <div class="cal-input-header">
-            <i class="fa-regular fa-calendar-check"></i>
-            <span>Pick-up Date</span>
+    <div class="booking-modal-wrap">
+      <!-- ═══ MODAL HEADER ═══ -->
+      <div class="booking-modal-header">
+        <div class="bm-header-left">
+          <div class="bm-badges">
+            <span class="bm-cat-pill"><i class="${isMotorcycle ? 'fa-solid fa-motorcycle' : 'fa-solid fa-car'}"></i> ${catName}</span>
+            <span class="bm-plate-pill"><i class="fa-solid fa-hashtag"></i> Plate: ${maskPlate(v.plate_number)}</span>
+            <span class="badge ${statusBadgeClass}"><i class="fa-solid fa-circle-check"></i> ${badgeContent}</span>
           </div>
-          <div class="cal-input-main">
-            <span class="cal-date-text" id="calPickupText">Select Date</span>
-            <span class="cal-time-badge">Noon</span>
+          <h3 class="bm-title">${v.name}</h3>
+        </div>
+        <div class="bm-header-right">
+          <div class="bm-rate-card">
+            <span class="bm-rate-label">Daily Rate</span>
+            <div class="bm-rate-val">${fmtMoney(rate)} <small>/ day</small></div>
+          </div>
+          <button type="button" class="modal-close bm-close-btn" id="mClose" aria-label="Close modal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ STEPPER BAR (V2) ═══ -->
+      <div class="booking-stepper-v2">
+        <div class="step-item active" id="stepNode1" data-step="1">
+          <div class="step-num-wrap">
+            <span class="step-num">1</span>
+            <i class="fa-solid fa-check step-check"></i>
+          </div>
+          <div class="step-text-wrap">
+            <span class="step-sub">Step 1</span>
+            <span class="step-title">Vehicle</span>
+          </div>
+        </div>
+        <div class="step-divider" id="stepDiv1"></div>
+        <div class="step-item" id="stepNode2" data-step="2">
+          <div class="step-num-wrap">
+            <span class="step-num">2</span>
+            <i class="fa-solid fa-check step-check"></i>
+          </div>
+          <div class="step-text-wrap">
+            <span class="step-sub">Step 2</span>
+            <span class="step-title">Dates &amp; Driver</span>
+          </div>
+        </div>
+        <div class="step-divider" id="stepDiv2"></div>
+        <div class="step-item" id="stepNode3" data-step="3">
+          <div class="step-num-wrap">
+            <span class="step-num">3</span>
+            <i class="fa-solid fa-check step-check"></i>
+          </div>
+          <div class="step-text-wrap">
+            <span class="step-sub">Step 3</span>
+            <span class="step-title">Fill-up &amp; Pay</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 1: VEHICLE SHOWCASE & SPECS ═══ -->
+      <div class="step-content" id="stepSection1">
+        <div class="vehicle-showcase-card">
+          <div class="showcase-top-tags">
+            <span class="showcase-status-badge"><i class="fa-solid fa-circle-check"></i> ${badgeContent}</span>
+            <span class="showcase-fleet-badge"><i class="fa-solid fa-shield-halved"></i> Verified Fleet</span>
+          </div>
+          <div class="showcase-img-container">
+            <div class="showcase-spotlight"></div>
+            <img id="detailCarImg" class="showcase-img" src="${exactImg}" alt="${v.name}" />
+          </div>
+          <div class="showcase-sub-tag">
+            <i class="fa-solid fa-shield-virus" style="color:var(--accent);"></i> Sanitized, Disinfected &amp; Safety Inspected
           </div>
         </div>
 
-        <div class="cal-input-divider">
-          <i class="fa-solid fa-arrow-right"></i>
+        <div class="compact-spec-pills">
+          <div class="spec-pill"><i class="fa-solid fa-users"></i> <span>${isMotorcycle ? '2 Seats' : (v.seats ?? '5 Seats')}</span></div>
+          <div class="spec-pill"><i class="fa-solid fa-gears"></i> <span>${v.transmission ?? 'Automatic'}</span></div>
+          <div class="spec-pill"><i class="fa-solid fa-gas-pump"></i> <span>${fuelType}</span></div>
+          <div class="spec-pill"><i class="${isMotorcycle ? 'fa-solid fa-helmet-safety' : 'fa-solid fa-snowflake'}"></i> <span>${isMotorcycle ? 'Helmet' : (hasAC ? 'A/C' : 'Vent')}</span></div>
+          <div class="spec-pill"><i class="fa-solid fa-shield-halved"></i> <span>Cover Included</span></div>
+          <div class="spec-pill"><i class="fa-solid fa-gas-pump"></i> <span>Full-to-Full</span></div>
         </div>
 
-        <div class="cal-input-card" id="calCardReturn" title="Click to choose Return Date">
-          <div class="cal-input-header">
-            <i class="fa-regular fa-calendar-xmark"></i>
-            <span>Return Date</span>
+        <div class="step-action-bar">
+          <button type="button" class="btn btn-primary btn-block" id="btnGoStep2">
+            <span>Proceed to Schedule &amp; Driver</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 2: DATES & DRIVER ═══ -->
+      <div class="step-content hidden" id="stepSection2">
+        <div class="booking-section-card">
+          <div class="section-card-header">
+            <div class="section-card-icon"><i class="fa-solid fa-calendar-days"></i></div>
+            <div>
+              <h4 class="section-card-title">1. Select Rental Schedule</h4>
+              <span class="section-card-sub">Choose pick-up &amp; return dates</span>
+            </div>
           </div>
-          <div class="cal-input-main">
-            <span class="cal-date-text" id="calReturnText">Select Date</span>
-            <span class="cal-time-badge">Noon</span>
+
+          <!-- Quick Duration Selector -->
+          <div class="cal-quick-bar">
+            <span class="cal-quick-label">Quick select:</span>
+            <button type="button" class="cal-quick-pill" data-dur="1">1 Day</button>
+            <button type="button" class="cal-quick-pill" data-dur="2">2 Days</button>
+            <button type="button" class="cal-quick-pill" data-dur="3">3 Days</button>
+            <button type="button" class="cal-quick-pill" data-dur="7">1 Week</button>
+          </div>
+
+          <!-- Interactive Date Selection Bar with Native + Visual Picker Sync -->
+          <div class="cal-booking-inputs-bar">
+            <div class="cal-input-card active" id="calCardPickup" title="Choose Pick-up Date">
+              <label for="bStart" class="cal-input-header">
+                <i class="fa-regular fa-calendar-check"></i>
+                <span>Pick-up Date</span>
+              </label>
+              <div class="cal-input-main">
+                <input type="date" id="bStart" min="${todayStr}" class="cal-date-field" />
+                <span class="cal-time-badge">Noon</span>
+              </div>
+            </div>
+
+            <div class="cal-input-divider">
+              <span class="cal-arrow-circle"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+
+            <div class="cal-input-card" id="calCardReturn" title="Choose Return Date">
+              <label for="bEnd" class="cal-input-header">
+                <i class="fa-regular fa-calendar-xmark"></i>
+                <span>Return Date</span>
+              </label>
+              <div class="cal-input-main">
+                <input type="date" id="bEnd" min="${todayStr}" class="cal-date-field" />
+                <span class="cal-time-badge">Noon</span>
+              </div>
+            </div>
+
+            <div class="cal-summary-pill" id="calTripSummary">
+              <span class="cal-summary-days" id="calTripDays">1 Day Rental</span>
+            </div>
+          </div>
+
+          <div id="calWidgetContainer"></div>
+          <div id="availabilityMsg" class="availability-callout"></div>
+        </div>
+
+        <div class="booking-section-card">
+          <div class="section-card-header">
+            <div class="section-card-icon"><i class="fa-solid fa-calculator"></i></div>
+            <div>
+              <h4 class="section-card-title">2. Billing Method</h4>
+              <span class="section-card-sub">Select daily or mileage plan</span>
+            </div>
+          </div>
+
+          <div class="billing-method-wrap">
+            <div class="billing-type-cards" id="chargeTypeSelector">
+              <div class="billing-opt-card active" data-type="per_day">
+                <div class="opt-card-radio"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="opt-card-body">
+                  <div class="opt-card-title"><i class="fa-solid fa-calendar-day"></i> Per Day Plan</div>
+                  <div class="opt-card-rate">${fmtMoney(rate)} <small>/ day</small></div>
+                  <span class="opt-card-badge"><i class="fa-solid fa-circle-check"></i> Unlimited Kilometers</span>
+                </div>
+              </div>
+              <div class="billing-opt-card" data-type="per_km">
+                <div class="opt-card-radio"><i class="fa-regular fa-circle"></i></div>
+                <div class="opt-card-body">
+                  <div class="opt-card-title"><i class="fa-solid fa-gauge-high"></i> Per Kilometer Plan</div>
+                  <div class="opt-card-rate">${fmtMoney(rate * 0.05)} <small>/ km</small></div>
+                  <span class="opt-card-badge" style="color:var(--accent);"><i class="fa-solid fa-bolt"></i> Metered for City Trips</span>
+                </div>
+              </div>
+            </div>
+
+            <select id="chargeType" class="clean-select" style="display:none;">
+              <option value="per_day" selected>Per Day (${fmtMoney(rate)} / day)</option>
+              <option value="per_km">Per Kilometer (${fmtMoney(rate * 0.05)} / km)</option>
+            </select>
+
+            <div class="field hidden" id="kmField" style="margin-top:10px;margin-bottom:0;">
+              <label>Estimated Distance (KM) <span style="color:#ef4444;">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-route input-icon"></i>
+                <input type="number" id="estKm" min="1" placeholder="e.g. 150 km" class="clean-input" />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="cal-summary-pill" id="calTripSummary">
-          <span class="cal-summary-days" id="calTripDays">Select Dates</span>
-        </div>
-      </div>
-
-      <!-- Preserved hidden inputs so all existing forms, validation and handlers work seamlessly -->
-      <div style="display:none;">
-        <input type="date" id="bStart" min="${todayStr}" />
-        <input type="date" id="bEnd" min="${todayStr}" />
-      </div>
-
-      <div id="calWidgetContainer"></div>
-      <div id="availabilityMsg" class="muted" style="margin-bottom:12px;"></div>
-
-      <div class="divider"></div>
-      <h4 style="margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#0f172a;">
-        2. Billing Method
-      </h4>
-      <div class="detail-grid" style="margin-bottom:14px;">
-        <div class="field">
-          <label>Charge Type</label>
-          <select id="chargeType">
-            <option value="per_day">Per Day (${fmtMoney(rate)} / day)</option>
-            <option value="per_km">Per Kilometer (${fmtMoney(rate * 0.05)} / km)</option>
-          </select>
-        </div>
-        <div class="field hidden" id="kmField">
-          <label>Estimated Kilometers</label>
-          <input type="number" id="estKm" min="1" placeholder="e.g. 150" />
-        </div>
-      </div>
-
-      <div class="system-driver-card ${isMotorcycle ? 'disabled' : ''}" id="privateDriverSection">
-        <h4 class="system-driver-title">Private Driver (Optional)</h4>
-        <p class="system-driver-desc">
-          Hire a private driver for the duration of your rental for P900/day. Please note that only the first day will be included in the total below. Any additional day will have to be paid directly to the driver.
-        </p>
-        <label class="system-driver-checkbox-label" for="driverHireCheckbox">
-          <input type="checkbox" id="driverHireCheckbox" ${isMotorcycle ? 'disabled' : ''} />
-          <span>I WANT TO HIRE A PRIVATE DRIVER (+₱900.00)</span>
-        </label>
-        ${isMotorcycle ? '<div class="system-driver-moto-note">Private driver is not available for motorcycle rentals.</div>' : ''}
-      </div>
-
-
-
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button type="button" class="btn btn-ghost" id="btnBackStep1" style="flex:1;">
-          Back
-        </button>
-        <button type="button" class="btn btn-primary" id="btnGoStep3" style="flex:2;" disabled>
-          Proceed to Fill-up &amp; Pricing
-        </button>
-      </div>
-    </div>
-
-    <div class="step-content hidden" id="stepSection3">
-      <!-- ═══ RENTER FILL-UP FORM ═══ -->
-      <div class="renter-fillup-card">
-        <div class="renter-fillup-header">
-          <div class="renter-fillup-icon">
-            <i class="fa-solid fa-user-pen"></i>
+        <div class="system-driver-card ${isMotorcycle ? 'disabled' : ''}" id="privateDriverSection">
+          <div class="driver-card-header">
+            <div class="driver-icon-badge"><i class="fa-solid fa-id-badge"></i></div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                <h4 class="system-driver-title">Private Driver Service (Optional)</h4>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="driver-rate-tag">+₱900.00 / day</span>
+                  <span class="driver-rating-badge"><i class="fa-solid fa-star"></i> 4.9 Professional</span>
+                </div>
+              </div>
+              <p class="system-driver-desc">
+                Professional licensed chauffeur for your rental journey. The first day is included in your checkout total; any succeeding days are settled directly with your driver.
+              </p>
+            </div>
           </div>
+          <label class="system-driver-checkbox-label" for="driverHireCheckbox">
+            <input type="checkbox" id="driverHireCheckbox" ${isMotorcycle ? 'disabled' : ''} />
+            <span>Add Private Driver Service (+₱900.00)</span>
+          </label>
+          ${isMotorcycle ? '<div class="system-driver-moto-note"><i class="fa-solid fa-circle-info"></i> Private driver is not available for motorcycle rentals (strictly self-drive).</div>' : ''}
+        </div>
+
+        <div class="step-nav-bar">
+          <button type="button" class="btn btn-ghost" id="btnBackStep1">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="btnGoStep3">
+            <span>Proceed to Fill-up &amp; Pricing</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 3: FILL-UP & PAYMENT ═══ -->
+      <div class="step-content hidden" id="stepSection3">
+        <!-- Renter Information Card -->
+        <div class="renter-fillup-card">
+          <div class="renter-fillup-header">
+            <div class="renter-fillup-icon">
+              <i class="fa-solid fa-user-pen"></i>
+            </div>
+            <div>
+              <h4 class="renter-fillup-title">Renter Information</h4>
+              <span class="renter-fillup-sub">Complete your verified renter details for reservation confirmation</span>
+            </div>
+          </div>
+
+          <div class="detail-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label>Full Name <span style="color:#ef4444;">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text" id="renterName" value="${p.full_name || state.user?.user_metadata?.full_name || ''}" placeholder="e.g. Mark Lester Ramos" required />
+              </div>
+            </div>
+            <div class="field">
+              <label>Mobile Number <span style="color:#ef4444;">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input type="tel" id="renterPhone" value="${p.phone || ''}" placeholder="e.g. 0917 582 9140" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-grid" style="margin-bottom:12px;">
+            <div class="field">
+              <label>Email Address</label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-envelope input-icon"></i>
+                <input type="email" id="renterEmail" value="${p.email || state.user?.email || ''}" placeholder="e.g. mark.ramos@gmail.com" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Driver's License No. <span style="font-weight:400;font-size:0.72rem;color:#94a3b8;">(Optional)</span></label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-id-card input-icon"></i>
+                <input type="text" id="renterLicense" value="${p.license_number || ''}" placeholder="e.g. N02-19-482019" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:12px;">
+            <label>Meetup / Delivery Address or Notes <span style="font-weight:400;font-size:0.72rem;color:#94a3b8;">(Optional)</span></label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-location-dot input-icon"></i>
+              <input type="text" id="renterAddress" value="${p.address || ''}" placeholder="e.g. Puerto Princesa Airport, Hotel Lobby, or Meetup Spot" />
+            </div>
+          </div>
+
+          <div class="renter-verify-badge">
+            <i class="fa-solid fa-shield-check" style="color:#059669;font-size:0.95rem;"></i>
+            <span>Physical driver's license will be verified in-person upon vehicle meetup / handover. No online license upload required.</span>
+          </div>
+        </div>
+
+        <!-- Transparent Itemized Breakdown -->
+        <div id="transparentPricingContainer"></div>
+
+        <!-- 100% Transparent Guarantee Box -->
+        <div class="guarantee-box">
+          <i class="fa-solid fa-shield-heart guarantee-icon"></i>
           <div>
-            <h4 class="renter-fillup-title">Renter Information</h4>
-            <span class="renter-fillup-sub">Pakilagay ang inyong impormasyon para sa opisyal na booking</span>
+            <strong>100% Transparent Guarantee:</strong> No hidden charges. Full-to-full fuel policy. Free cancellation up to 24 hours prior to pickup. No online license upload needed — simply present your valid physical driver's license upon vehicle handover.
           </div>
         </div>
 
-        <div class="detail-grid" style="margin-bottom:12px;">
-          <div class="field">
-            <label style="font-weight:700;font-size:0.78rem;">Full Name (Buong Pangalan) <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="renterName" value="${p.full_name || state.user?.user_metadata?.full_name || ''}" placeholder="e.g. Mark Lester Ramos" required />
+        <!-- Complete Payment Card -->
+        <div class="complete-payment-card">
+          <div class="payment-card-top-bar">
+            <div>
+              <div class="complete-payment-tag">SECURE CHECKOUT</div>
+              <h4 class="complete-payment-title">Payment &amp; Reservation Confirmation</h4>
+            </div>
+            <div class="payment-amount-pill">
+              <span class="amount-pill-sub">Amount Due Now</span>
+              <strong class="amount-pill-val" id="paymentAmountDueVal">₱0.00</strong>
+            </div>
           </div>
-          <div class="field">
-            <label style="font-weight:700;font-size:0.78rem;">Phone Number (Contact Number) <span style="color:#ef4444;">*</span></label>
-            <input type="tel" id="renterPhone" value="${p.phone || ''}" placeholder="e.g. 0917 582 9140" required />
+
+          <div class="payment-selection-section">
+            <div class="field" style="margin-bottom:14px;">
+              <label>Payment Structure</label>
+              <div class="pay-structure-selector" id="bPayStructureSelector">
+                <div class="selector-opt-card active" data-pct="100">
+                  <div class="opt-radio"><i class="fa-solid fa-circle-check"></i></div>
+                  <div class="opt-content">
+                    <div class="opt-top">
+                      <strong>Pay in Full (100%)</strong>
+                      <span class="opt-chip opt-chip-green">Recommended</span>
+                    </div>
+                    <span class="opt-sub">Instant zero-balance reservation with priority vehicle handover</span>
+                  </div>
+                </div>
+                <div class="selector-opt-card" data-pct="20">
+                  <div class="opt-radio"><i class="fa-regular fa-circle"></i></div>
+                  <div class="opt-content">
+                    <div class="opt-top">
+                      <strong>Downpayment (20%)</strong>
+                    </div>
+                    <span class="opt-sub">Pay 20% today to lock reservation · Balance upon vehicle meetup</span>
+                  </div>
+                </div>
+              </div>
+              <select id="payStructureSelect" class="clean-select" style="display:none;">
+                <option value="100" selected>Pay in Full (100%)</option>
+                <option value="20">Downpayment (20%)</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin-bottom:14px;">
+              <label>Payment Method</label>
+              <div class="payment-methods-grid" id="bPaymentMethodGrid">
+                <div class="pay-method-card active" data-method="card">
+                  <div class="pm-radio"><i class="fa-solid fa-circle-check"></i></div>
+                  <div class="pm-icon pm-card-icon"><i class="fa-solid fa-credit-card"></i></div>
+                  <div class="pm-info">
+                    <strong class="pm-name">Card</strong>
+                    <span class="pm-desc">Debit or Credit Card</span>
+                  </div>
+                </div>
+
+                <div class="pay-method-card" data-method="gcash">
+                  <div class="pm-radio"><i class="fa-regular fa-circle"></i></div>
+                  <div class="pm-icon pm-gcash-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                  <div class="pm-info">
+                    <strong class="pm-name">GCash</strong>
+                    <span class="pm-desc">Instant QR Scan</span>
+                  </div>
+                  <span class="pm-tag">Instant</span>
+                </div>
+
+                <div class="pay-method-card" data-method="bank_transfer">
+                  <div class="pm-radio"><i class="fa-regular fa-circle"></i></div>
+                  <div class="pm-icon pm-bank-icon"><i class="fa-solid fa-building-columns"></i></div>
+                  <div class="pm-info">
+                    <strong class="pm-name">Bank Transfer</strong>
+                    <span class="pm-desc">QR Ph &amp; InstaPay</span>
+                  </div>
+                </div>
+
+                <div class="pay-method-card" data-method="cash">
+                  <div class="pm-radio"><i class="fa-regular fa-circle"></i></div>
+                  <div class="pm-icon pm-cash-icon"><i class="fa-solid fa-handshake"></i></div>
+                  <div class="pm-info">
+                    <strong class="pm-name">Via Meetup</strong>
+                    <span class="pm-desc">Pay Cash on Handover</span>
+                  </div>
+                </div>
+              </div>
+              <select id="paymentMethodSelect" class="clean-select" style="display:none;">
+                <option value="card" selected>Card (Debit / Credit)</option>
+                <option value="gcash">GCash (Instant QR)</option>
+                <option value="bank_transfer">Bank Transfer (QR Ph / InstaPay)</option>
+                <option value="cash">Via Meetup (Cash)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="bookingPayMethodDetail"></div>
+
+          <div class="checkout-trust-row">
+            <span><i class="fa-solid fa-lock"></i> 256-Bit SSL Encrypted</span>
+            <span><i class="fa-solid fa-shield-halved"></i> Verified Fleet Partner</span>
+            <span><i class="fa-solid fa-circle-check"></i> Instant Booking Pass</span>
           </div>
         </div>
 
-        <div class="detail-grid" style="margin-bottom:12px;">
-          <div class="field">
-            <label style="font-weight:700;font-size:0.78rem;">Email Address</label>
-            <input type="email" id="renterEmail" value="${p.email || state.user?.email || ''}" placeholder="e.g. mark.ramos@gmail.com" />
-          </div>
-          <div class="field">
-            <label style="font-weight:700;font-size:0.78rem;">Driver's License No. <span style="font-weight:400;font-size:0.72rem;color:#94a3b8;">(Optional)</span></label>
-            <input type="text" id="renterLicense" value="${p.license_number || ''}" placeholder="e.g. N02-19-482019" />
-          </div>
-        </div>
-
-        <div class="field" style="margin-bottom:12px;">
-          <label style="font-weight:700;font-size:0.78rem;">Meetup / Delivery Address or Notes <span style="font-weight:400;font-size:0.72rem;color:#94a3b8;">(Optional)</span></label>
-          <input type="text" id="renterAddress" value="${p.address || ''}" placeholder="e.g. Puerto Princesa Airport / Hotel Lobby" />
-        </div>
-
-        <div class="renter-verify-badge">
-          <i class="fa-solid fa-circle-check" style="color:#059669;font-size:0.95rem;"></i>
-          <span>Physical driver's license will be verified in-person upon vehicle meetup / pickup. No online upload required.</span>
+        <!-- Step 3 Action Buttons -->
+        <div class="step-nav-bar">
+          <button type="button" class="btn btn-ghost" id="btnBackStep2">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="submitBooking">
+            <i class="fa-solid fa-lock"></i>
+            <span>Submit Payment</span>
+          </button>
         </div>
       </div>
-
-      <div id="transparentPricingContainer"></div>
-
-      <div class="guarantee-box">
-        <div>
-          <strong>100% Transparent Guarantee:</strong> Walang hidden fees. Full-to-full fuel policy. Libreng cancellation hanggang 24 oras bago ang pickup. Walang kailangang online license upload — ipresenta lamang ang physical driver's license kapag nag-pickup na ng sasakyan.
-        </div>
-      </div>
-
-      <div class="complete-payment-card">
-        <div class="complete-payment-tag">PAYMENT</div>
-        <h4 class="complete-payment-title">Complete your payment</h4>
-        <div class="complete-payment-due">
-          Amount due: <strong id="paymentAmountDueVal">₱0.00</strong>
-        </div>
-
-        <div class="field" style="margin-bottom:12px;">
-          <label>Payment structure</label>
-          <select id="payStructureSelect" class="clean-select">
-            <option value="100">Pay in Full (100%) — Instant zero-balance reservation</option>
-            <option value="20">Downpayment (20%) — Balance upon vehicle pickup</option>
-          </select>
-        </div>
-
-        <div class="field" style="margin-bottom:14px;">
-          <label>Payment method</label>
-          <select id="paymentMethodSelect" class="clean-select">
-            <option value="card">Card</option>
-            <option value="gcash">GCash</option>
-            <option value="bank_transfer">Bank transfer</option>
-            <option value="cash">Via meetup</option>
-          </select>
-        </div>
-
-        <div id="bookingPayMethodDetail"></div>
-      </div>
-
-      <div style="display:flex;gap:10px;margin-top:14px;">
-        <button type="button" class="btn btn-ghost" id="btnBackStep2" style="flex:1;">
-          Back
-        </button>
-        <button type="button" class="btn btn-primary" id="submitBooking" style="flex:2;">
-          Submit Payment
-        </button>
-      </div>
-    </div>
-  `, true);
+    </div>`, true);
 
   $('#mClose')?.addEventListener('click', closeModal);
 
@@ -356,6 +518,20 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
     if (d1) d1.classList.toggle('active', step >= 2);
     if (d2) d2.classList.toggle('active', step >= 3);
+
+    // CRITICAL: Scroll modal to top on every step transition!
+    const modalWrap = modal.querySelector('.booking-modal-wrap');
+    if (modalWrap) {
+      modalWrap.scrollTop = 0;
+      modal.scrollTop = 0;
+    }
+
+    if (step === 2) {
+      renderInteractiveCalendar();
+      checkAvailability();
+    } else if (step === 3) {
+      renderStep3Pricing();
+    }
   }
 
   $('#stepNode1')?.addEventListener('click', () => setStep(1));
@@ -374,6 +550,22 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     checkAvailability();
   });
   if (estKmInput) estKmInput.addEventListener('input', checkAvailability);
+
+  // Sync interactive Billing Type UI cards
+  $$('.billing-opt-card', modal).forEach(card => {
+    card.addEventListener('click', () => {
+      $$('.billing-opt-card', modal).forEach(c => {
+        c.classList.remove('active');
+        const ic = c.querySelector('.opt-card-radio i');
+        if (ic) ic.className = 'fa-regular fa-circle';
+      });
+      card.classList.add('active');
+      const activeIc = card.querySelector('.opt-card-radio i');
+      if (activeIc) activeIc.className = 'fa-solid fa-circle-check';
+      chargeType.value = card.dataset.type;
+      chargeType.dispatchEvent(new Event('change'));
+    });
+  });
 
   const driverCheckbox = $('#driverHireCheckbox');
 
@@ -421,6 +613,34 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     }
   }
 
+  // Bind top card and quick pill listeners once outside renderInteractiveCalendar
+  $$('.cal-quick-pill', modal).forEach(pill => {
+    pill.addEventListener('click', () => {
+      const dCount = Number(pill.dataset.dur || 1);
+      const baseStart = start.value || todayStr;
+      start.value = baseStart;
+      const targetDate = new Date(baseStart + 'T00:00:00');
+      targetDate.setDate(targetDate.getDate() + (dCount - 1));
+      end.value = targetDate.toISOString().slice(0, 10);
+      renderInteractiveCalendar();
+      checkAvailability();
+    });
+  });
+
+  $('#calCardPickup')?.addEventListener('click', () => {
+    const input = $('#bStart');
+    if (input && typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (err) {}
+    }
+  });
+
+  $('#calCardReturn')?.addEventListener('click', () => {
+    const input = $('#bEnd');
+    if (input && typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (err) {}
+    }
+  });
+
   function renderInteractiveCalendar() {
     const calContainer = $('#calWidgetContainer');
     if (!calContainer) return;
@@ -441,7 +661,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       if (selectedStartVal && selectedEndVal) {
         returnText.textContent = selectedStartVal === selectedEndVal ? `${formatShortDate(selectedEndVal)} (1 Day)` : formatShortDate(selectedEndVal);
       } else if (selectedStartVal) {
-        returnText.textContent = 'Same Day / Return';
+        returnText.textContent = 'Select Return';
       } else {
         returnText.textContent = 'Select Date';
       }
@@ -459,28 +679,11 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
     if (tripDaysEl) {
       if (selectedStartVal && selectedEndVal) {
-        const days = Math.max(1, Math.round((new Date(selectedEndVal) - new Date(selectedStartVal)) / (1000 * 60 * 60 * 24)));
+        const days = Math.max(1, Math.round((new Date(selectedEndVal) - new Date(selectedStartVal)) / (1000 * 60 * 60 * 24)) + 1);
         tripDaysEl.innerHTML = `<strong>${days} Day${days > 1 ? 's' : ''}</strong> Rental`;
-      } else if (selectedStartVal) {
-        tripDaysEl.innerHTML = `<span id="calQuickSingleDay" style="cursor:pointer;color:var(--accent);font-weight:700;" title="Click for 1-day rental">1 Day? Tap here</span>`;
       } else {
         tripDaysEl.textContent = 'Select dates';
       }
-    }
-
-    // Pricing tiers based on average vehicle rates across categories
-    const baseRate = rate;
-    const weekendMultiplier = 1.35;
-    const fridayMultiplier = 1.15;
-    const tierLow = baseRate;
-    const tierMid = Math.round(baseRate * fridayMultiplier);
-    const tierHigh = Math.round(baseRate * weekendMultiplier);
-
-    function getPriceTier(dateIso) {
-      const dayOfWeek = new Date(dateIso + 'T00:00:00').getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) return { tier: 'high', price: tierHigh };
-      if (dayOfWeek === 5) return { tier: 'mid', price: tierMid };
-      return { tier: 'low', price: tierLow };
     }
 
     function buildMonthHTML(year, month, panelId) {
@@ -504,25 +707,19 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         const isInRange = selectedStartVal && selectedEndVal && dateIso > selectedStartVal && dateIso < selectedEndVal;
         const isToday = dateIso === todayStr;
 
-        const { tier, price } = getPriceTier(dateIso);
-
         if (isPast) {
           daysHTML += `<div class="cal-day cal-day-past" data-date="${dateIso}">${d}</div>`;
         } else if (isBooked) {
-          daysHTML += `<div class="cal-day cal-day-booked" data-date="${dateIso}" title="Booked (Unavailable)">${d}</div>`;
+          daysHTML += `<div class="cal-day cal-day-booked" data-date="${dateIso}" title="Reserved">${d}</div>`;
         } else {
-          let dayClass = `cal-day-price cal-day-price-${tier}`;
+          let dayClass = 'cal-day-price';
           if (isStart && isEnd) dayClass += ' cal-day-selected cal-day-single';
           else if (isStart) dayClass += ' cal-day-selected cal-day-start';
           else if (isEnd) dayClass += ' cal-day-selected cal-day-end';
           else if (isInRange) dayClass += ' cal-day-in-range';
           if (isToday) dayClass += ' cal-day-today';
 
-          daysHTML += `
-            <div class="cal-day ${dayClass}" data-date="${dateIso}" title="${monthNames[month]} ${d}, ${year} - ₱${price.toLocaleString()}/day">
-              ${d}
-            </div>
-          `;
+          daysHTML += `<div class="cal-day ${dayClass}" data-date="${dateIso}">${d}</div>`;
         }
       }
 
@@ -536,14 +733,12 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       `;
     }
 
-    // Calculate left and right month
     const leftYear = calViewYear;
     const leftMonth = calViewMonth;
     let rightMonth = calViewMonth + 1;
     let rightYear = calViewYear;
     if (rightMonth > 11) { rightMonth = 0; rightYear++; }
 
-    // Check if prev button should be disabled (cannot navigate before current month)
     const now = new Date();
     const isPrevDisabled = (leftYear < now.getFullYear()) || (leftYear === now.getFullYear() && leftMonth <= now.getMonth());
 
@@ -559,23 +754,11 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
           ${buildMonthHTML(leftYear, leftMonth, 'calPanelLeft')}
           ${buildMonthHTML(rightYear, rightMonth, 'calPanelRight')}
         </div>
-        <div class="cal-price-legend">
-          <div class="cal-price-legend-item">
-            <span class="cal-legend-pill cal-pill-low">₱${tierLow.toLocaleString()}+</span>
-          </div>
-          <div class="cal-price-legend-item">
-            <span class="cal-legend-pill cal-pill-mid">₱${tierMid.toLocaleString()}+</span>
-          </div>
-          <div class="cal-price-legend-item">
-            <span class="cal-legend-pill cal-pill-high">₱${tierHigh.toLocaleString()}+</span>
-          </div>
-          <span class="cal-legend-note">Based on average prices of all cars.</span>
-        </div>
       </div>
     `;
 
     // Month Navigation Events
-    $('#calPrevMonth')?.addEventListener('click', (e) => {
+    $('#calPrevMonth', calContainer)?.addEventListener('click', (e) => {
       e.preventDefault();
       if (isPrevDisabled) return;
       calViewMonth--;
@@ -583,151 +766,57 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       renderInteractiveCalendar();
     });
 
-    $('#calNextMonth')?.addEventListener('click', (e) => {
+    $('#calNextMonth', calContainer)?.addEventListener('click', (e) => {
       e.preventDefault();
       calViewMonth++;
       if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
       renderInteractiveCalendar();
     });
 
-    // Top Card Click Handlers
-    $('#calCardPickup')?.addEventListener('click', () => {
-      start.value = '';
-      end.value = '';
-      renderInteractiveCalendar();
-      checkAvailability();
-    });
-
-    $('#calCardReturn')?.addEventListener('click', () => {
-      if (start.value && !end.value) {
-        // Quick toggle to 1-day rental!
-        end.value = start.value;
-        renderInteractiveCalendar();
-        checkAvailability();
-      } else if (start.value && end.value) {
-        end.value = '';
-        renderInteractiveCalendar();
-        checkAvailability();
-      }
-    });
-
-    // Quick single-day rental helper link if present
-    const qBtn = calContainer.querySelector('#calQuickSingleDay') || $('#calQuickSingleDay');
-    if (qBtn) {
-      qBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (start.value) {
-          end.value = start.value;
-          renderInteractiveCalendar();
-          checkAvailability();
-        }
-      });
-    }
-
-    // Hover Range Preview Effect & Date Selection
+    // Date Selection Clicks
     const priceCells = calContainer.querySelectorAll('.cal-day-price');
     priceCells.forEach(cell => {
-      cell.addEventListener('mouseenter', () => {
-        if (start.value && !end.value) {
-          const hoveredDate = cell.dataset.date;
-          if (hoveredDate > start.value) {
-            priceCells.forEach(c => {
-              const d = c.dataset.date;
-              if (d > start.value && d <= hoveredDate) {
-                c.classList.add('cal-day-hover-in-range');
-                c.style.backgroundColor = '#273549';
-                c.style.color = '#ffffff';
-                c.style.borderRadius = '0';
-              } else if (d > start.value) {
-                c.classList.remove('cal-day-hover-in-range');
-                const t = c.dataset.tier;
-                if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
-                else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
-                else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
-                c.style.borderRadius = '8px';
-              }
-            });
-          }
-        }
-      });
-
       cell.addEventListener('click', () => {
         const clickedDate = cell.dataset.date;
-
-        // Check if the next consecutive day is booked or unavailable
-        const nextDateObj = new Date(clickedDate + 'T00:00:00');
-        nextDateObj.setDate(nextDateObj.getDate() + 1);
-        const nextDateIso = nextDateObj.toISOString().slice(0, 10);
-        const isNextDayBooked = allBookedIntervals && allBookedIntervals.some(b => nextDateIso >= b.start_date && nextDateIso <= b.end_date);
-
-        if (!start.value || (start.value && end.value)) {
+        if (!start.value || (start.value && end.value && start.value !== end.value)) {
           start.value = clickedDate;
-          // If the next consecutive date is already booked, this is an isolated single day left!
-          // Auto-select as 1-day rental so the user can immediately book without being blocked!
-          if (isNextDayBooked) {
-            end.value = clickedDate;
-            toast('1-day rental selected (next date is already reserved).', 'info');
-          } else {
-            end.value = '';
-          }
-        } else if (clickedDate === start.value) {
-          // User clicked on the exact same date again -> Confirm as 1-day rental!
           end.value = clickedDate;
-          toast('1-day rental confirmed for this date.', 'info');
+        } else if (clickedDate === start.value) {
+          end.value = clickedDate;
         } else if (clickedDate > start.value) {
-          // Check if any existing booking starts strictly between start.value and clickedDate
-          const hasBookedInside = allBookedIntervals && allBookedIntervals.some(b => {
-            return b.start_date > start.value && b.start_date <= clickedDate;
-          });
+          const hasBookedInside = allBookedIntervals && allBookedIntervals.some(b => b.start_date > start.value && b.start_date <= clickedDate);
           if (hasBookedInside) {
-            toast('Cannot select range across already booked dates.', 'error');
+            toast('Cannot select range across reserved dates.', 'error');
             start.value = clickedDate;
-            if (isNextDayBooked) {
-              end.value = clickedDate;
-            } else {
-              end.value = '';
-            }
+            end.value = clickedDate;
           } else {
             end.value = clickedDate;
           }
         } else {
-          // Clicked earlier date
           start.value = clickedDate;
-          if (isNextDayBooked) {
-            end.value = clickedDate;
-          } else {
-            end.value = '';
-          }
+          end.value = clickedDate;
         }
         renderInteractiveCalendar();
         checkAvailability();
       });
     });
-
-    calContainer.addEventListener('mouseleave', () => {
-      priceCells.forEach(c => {
-        const d = c.dataset.date;
-        if (d !== start.value && d !== end.value && !(start.value && end.value && d > start.value && d < end.value)) {
-          c.classList.remove('cal-day-hover-in-range');
-          const t = c.dataset.tier;
-          if (t === 'low') { c.style.backgroundColor = '#71deb5'; c.style.color = '#0f172a'; }
-          else if (t === 'mid') { c.style.backgroundColor = '#fbc072'; c.style.color = '#0f172a'; }
-          else if (t === 'high') { c.style.backgroundColor = '#fda4af'; c.style.color = '#0f172a'; }
-          c.style.borderRadius = '8px';
-        }
-      });
-    });
   }
 
-  // Prepopulate dates if passed from Hero Availability search
+  // Prepopulate dates if passed from Hero Availability search or set sensible default
   if (prefillStart) {
     start.value = prefillStart;
-    if (prefillEnd && prefillEnd >= prefillStart) {
-      end.value = prefillEnd;
-    }
+    end.value = (prefillEnd && prefillEnd >= prefillStart) ? prefillEnd : prefillStart;
+  } else if (!start.value) {
+    start.value = todayStr;
+    const nextDay = new Date();
+    nextDay.setDate(nextDay.getDate() + 1);
+    const nextDayIso = nextDay.toISOString().slice(0, 10);
+    const isNextBooked = allBookedIntervals && allBookedIntervals.some(b => nextDayIso >= b.start_date && nextDayIso <= b.end_date);
+    end.value = isNextBooked ? todayStr : nextDayIso;
   }
 
   renderInteractiveCalendar();
+  checkAvailability();
 
   start.addEventListener('change', () => {
     if (!start.value) return;
@@ -778,20 +867,14 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       }
     }
 
-    availMsg.textContent = 'Verifying date availability…';
-    const { data: overlaps, error } = await supabase
-      .from('bookings')
-      .select('id, start_date, end_date')
-      .eq('vehicle_id', v.id)
-      .in('status', ['pending', 'approved', 'active'])
-      .lte('start_date', end.value)
-      .gte('end_date', start.value);
-
-    if (error) { availMsg.textContent = 'Could not check availability.'; return; }
-    if (overlaps && overlaps.length) {
-      availMsg.innerHTML = `<span style="color:#dc2626;font-weight:700;">Dates already booked. Please choose available dates above.</span>`;
-      btnGoStep3.disabled = true;
-      return;
+    // Fast synchronous availability check from preloaded intervals for zero-delay UX
+    if (allBookedIntervals && allBookedIntervals.length) {
+      const liveConflict = allBookedIntervals.find(b => start.value <= b.end_date && end.value >= b.start_date);
+      if (liveConflict) {
+        availMsg.innerHTML = `<span style="color:#B24A5A;font-weight:600;">Dates already booked. Please choose available dates above.</span>`;
+        btnGoStep3.disabled = true;
+        return;
+      }
     }
 
     const days = daysBetween(start.value, end.value);
@@ -857,73 +940,73 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
     pricingContainer.innerHTML = `
       <div class="price-breakdown-card">
-        <h4 style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-          Transparent Itemized Breakdown
-        </h4>
+        <div class="price-breakdown-header">
+          <i class="fa-solid fa-file-invoice-dollar text-accent"></i>
+          <h4 class="price-breakdown-title">Transparent Itemized Breakdown</h4>
+        </div>
 
         <div class="price-item">
-          <span>
-            ${v.name} Base Rental
-            <div style="font-size:0.75rem;color:#64748b;">
+          <div>
+            <div class="price-item-name">${v.name} Base Rental</div>
+            <div class="price-item-sub">
               ${data.isPerKm ? `${data.estKm} km × ${fmtMoney(data.kmRate)}/km` : `${data.days} day(s) × ${fmtMoney(rate)}/day`}
             </div>
-          </span>
-          <span style="font-weight:700;color:#0f172a;">${fmtMoney(data.vehicleCost)}</span>
+          </div>
+          <span class="price-item-val">${fmtMoney(data.vehicleCost)}</span>
         </div>
 
         ${data.selectedDriverMode === 'with_driver' ? `
           <div class="price-item">
-            <span>
-              Private Driver (Optional)
-              <div style="font-size:0.75rem;color:#64748b;">
-                First day included in checkout ${data.days > 1 ? `· Remaining ${data.days - 1} day(s) (${fmtMoney(data.driverDirectPayFee)}) to be paid directly to driver` : ''}
+            <div>
+              <div class="price-item-name">Private Driver Service</div>
+              <div class="price-item-sub">
+                First day included in checkout ${data.days > 1 ? `· Remaining ${data.days - 1} day(s) (${fmtMoney(data.driverDirectPayFee)}) payable directly to driver` : ''}
               </div>
-            </span>
-            <span style="font-weight:700;color:var(--accent);">+₱900.00</span>
+            </div>
+            <span class="price-item-val text-accent">+₱900.00</span>
           </div>
         ` : `
           <div class="price-item">
-            <span>
-              Private Driver (Optional)
-              <div style="font-size:0.75rem;color:#64748b;">Self-Drive (Customer Driving)</div>
-            </span>
-            <span style="font-weight:700;color:#059669;">₱0 (Self-Drive)</span>
+            <div>
+              <div class="price-item-name">Private Driver Service</div>
+              <div class="price-item-sub">Self-Drive (Customer Driving)</div>
+            </div>
+            <span class="price-item-val text-success">₱0 (Self-Drive)</span>
           </div>
         `}
 
         <div class="price-item">
-          <span>
-            Comprehensive Vehicle Protection
-            <div style="font-size:0.75rem;color:#059669;font-weight:600;">Basic third-party liability included</div>
-          </span>
-          <span style="font-weight:700;color:#059669;">FREE</span>
+          <div>
+            <div class="price-item-name">Comprehensive Vehicle Protection</div>
+            <div class="price-item-sub text-success">Basic third-party liability &amp; road coverage included</div>
+          </div>
+          <span class="badge badge-success-soft">INCLUDED</span>
         </div>
 
         <div class="price-item">
-          <span>
-            Sanitation &amp; Vehicle Prep
-            <div style="font-size:0.75rem;color:#059669;font-weight:600;">Complimentary pre-delivery wash</div>
-          </span>
-          <span style="font-weight:700;color:#059669;">FREE</span>
+          <div>
+            <div class="price-item-name">Vehicle Prep &amp; Sanitation</div>
+            <div class="price-item-sub text-success">Complimentary pre-delivery wash and disinfection</div>
+          </div>
+          <span class="badge badge-success-soft">FREE</span>
         </div>
 
-        <div class="price-item">
-          <span>
-            Refundable Security Deposit
-            <div style="font-size:0.75rem;color:#d97706;font-weight:600;">Payable upon pickup · 100% refundable upon safe return</div>
-          </span>
-          <span style="font-weight:600;color:#475569;">3,000.00 <span style="font-size:0.72rem;color:#94a3b8;">(deposit)</span></span>
+        <div class="price-item deposit-row">
+          <div>
+            <div class="price-item-name">Refundable Security Deposit</div>
+            <div class="price-item-sub text-amber">Payable upon pickup · 100% refunded upon safe vehicle return</div>
+          </div>
+          <span class="deposit-val">₱3,000.00 <small>(deposit)</small></span>
         </div>
 
         <div class="price-item total-row">
-          <span>
-            Estimated Total Amount
-            <div style="font-size:0.74rem;font-weight:500;color:#64748b;">All taxes &amp; vehicle rental fees included</div>
-          </span>
+          <div>
+            <div class="total-title">Total Rental Amount</div>
+            <div class="total-sub">All taxes, vehicle fees &amp; reservation charges included</div>
+          </div>
           <span class="total-val">${fmtMoney(netTotal)}</span>
         </div>
-      </div>
-    `;
+      </div>`;
 
     selectedDownpaymentPct = 100;
     let selectedPaymentMethod = 'card';
@@ -954,6 +1037,42 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         renderBookingPaymentDetail();
       };
     }
+
+    // Sync Payment Structure interactive cards
+    $$('#bPayStructureSelector .selector-opt-card', modal).forEach(card => {
+      card.addEventListener('click', () => {
+        $$('#bPayStructureSelector .selector-opt-card', modal).forEach(c => {
+          c.classList.remove('active');
+          const ic = c.querySelector('.opt-radio i');
+          if (ic) ic.className = 'fa-regular fa-circle';
+        });
+        card.classList.add('active');
+        const activeIc = card.querySelector('.opt-radio i');
+        if (activeIc) activeIc.className = 'fa-solid fa-circle-check';
+        if (payStructure) {
+          payStructure.value = card.dataset.pct;
+          payStructure.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+
+    // Sync Payment Method interactive cards
+    $$('#bPaymentMethodGrid .pay-method-card', modal).forEach(card => {
+      card.addEventListener('click', () => {
+        $$('#bPaymentMethodGrid .pay-method-card', modal).forEach(c => {
+          c.classList.remove('active');
+          const ic = c.querySelector('.pm-radio i');
+          if (ic) ic.className = 'fa-regular fa-circle';
+        });
+        card.classList.add('active');
+        const activeIc = card.querySelector('.pm-radio i');
+        if (activeIc) activeIc.className = 'fa-solid fa-circle-check';
+        if (payMethodSelect) {
+          payMethodSelect.value = card.dataset.method;
+          payMethodSelect.dispatchEvent(new Event('change'));
+        }
+      });
+    });
 
     updateAmountDue();
 
@@ -1013,7 +1132,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
               ${uploadedProofDataUrl ? `
                 <div class="proof-preview-wrap">
                   <img src="${uploadedProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
-                  <button type="button" class="proof-remove-btn" id="bRemoveProofBtn" title="Remove proof image">✕</button>
+                  <button type="button" class="proof-remove-btn" id="bRemoveProofBtn" title="Remove proof image"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div style="font-size:0.75rem;color:var(--text-hi);font-weight:600;">Proof of payment attached</div>
               ` : `
@@ -1029,14 +1148,21 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="text-align:center;">
             <div class="pay-detail-heading" style="text-align:center;">Scan via Banking App (QR Ph / InstaPay)</div>
-            <div style="margin-bottom:10px;text-align:left;">
-              <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);margin-bottom:4px;display:block;">Select Banking App:</label>
-              <select id="bBankSelect" class="clean-select">
-                <option value="Maya">Maya / Smart Padala</option>
-                <option value="BDO">BDO Unibank</option>
-                <option value="BPI">BPI Online</option>
-                <option value="UnionBank">UnionBank of the Philippines</option>
-                <option value="Metrobank">Metrobank Direct</option>
+            <div style="margin-bottom:12px;text-align:left;">
+              <label style="font-size:0.74rem;font-weight:700;color:var(--text-mid);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.04em;">Select Banking App:</label>
+              <div class="bank-pill-group" id="bBankPillGroup">
+                <button type="button" class="bank-pill active" data-bank="Maya"><i class="fa-solid fa-wallet"></i> Maya</button>
+                <button type="button" class="bank-pill" data-bank="BDO"><i class="fa-solid fa-building-columns"></i> BDO</button>
+                <button type="button" class="bank-pill" data-bank="BPI"><i class="fa-solid fa-building-columns"></i> BPI</button>
+                <button type="button" class="bank-pill" data-bank="UnionBank"><i class="fa-solid fa-building-columns"></i> UnionBank</button>
+                <button type="button" class="bank-pill" data-bank="Metrobank"><i class="fa-solid fa-building-columns"></i> Metrobank</button>
+              </div>
+              <select id="bBankSelect" class="clean-select" style="display:none;">
+                <option value="Maya" selected>Maya</option>
+                <option value="BDO">BDO</option>
+                <option value="BPI">BPI</option>
+                <option value="UnionBank">UnionBank</option>
+                <option value="Metrobank">Metrobank</option>
               </select>
             </div>
             <div class="pay-qr-wrap">
@@ -1060,7 +1186,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
               ${uploadedProofDataUrl ? `
                 <div class="proof-preview-wrap">
                   <img src="${uploadedProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
-                  <button type="button" class="proof-remove-btn" id="bRemoveProofBtn" title="Remove proof image">✕</button>
+                  <button type="button" class="proof-remove-btn" id="bRemoveProofBtn" title="Remove proof image"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div style="font-size:0.75rem;color:var(--text-hi);font-weight:600;">Proof of payment attached</div>
               ` : `
@@ -1072,6 +1198,19 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
           </div>
         `;
         if (submitBtn) submitBtn.textContent = `Submit Payment (${fmtMoney(amountToPay)})`;
+
+        // Bind Bank Pill selector
+        const bankSelect = detailContainer.querySelector('#bBankSelect');
+        detailContainer.querySelectorAll('.bank-pill').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            detailContainer.querySelectorAll('.bank-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (bankSelect) {
+              bankSelect.value = btn.dataset.bank;
+            }
+          });
+        });
       } else if (selectedPaymentMethod === 'cash') {
         detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="text-align:center;">
@@ -1147,7 +1286,16 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     renderBookingPaymentDetail();
   }
 
-  btnGoStep3.addEventListener('click', () => {
+  btnGoStep3.addEventListener('click', async () => {
+    if (!start.value || !end.value) {
+      toast('Please choose your rental schedule dates.', 'info');
+      return;
+    }
+    await checkAvailability();
+    if (!calculatedBookingData) {
+      toast('Selected dates are not available. Please choose available dates.', 'error');
+      return;
+    }
     renderStep3Pricing();
     setStep(3);
   });

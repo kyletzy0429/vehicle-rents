@@ -1,347 +1,940 @@
-.booking-stepper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  background: var(--bg-subtle);
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+/* ==========================================================================
+   MODERN VEHICLE BOOKING MODAL REDESIGN (CYBER-LUXURY)
+   ========================================================================== */
+
+/* Modal Container Overhaul - Compact & Human-Crafted */
+.modal:has(.booking-modal-wrap) {
+  max-width: 650px;
+  width: 95vw;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg, 16px);
+  background: var(--bg-surface, #ffffff);
   border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
 }
 
-.step-item {
+[data-theme="dark"] .modal:has(.booking-modal-wrap) {
+  background: #111827;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75);
+}
+
+.booking-modal-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ═══ Header Section ═══ */
+.booking-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+}
+
+[data-theme="dark"] .booking-modal-header {
+  border-bottom-color: rgba(139, 92, 246, 0.2);
+}
+
+.bm-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bm-badges {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bm-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--accent, #7c3aed);
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-low);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
+  letter-spacing: 0.02em;
 }
 
-.step-item.active {
-  color: var(--accent);
+.bm-plate-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full, 9999px);
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
 }
 
-.step-item.completed {
-  color: #059669;
+[data-theme="dark"] .bm-plate-pill {
+  background: #1e1b2e;
+  color: #cbd5e1;
 }
 
-.step-num {
-  width: 24px;
-  height: 24px;
+.bm-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.bm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.bm-rate-card {
+  text-align: right;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: var(--radius-sm, 10px);
+}
+
+[data-theme="dark"] .bm-rate-card {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.bm-rate-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-mid, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bm-rate-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+  line-height: 1.1;
+}
+
+.bm-rate-val small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-mid, #64748b);
+}
+
+.bm-close-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
   border-radius: 50%;
-  background: var(--accent-light);
-  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bm-close-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #dc2626;
+  transform: rotate(90deg) scale(1.05);
+}
+
+[data-theme="dark"] .bm-close-btn {
+  background: #1e1b2e;
+  border-color: #3b3754;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .bm-close-btn:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+/* ═══ Stepper Bar (V2) ═══ */
+.booking-stepper-v2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(145deg, #fbf9ff 0%, #f4effe 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.16);
+  border-radius: var(--radius-lg, 16px);
+  padding: 10px 16px;
+  box-shadow: inset 0 1px 3px rgba(124, 58, 237, 0.04);
+}
+
+[data-theme="dark"] .booking-stepper-v2 {
+  background: linear-gradient(145deg, #181926 0%, #151322 100%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.booking-stepper-v2 .step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.booking-stepper-v2 .step-num-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
   font-weight: 800;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
 }
 
-.step-item.active .step-num {
-  background: var(--accent);
+.booking-stepper-v2 .step-check {
+  display: none;
+}
+
+.booking-stepper-v2 .step-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-stepper-v2 .step-sub {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.booking-stepper-v2 .step-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #475569;
+  transition: color 0.2s ease;
+}
+
+/* Stepper Active State */
+.booking-stepper-v2 .step-item.active {
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .booking-stepper-v2 .step-item.active {
+  background: #232038;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.booking-stepper-v2 .step-item.active .step-num-wrap {
+  background: var(--primary-gradient, linear-gradient(135deg, #7c3aed, #9333ea));
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
 
-.step-item.completed .step-num {
+.booking-stepper-v2 .step-item.active .step-sub {
+  color: var(--accent, #7c3aed);
+}
+
+.booking-stepper-v2 .step-item.active .step-title {
+  color: var(--text-hi, #0f172a);
+  font-weight: 800;
+}
+
+/* Stepper Completed State */
+.booking-stepper-v2 .step-item.completed .step-num-wrap {
   background: #059669;
   color: #ffffff;
 }
 
-.step-divider {
+.booking-stepper-v2 .step-item.completed .step-num {
+  display: none;
+}
+
+.booking-stepper-v2 .step-item.completed .step-check {
+  display: block;
+  font-size: 0.8rem;
+}
+
+.booking-stepper-v2 .step-item.completed .step-title {
+  color: #059669;
+}
+
+.booking-stepper-v2 .step-divider {
   flex: 1;
   height: 2px;
-  background: var(--accent-border);
+  background: rgba(139, 92, 246, 0.15);
   margin: 0 8px;
   border-radius: 2px;
+  transition: background 0.3s ease;
 }
 
-.step-divider.active {
-  background: var(--accent);
+.booking-stepper-v2 .step-divider.active {
+  background: linear-gradient(90deg, #059669, var(--accent, #7c3aed));
 }
 
-
-.angle-viewer {
+/* ═══ STEP 1: Hero Showcase Card ═══ */
+.vehicle-showcase-card {
   position: relative;
-  background: radial-gradient(ellipse at 50% 80%, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0.02) 65%, transparent 75%), var(--bg-subtle);
-  border: 1.5px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 100%, rgba(139, 92, 246, 0.14) 0%, rgba(99, 102, 241, 0.04) 60%, #ffffff 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.18);
+  border-radius: var(--radius-xl, 20px);
   padding: 16px;
   text-align: center;
-  margin-bottom: 18px;
   overflow: hidden;
-  box-shadow: inset 0 2px 6px rgba(124, 58, 237, 0.04);
+  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-.angle-viewer-img-wrap {
-  height: 200px;
+[data-theme="dark"] .vehicle-showcase-card {
+  background: radial-gradient(ellipse at 50% 100%, rgba(139, 92, 246, 0.2) 0%, rgba(15, 17, 26, 0.95) 75%), #141320;
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.showcase-img-container {
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  background: transparent;
 }
 
-.angle-viewer-img {
+.showcase-img {
   max-height: 100%;
   max-width: 100%;
   object-fit: contain;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.4s ease;
-  filter: drop-shadow(0 10px 20px rgba(22, 14, 51, 0.14));
+  filter: drop-shadow(0 14px 28px rgba(22, 14, 51, 0.16));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.angle-viewer-img.side-view {
-  transform: scaleX(-1) scale(0.96) !important;
+.showcase-img:hover {
+  transform: scale(1.02) translateY(-2px);
 }
 
-.angle-viewer-img.rear-view {
-  transform: scale(0.92) perspective(500px) rotateY(18deg) !important;
-}
-
-.angle-viewer-img.top-view {
-  transform: scale(0.92) rotate(-4deg) !important;
-}
-
-.promo-box {
-  background: var(--bg-subtle);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 14px;
-  margin-bottom: 14px;
-  transition: border-color 0.2s;
-}
-
-.promo-box:focus-within {
-  border-color: var(--accent);
-}
-
-.promo-hint-chip {
-  font-size: 0.72rem;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
+.showcase-floating-tag {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  color: #065f46;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full, 9999px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-.promo-hint-chip:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+[data-theme="dark"] .showcase-floating-tag {
+  background: rgba(6, 78, 59, 0.85);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #a7f3d0;
 }
 
 
-.price-breakdown-card {
-  background: var(--bg-subtle);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  margin-bottom: 14px;
-}
-
-.price-item {
+/* Showcase Spotlight & Tags */
+.showcase-top-tags {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 0;
-  font-size: 0.84rem;
-  color: var(--text-mid);
-  border-bottom: 1px dashed var(--glass-border);
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 2;
 }
 
-.price-item:last-child {
-  border-bottom: none;
-}
-
-.price-item.total-row {
-  padding-top: 12px;
-  margin-top: 6px;
-  border-top: 2px solid var(--accent);
-  border-bottom: none;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--text-hi);
-}
-
-.price-item.total-row .total-val {
-  color: var(--accent);
-  font-size: 1.25rem;
-}
-
-.guarantee-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 14px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  border-radius: var(--radius-sm);
-  font-size: 0.78rem;
-  color: #065f46;
-  line-height: 1.5;
-  margin-bottom: 14px;
-}
-
-[data-theme="dark"] .guarantee-box {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
-}
-
-
-.pay-tier-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.pay-tier-btn {
-  background: #ffffff;
-  border: 1.5px solid #ede9fe;
-  border-radius: 10px;
-  padding: 10px 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.pay-tier-btn:hover {
-  border-color: #c4b5fd;
-  background: #faf7fd;
-}
-
-.pay-tier-btn.active {
-  border-color: var(--accent);
-  background: #f5f3ff;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.18);
-}
-
-.pay-tier-btn .tier-label {
-  font-size: 0.78rem;
+.showcase-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-hi);
+  padding: 4px 10px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
 
-.pay-tier-btn .tier-amount {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--accent);
-  margin-top: 2px;
+.showcase-fleet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--accent, #7c3aed);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid rgba(124, 58, 237, 0.18);
 }
 
-.pay-tier-btn .tier-sub {
-  font-size: 0.68rem;
-  color: #64748b;
+.showcase-spotlight {
+  position: absolute;
+  bottom: 8px;
+  width: 78%;
+  height: 28px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(124, 58, 237, 0.32) 0%, rgba(99, 102, 241, 0.12) 50%, transparent 75%);
+  border-radius: 50%;
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Payment Methods Grid */
-.pay-method-grid {
+.showcase-img {
+  position: relative;
+  z-index: 1;
+}
+
+.showcase-sub-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-mid, #64748b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Rental Inclusions Trust Chips */
+.rental-trust-chips {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  margin-bottom: 16px;
+  margin: 14px 0 6px 0;
 }
 
-@media (max-width: 520px) {
-  .pay-method-grid {
+@media (max-width: 600px) {
+  .rental-trust-chips {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.pay-method-btn {
+.trust-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  background: #fbf9ff;
+  border: 1px solid #ede9fe;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-hi, #1e1b2e);
+  transition: all 0.2s ease;
+}
+
+.trust-chip:hover {
+  border-color: var(--accent, #7c3aed);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.trust-chip i {
+  color: var(--accent, #7c3aed);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .trust-chip {
+  background: #181926;
+  border-color: #2e284a;
+  color: #e2e8f0;
+}
+
+/* Calendar Arrow Circle */
+.cal-arrow-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--accent, #7c3aed);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 8px;
-  background: var(--bg-card, #ffffff);
-  border: 1.5px solid var(--border-light, #e2e8f0);
-  border-radius: var(--radius-sm, 10px);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+}
+
+.cal-booking-inputs-bar:hover .cal-arrow-circle {
+  background: var(--accent, #7c3aed);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* Driver Rating Badge */
+.driver-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+  border-radius: 6px;
+}
+
+.driver-rating-badge i {
+  color: #f59e0b;
+}
+
+/* Input Icon Wrap */
+.input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-wrap .input-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  pointer-events: none;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+.input-icon-wrap input {
+  width: 100%;
+  padding-left: 36px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.input-icon-wrap input:focus + .input-icon,
+.input-icon-wrap:focus-within .input-icon {
+  color: var(--accent, #7c3aed);
+}
+
+/* Checkout Trust Row */
+.checkout-trust-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-mid, #475569);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: center;
-  user-select: none;
-  min-height: 42px;
+  color: #64748b;
 }
 
-.pay-method-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-subtle, rgba(124, 58, 237, 0.06));
-  transform: translateY(-1px);
+[data-theme="dark"] .checkout-trust-row {
+  border-top-color: #2e284a;
+  color: #94a3b8;
 }
 
-.pay-method-btn.active {
-  background: var(--primary-gradient, linear-gradient(135deg, #7c3aed, #9333ea));
-  border-color: transparent;
-  color: #ffffff !important;
-  box-shadow: 0 4px 12px var(--accent-glow, rgba(124, 58, 237, 0.25));
-  transform: translateY(-1px);
+.checkout-trust-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
-[data-theme="dark"] .pay-method-btn {
+.checkout-trust-row i {
+  color: var(--accent, #7c3aed);
+}
+
+/* Card Brand Badges */
+.card-brand-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-chip-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+[data-theme="dark"] .card-chip-tag {
   background: #1e1b2e;
-  border-color: #332d4a;
+  border-color: #3b3754;
   color: #cbd5e1;
 }
 
-[data-theme="dark"] .pay-method-btn:hover {
-  border-color: var(--accent);
-  color: #ffffff;
-  background: rgba(124, 58, 237, 0.15);
+/* Custom Sleek Scrollbar for Modal */
+.modal::-webkit-scrollbar {
+  width: 7px;
 }
 
-[data-theme="dark"] .pay-method-btn.active {
-  background: var(--primary-gradient);
-  border-color: transparent;
-  color: #ffffff !important;
-  box-shadow: 0 4px 16px var(--accent-glow);
+.modal::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.receipt {
-  font-family: inherit;
-  border: 1px dashed #cbd5e1;
-  padding: 20px;
-  border-radius: var(--radius-md);
-  background: #f8fafc;
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 10px;
 }
 
-.receipt-row {
+.modal::-webkit-scrollbar-thumb:hover {
+  background: var(--accent, #7c3aed);
+}
+
+/* Vehicle Description Callout */
+.vehicle-desc-callout {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  padding: 5px 0;
-  color: var(--text-mid);
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-left: 3px solid var(--accent, #7c3aed);
+  border-radius: 4px 10px 10px 4px;
+  margin: 14px 0;
 }
 
-.receipt-total {
-  font-weight: 800;
-  font-size: 1.15rem;
-  color: var(--accent);
-  padding-top: 10px;
-  border-top: 1px solid #ede9fe;
-  margin-top: 6px;
+[data-theme="dark"] .vehicle-desc-callout {
+  background: #181926;
+  border-left-color: var(--accent, #7c3aed);
 }
 
-.renter-fillup-card {
-  background: var(--bg-card, #ffffff);
-  border: 1.5px solid #e2e8f0;
-  border-radius: var(--radius-md, 12px);
-  padding: 16px;
+.desc-quote-icon {
+  color: var(--accent, #7c3aed);
+  font-size: 0.9rem;
+  opacity: 0.6;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.desc-text {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--text-mid, #475569);
+}
+
+/* Specs Modern 6-Tile Grid */
+.specs-modern-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 600px) {
+  .specs-modern-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.spec-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1.5px solid #ede9fe;
+  border-radius: var(--radius-md, 12px);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .spec-tile {
+  background: #181926;
+  border-color: #2e284a;
+}
+
+.spec-tile:hover {
+  border-color: #c4b5fd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+}
+
+.spec-tile-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.09);
+  color: var(--accent, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.spec-tile-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.spec-tile-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  margin-bottom: 1px;
+}
+
+.spec-tile-val {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-accent {
+  color: var(--accent, #7c3aed) !important;
+}
+
+.text-success {
+  color: #059669 !important;
+}
+
+.text-amber {
+  color: #d97706 !important;
+}
+
+.step-action-bar, .step-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(139, 92, 246, 0.12);
+}
+
+.btn-lg {
+  padding: 13px 24px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* ═══ STEP 2 & 3: Section Cards ═══ */
+.booking-section-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 14px);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .booking-section-card {
+  background: #181926;
+  border-color: #2e284a;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+[data-theme="dark"] .section-card-header {
+  border-bottom-color: #262438;
+}
+
+.section-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  flex-shrink: 0;
+}
+
+.section-card-title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+}
+
+.section-card-sub {
+  font-size: 0.72rem;
+  color: var(--text-mid, #64748b);
+}
+
+.billing-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .billing-method-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.clean-select, .clean-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: var(--text-hi, #0f172a);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.clean-select:focus, .clean-input:focus {
+  outline: none;
+  border-color: var(--accent, #7c3aed);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+[data-theme="dark"] .clean-select, [data-theme="dark"] .clean-input {
+  background: #13121f;
+  border-color: #3b3754;
+  color: #f1f5f9;
+}
+
+/* System Driver Card Overhaul */
+.system-driver-card {
+  background: #fdfcff;
+  border: 1.5px solid #ede9fe;
+  border-radius: var(--radius-md, 14px);
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .system-driver-card {
+  background: #181926;
+  border-color: #2e284a;
+}
+
+.driver-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.driver-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.system-driver-title {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+  margin: 0;
+}
+
+.driver-rate-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent, #7c3aed);
+  border-radius: 6px;
+}
+
+.system-driver-desc {
+  font-size: 0.78rem;
+  color: var(--text-mid, #64748b);
+  line-height: 1.45;
+  margin: 4px 0 0 0;
+}
+
+.system-driver-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid rgba(139, 92, 246, 0.25);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent, #7c3aed);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.system-driver-checkbox-label:hover {
+  background: #fbf9ff;
+  border-color: var(--accent, #7c3aed);
+}
+
+[data-theme="dark"] .system-driver-checkbox-label {
+  background: #1f1d30;
+}
+
+.system-driver-moto-note {
+  margin-top: 8px;
+  font-size: 0.74rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ═══ STEP 3: Pricing & Checkout ═══ */
+.renter-fillup-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 14px);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .renter-fillup-card {
+  background: #181926;
+  border-color: #2e284a;
 }
 
 .renter-fillup-header {
@@ -351,6 +944,10 @@
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid #f1f5f9;
+}
+
+[data-theme="dark"] .renter-fillup-header {
+  border-bottom-color: #262438;
 }
 
 .renter-fillup-icon {
@@ -392,148 +989,355 @@
   margin-top: 4px;
 }
 
-[data-theme="dark"] .renter-fillup-card {
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(51, 65, 85, 0.8);
-}
-
-[data-theme="dark"] .renter-fillup-header {
-  border-bottom-color: rgba(51, 65, 85, 0.6);
-}
-
 [data-theme="dark"] .renter-verify-badge {
   background: rgba(6, 78, 59, 0.3);
   border-color: rgba(16, 185, 129, 0.3);
   color: #a7f3d0;
 }
 
-/* ═══ Payment Timing Selection (Pay Now vs Pay Later) ═══ */
-.pay-mode-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.price-breakdown-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 14px);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .price-breakdown-card {
+  background: #181926;
+  border-color: #2e284a;
+}
+
+.price-breakdown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-@media (max-width: 520px) {
-  .pay-mode-grid {
-    grid-template-columns: 1fr;
-  }
+[data-theme="dark"] .price-breakdown-header {
+  border-bottom-color: #262438;
 }
 
-.pay-mode-card {
-  background: var(--bg-card, #ffffff);
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 13px 12px;
-  cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.pay-mode-card:hover {
-  border-color: #c4b5fd;
-  background: #faf7fd;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.08);
-}
-
-.pay-mode-card.active {
-  border-color: var(--accent);
-  background: #f5f3ff;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.16);
-}
-
-.pay-mode-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.pay-mode-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  padding: 3px 8px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.pay-mode-badge.badge-fast {
-  background: rgba(124, 58, 237, 0.12);
-  color: var(--accent);
-}
-
-.pay-mode-badge.badge-cash {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.pay-mode-icon {
-  font-size: 1rem;
-  color: #94a3b8;
-  transition: all 0.2s ease;
-}
-
-.pay-mode-card.active .pay-mode-icon {
-  color: var(--accent);
-  transform: scale(1.1);
-}
-
-.pay-mode-title {
+.price-breakdown-title {
+  margin: 0;
   font-size: 0.94rem;
   font-weight: 800;
   color: var(--text-hi, #0f172a);
-  margin-bottom: 3px;
 }
 
-.pay-mode-card.active .pay-mode-title {
-  color: var(--accent);
+.price-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #f1f5f9;
 }
 
-.pay-mode-desc {
-  font-size: 0.72rem;
+[data-theme="dark"] .price-item {
+  border-bottom-color: #262438;
+}
+
+.price-item:last-child {
+  border-bottom: none;
+}
+
+.price-item-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-hi, #0f172a);
+}
+
+.price-item-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.price-item-val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-hi, #0f172a);
+}
+
+.badge-success-soft {
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.price-item.deposit-row {
+  background: #fffbeb;
+  margin: 4px -8px;
+  padding: 8px 8px;
+  border-radius: 8px;
+  border-bottom: none;
+}
+
+[data-theme="dark"] .price-item.deposit-row {
+  background: rgba(217, 119, 6, 0.12);
+}
+
+.deposit-val {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.deposit-val small {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .deposit-val {
+  color: #fcd34d;
+}
+
+.price-item.total-row {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 2px solid var(--accent, #7c3aed);
+  border-bottom: none;
+}
+
+.total-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+}
+
+.total-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.price-item.total-row .total-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+}
+
+/* Guarantee Box */
+.guarantee-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-sm, 10px);
+  font-size: 0.78rem;
+  color: #065f46;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+[data-theme="dark"] .guarantee-box {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.guarantee-icon {
+  color: #059669;
+  font-size: 1.1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Complete Payment Card Overhaul */
+.complete-payment-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 14px);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .complete-payment-card {
+  background: #181926;
+  border-color: #2e284a;
+}
+
+.payment-card-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+[data-theme="dark"] .payment-card-top-bar {
+  border-bottom-color: #262438;
+}
+
+.complete-payment-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--accent, #7c3aed);
+  text-transform: uppercase;
+}
+
+.complete-payment-title {
+  margin: 2px 0 0 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+}
+
+.payment-amount-pill {
+  text-align: right;
+  padding: 6px 14px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 10px;
+}
+
+.amount-pill-sub {
+  display: block;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.amount-pill-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+}
+
+.pay-detail-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 14px;
+}
+
+[data-theme="dark"] .pay-detail-panel {
+  background: #141320;
+  border-color: #2e284a;
+}
+
+.pay-detail-heading {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-hi, #0f172a);
+  margin-bottom: 12px;
+}
+
+.pay-qr-wrap {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 14px;
+  display: inline-block;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+  border: 2px solid #ede9fe;
+  margin: 10px 0;
+}
+
+.pay-qr-wrap img {
+  width: 145px;
+  height: 145px;
+  display: block;
+}
+
+.pay-account-info {
+  margin: 8px 0;
+}
+
+.pay-account-name {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--text-hi, #0f172a);
+}
+
+.pay-account-num {
+  font-family: ui-monospace, monospace;
+  font-size: 0.84rem;
+  color: var(--accent, #7c3aed);
+  font-weight: 700;
+}
+
+.pay-amount-line {
+  font-size: 0.86rem;
   color: var(--text-mid, #64748b);
-  line-height: 1.35;
+  margin-top: 6px;
 }
 
-[data-theme="dark"] .pay-mode-card {
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(51, 65, 85, 0.8);
+.pay-amount-line strong {
+  color: var(--accent, #7c3aed);
+  font-size: 1.05rem;
 }
 
-[data-theme="dark"] .pay-mode-card:hover {
-  border-color: #8b5cf6;
-  background: rgba(30, 41, 59, 0.95);
+.proof-upload-box {
+  background: #ffffff;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-[data-theme="dark"] .pay-mode-card.active {
-  border-color: #8b5cf6;
-  background: rgba(124, 58, 237, 0.18);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25);
+.proof-upload-box:hover {
+  border-color: var(--accent, #7c3aed);
+  background: rgba(124, 58, 237, 0.04);
 }
 
-[data-theme="dark"] .pay-mode-title {
-  color: #f8fafc;
+[data-theme="dark"] .proof-upload-box {
+  background: #1e1b2e;
+  border-color: #3b3754;
 }
 
-[data-theme="dark"] .pay-mode-desc {
-  color: #94a3b8;
+.proof-preview-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 8px;
 }
 
-[data-theme="dark"] .pay-mode-badge.badge-cash {
-  background: rgba(16, 185, 129, 0.18);
-  color: #34d399;
+.proof-preview-img {
+  max-width: 160px;
+  max-height: 120px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
+
+.proof-remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.72rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.proof-remove-btn:hover {
+  transform: scale(1.15);
+}
+
+
 
 /* ==========================================================================
    Venue Express Pickup QR Pass Styles
@@ -675,6 +1479,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.cal-date-field {
+  font-family: var(--font-body, inherit);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2A2340;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  max-width: 145px;
+  color-scheme: light;
 }
 
 .cal-date-text {
@@ -842,20 +1662,19 @@
   opacity: 0.55;
 }
 
-/* Available Dates - Colored rounded blocks according to price tier */
-.cal-day-price-low {
-  background: #71deb5;
-  color: #0f172a;
+/* Available Dates - Clean modern car rental palette */
+.cal-day-price {
+  background: transparent;
+  color: var(--text-hi);
+  border: 1px solid transparent;
+  font-weight: 600;
 }
-
-.cal-day-price-mid {
-  background: #fbc072;
-  color: #0f172a;
-}
-
-.cal-day-price-high {
-  background: #fda4af;
-  color: #0f172a;
+.cal-day-price:hover {
+  background: var(--accent-light);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  transform: scale(1.04);
+  z-index: 5;
 }
 
 /* Hover effects */
@@ -1234,6 +2053,11 @@
   border-color: #94a3b8;
 }
 
+[data-theme="dark"] .cal-date-field {
+  color: #f5f2fb;
+  color-scheme: dark;
+}
+
 [data-theme="dark"] .cal-date-text {
   color: #f8fafc;
 }
@@ -1559,3 +2383,77 @@
   border-color: rgba(168, 85, 247, 0.2);
 }
 
+
+
+/* Quick Bar Duration Selector */
+.cal-quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.cal-quick-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cal-quick-pill {
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-surface);
+  color: var(--text-hi);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.cal-quick-pill:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+[data-theme="dark"] .cal-quick-pill {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+.cal-real-date-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.compact-spec-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.spec-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+[data-theme="dark"] .spec-pill {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.spec-pill i {
+  color: var(--accent);
+  font-size: 0.85rem;
+}

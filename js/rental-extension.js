@@ -101,13 +101,14 @@ export async function openRentalExtensionModal(bookingId = null) {
 
   // Fetch or find candidate active bookings
   try {
-    const local = getLocalBookings().filter(b => ['approved', 'active', 'reserved'].includes(b.status));
+    const validExtStatuses = ['approved', 'active', 'reserved', 'confirmed', 'vehicle_released', 'cash_on_pickup'];
+    const local = [...getLocalBookings(), ...(state.bookings || [])].filter(b => validExtStatuses.includes(b.status));
     let dbBookings = [];
     if (supabase) {
       const { data } = await supabase
         .from('bookings')
         .select('*, vehicles(id, name, plate_number, image_url, category_id, categories(daily_rate)), profiles(full_name, phone)')
-        .in('status', ['approved', 'active', 'reserved'])
+        .in('status', ['approved', 'active', 'reserved', 'confirmed', 'vehicle_released', 'cash_on_pickup'])
         .order('created_at', { ascending: false });
       if (data) dbBookings = data;
     }
@@ -123,14 +124,14 @@ export async function openRentalExtensionModal(bookingId = null) {
     allActiveBookings = Array.from(mergedMap.values());
   } catch (e) {
     console.warn('Error loading active bookings:', e);
-    allActiveBookings = getLocalBookings().filter(b => ['approved', 'active', 'reserved'].includes(b.status));
+    allActiveBookings = getLocalBookings().filter(b => ['approved', 'active', 'reserved', 'confirmed', 'vehicle_released', 'cash_on_pickup'].includes(b.status));
   }
 
   if (bookingId) {
     targetBooking = allActiveBookings.find(b => String(b.id) === String(bookingId));
     if (!targetBooking) {
       // Direct lookup in active customer bookings or local storage
-      targetBooking = getLocalBookings().find(b => String(b.id) === String(bookingId));
+      targetBooking = getLocalBookings().find(b => String(b.id) === String(bookingId)) || (state.bookings || []).find(b => String(b.id) === String(bookingId));
     }
   } else if (allActiveBookings.length > 0) {
     targetBooking = allActiveBookings[0];

@@ -622,9 +622,9 @@ export function renderBrowse(view) {
               <label class="filter-label"><i class="fa-solid fa-star"></i> Minimum Rating</label>
               <select id="filterRating" class="filter-select">
                 <option value="all" ${browseRatingFilter === 'all' ? 'selected' : ''}>All</option>
-                <option value="4.5" ${browseRatingFilter === '4.5' ? 'selected' : ''}>4.5+ ⭐</option>
-                <option value="4.0" ${browseRatingFilter === '4.0' ? 'selected' : ''}>4.0+ ⭐</option>
-                <option value="3.5" ${browseRatingFilter === '3.5' ? 'selected' : ''}>3.5+ ⭐</option>
+                <option value="4.5" ${browseRatingFilter === '4.5' ? 'selected' : ''}>4.5+ Stars</option>
+                <option value="4.0" ${browseRatingFilter === '4.0' ? 'selected' : ''}>4.0+ Stars</option>
+                <option value="3.5" ${browseRatingFilter === '3.5' ? 'selected' : ''}>3.5+ Stars</option>
               </select>
             </div>
 

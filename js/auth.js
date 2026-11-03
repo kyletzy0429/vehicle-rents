@@ -570,7 +570,7 @@ export function renderLandingPage() {
 export function openLandingDealPrompt(vehName = '') {
   const modal = openModal(`
     <div class="clean-deal-prompt">
-      <button type="button" class="clean-prompt-close" id="promptCloseBtn" aria-label="Close">✕</button>
+      <button type="button" class="clean-prompt-close" id="promptCloseBtn" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       
       <div class="clean-prompt-header">
         <div class="clean-prompt-tag"><i class="fa-solid fa-car-side"></i> Vehicle Reservation</div>

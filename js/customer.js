@@ -62,15 +62,15 @@ export async function renderCustomerProfile(view) {
             ${initials}
           </div>
           <div style="flex:1;">
-            <h3 style="font-size:1.25rem;font-weight:800;color:#0f172a;margin-bottom:2px;">${p.full_name || 'Customer Account'}</h3>
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#64748b;flex-wrap:wrap;">
+            <h3 style="font-size:1.25rem;font-weight:800;color:var(--text-hi);margin-bottom:2px;">${p.full_name || 'Customer Account'}</h3>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-mid);flex-wrap:wrap;">
               <span>${state.user?.email || '—'}</span>
             </div>
           </div>
         </div>
 
         <form id="profileForm">
-          <h4 style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
             Personal Information
           </h4>
           <div class="detail-grid" style="margin-bottom:18px;">
@@ -84,22 +84,22 @@ export async function renderCustomerProfile(view) {
             </div>
           </div>
 
-          <h4 style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
             Driver's License Information
           </h4>
           <div class="detail-grid" style="margin-bottom:18px;">
             <div class="field">
-              <label>Driver's License Number <span style="font-weight:normal;color:#64748b;font-size:0.75rem;">(Optional — verify in-person at meetup)</span></label>
+              <label>Driver's License Number <span style="font-weight:normal;color:var(--text-mid);font-size:0.75rem;">(Optional — verify in-person at meetup)</span></label>
               <input type="text" id="profLicense" value="${p.license_number ?? ''}" placeholder="Optional (e.g. N02-18-984012)" />
             </div>
             <div class="field">
-              <label>License Expiry Date <span style="font-weight:normal;color:#64748b;font-size:0.75rem;">(Optional)</span></label>
+              <label>License Expiry Date <span style="font-weight:normal;color:var(--text-mid);font-size:0.75rem;">(Optional)</span></label>
               <input type="date" id="profLicenseExpiry" value="${p.license_expiry ?? ''}" />
             </div>
           </div>
 
-          <h4 style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            Driver's License Photo <span style="font-weight:normal;color:#64748b;font-size:0.75rem;">(Optional)</span>
+          <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-hi);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            Driver's License Photo <span style="font-weight:normal;color:var(--text-mid);font-size:0.75rem;">(Optional)</span>
           </h4>
           <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
             <div id="licensePreviewBox" style="margin-bottom:12px;">
@@ -110,8 +110,8 @@ export async function renderCustomerProfile(view) {
                 </div>
               ` : `
                 <div style="padding:16px 10px;">
-                  <div style="font-size:0.88rem;font-weight:700;color:#334155;">Upload Driver's License Card Photo</div>
-                  <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Select clear photo of your Driver's License ID (JPG, PNG, WEBP)</div>
+                  <div style="font-size:0.88rem;font-weight:700;color:var(--text-hi);">Upload Driver's License Card Photo</div>
+                  <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">Select clear photo of your Driver's License ID (JPG, PNG, WEBP)</div>
                 </div>
               `}
             </div>
@@ -250,48 +250,50 @@ export async function renderMyBookings(view) {
         </div>
       </div>
 
-      ${returnDueBooking ? `
-        <div class="return-today-alert-card" style="background:${isOverdue ? '#fff8f8' : '#fffbeb'};border:1px solid ${isOverdue ? '#fecdd3' : '#fde68a'};border-left:5px solid ${isOverdue ? '#e11d48' : '#d97706'};border-radius:14px;padding:16px 20px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 4px 16px rgba(0,0,0,0.03);flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:260px;">
-            <div style="width:44px;height:44px;background:${isOverdue ? '#ffe4e6' : '#fef3c7'};color:${isOverdue ? '#e11d48' : '#d97706'};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">
-              <i class="fa-solid ${isOverdue ? 'fa-triangle-exclamation' : 'fa-bell'}"></i>
+      <div class="search-unified-card bookings-unified-card">
+        ${returnDueBooking ? `
+          <div class="return-today-alert-card bookings-unified-alert ${isOverdue ? 'is-overdue' : 'is-due-today'}">
+            <div class="bookings-alert-left">
+              <div class="bookings-alert-icon">
+                <i class="fa-solid ${isOverdue ? 'fa-triangle-exclamation' : 'fa-bell'}"></i>
+              </div>
+              <div class="bookings-alert-body">
+                <div class="bookings-alert-title-row">
+                  <span class="bookings-alert-title">${isOverdue ? 'Rental Return Overdue' : 'Vehicle Return Due Today'}</span>
+                  <span class="bookings-alert-badge">
+                    <i class="fa-regular fa-clock"></i> 12:00 PM Handover
+                  </span>
+                </div>
+                <div class="bookings-alert-desc">
+                  Your <strong>${returnDueBooking.vehicles?.name || 'Rental'}</strong> is scheduled for return at <strong>123 PPC Main Branch Venue</strong>. Please ensure fuel matches pickup level.
+                </div>
+              </div>
             </div>
-            <div>
-              <div style="font-weight:700;color:${isOverdue ? '#9f1239' : '#92400e'};font-size:0.98rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
-                <span>${isOverdue ? 'Rental Return Overdue' : 'Vehicle Return Due Today'}</span>
-                <span style="font-size:0.72rem;background:${isOverdue ? '#ffe4e6' : '#fef3c7'};color:${isOverdue ? '#9f1239' : '#92400e'};border:1px solid ${isOverdue ? '#fecdd3' : '#fde68a'};padding:2px 8px;border-radius:20px;font-weight:700;">
-                  <i class="fa-regular fa-clock" style="margin-right:3px;"></i>12:00 PM Handover
-                </span>
-              </div>
-              <div style="font-size:0.84rem;color:${isOverdue ? '#881337' : '#78350f'};line-height:1.45;">
-                Your <strong>${returnDueBooking.vehicles?.name || 'Rental'}</strong> is scheduled for return at <strong>123 PPC Main Branch Venue</strong>. Please ensure fuel matches pickup level.
-              </div>
+            <div class="bookings-alert-actions">
+              <button type="button" class="btn btn-sm bookings-alert-btn" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${returnDueBooking.id}')">
+                <i class="fa-solid fa-clock-rotate-left"></i> Request Extension
+              </button>
             </div>
           </div>
-          <div style="display:flex;gap:8px;flex-shrink:0;">
-            <button type="button" class="btn btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${returnDueBooking.id}')" style="background:${isOverdue ? '#e11d48' : '#d97706'};color:#ffffff;border:none;border-radius:8px;font-weight:600;padding:8px 16px;box-shadow:0 3px 10px ${isOverdue ? 'rgba(225,29,72,0.25)' : 'rgba(217,119,6,0.25)'};cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;">
-              <i class="fa-solid fa-clock-rotate-left"></i> Request Extension
-            </button>
-          </div>
-        </div>
-      ` : ''}
+        ` : ''}
 
-      <div class="booking-filter-tabs">
-        <button type="button" class="booking-tab-btn active" data-bfilter="all">
-          <i class="fa-solid fa-list-ul"></i> All Bookings <span class="booking-tab-badge">${bookings.length}</span>
-        </button>
-        <button type="button" class="booking-tab-btn" data-bfilter="pending">
-          <i class="fa-solid fa-hourglass-half"></i> Pending <span class="booking-tab-badge">${pendingCount}</span>
-        </button>
-        <button type="button" class="booking-tab-btn" data-bfilter="active">
-          <i class="fa-solid fa-car"></i> Active &amp; Approved <span class="booking-tab-badge">${activeCount}</span>
-        </button>
-        <button type="button" class="booking-tab-btn" data-bfilter="completed">
-          <i class="fa-solid fa-circle-check"></i> Completed <span class="booking-tab-badge">${completedCount}</span>
-        </button>
-        <button type="button" class="booking-tab-btn" data-bfilter="cancelled">
-          <i class="fa-solid fa-ban"></i> Cancelled <span class="booking-tab-badge">${cancelledCount}</span>
-        </button>
+        <div class="booking-filter-tabs ${returnDueBooking ? 'has-top-alert' : ''}">
+          <button type="button" class="booking-tab-btn active" data-bfilter="all">
+            <i class="fa-solid fa-list-ul"></i> All Bookings <span class="booking-tab-badge">${bookings.length}</span>
+          </button>
+          <button type="button" class="booking-tab-btn" data-bfilter="pending">
+            <i class="fa-solid fa-hourglass-half"></i> Pending <span class="booking-tab-badge">${pendingCount}</span>
+          </button>
+          <button type="button" class="booking-tab-btn" data-bfilter="active">
+            <i class="fa-solid fa-car"></i> Active &amp; Approved <span class="booking-tab-badge">${activeCount}</span>
+          </button>
+          <button type="button" class="booking-tab-btn" data-bfilter="completed">
+            <i class="fa-solid fa-circle-check"></i> Completed <span class="booking-tab-badge">${completedCount}</span>
+          </button>
+          <button type="button" class="booking-tab-btn" data-bfilter="cancelled">
+            <i class="fa-solid fa-ban"></i> Cancelled <span class="booking-tab-badge">${cancelledCount}</span>
+          </button>
+        </div>
       </div>
 
       <div class="row-list" id="bookingList">
@@ -353,12 +355,12 @@ export async function renderMyBookings(view) {
       if (!filtered.length) {
         listEl.innerHTML = `
           <div class="empty-box" style="text-align:center;padding:48px 20px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:14px;">
-            <div style="width:48px;height:48px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#64748b;font-size:1.25rem;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--text-mid);font-size:1.25rem;">
               <i class="fa-solid fa-car-side"></i>
             </div>
             <h4 style="font-size:0.98rem;font-weight:700;color:var(--text-hi);margin-bottom:4px;">No ${filterKey === 'all' ? '' : filterKey} bookings</h4>
             <p style="font-size:0.83rem;color:var(--text-mid);margin-bottom:16px;">There are no bookings under this filter at the moment.</p>
-            <button type="button" class="btn btn-primary btn-sm" onclick="window.switchTab && window.switchTab('vehicles')">
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.switchTab ? window.switchTab('browse') : (state.tab = 'browse', window.renderShell && window.renderShell())">
               <i class="fa-solid fa-compass"></i> Browse Available Vehicles
             </button>
           </div>
@@ -412,6 +414,7 @@ export function customerBookingRow(b) {
       <div style="font-size:0.78rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:4px;">
         <i class="fa-solid fa-clock"></i> Awaiting Staff Review
       </div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-clock-rotate-left"></i> Extend Rental</button>
       <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt"></i> View Pass / Receipt</button>
       <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
     `;
@@ -419,7 +422,7 @@ export function customerBookingRow(b) {
     badgeHTML = `<span class="badge badge-cash_on_pickup"><i class="fa-solid fa-money-bill-wave" style="margin-right:4px;"></i> Cash on Pickup</span>`;
     actions = `
       <div style="font-size:0.78rem;color:#166534;font-weight:700;display:flex;align-items:center;gap:4px;">
-        <i class="fa-solid fa-store"></i> Pay at Counter Upon Pickup
+        <i class="fa-solid fa-handshake"></i> Pay Cash via Meetup
       </div>
       <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt"></i> View Pass / Receipt</button>
       <button type="button" class="btn btn-outline-danger btn-sm" data-cancel-id="${b.id}" onclick="window.cancelCustomerBooking && window.cancelCustomerBooking('${b.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
@@ -430,6 +433,7 @@ export function customerBookingRow(b) {
       <div style="font-size:0.75rem;color:#059669;font-weight:700;display:flex;align-items:center;gap:4px;">
         <i class="fa-solid fa-car-side"></i> Vehicle Ready for Release
       </div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="window.openRentalExtensionModal && window.openRentalExtensionModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-clock-rotate-left"></i> Extend Rental</button>
       <button type="button" class="btn btn-ghost btn-sm" data-receipt-id="${b.id}" onclick="window.openPaidReceiptModal && window.openPaidReceiptModal('${b.id}')" style="border:1px solid #cbd5e1;"><i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Receipt &amp; QR Pass</button>
     `;
   } else if (b.status === 'vehicle_released' || b.status === 'active') {
@@ -604,17 +608,36 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);">${isPayingBalance ? 'Pay Remaining Balance' : 'Complete Booking Payment'}</h3>
         <span class="muted" style="font-size:0.78rem;">${vehicleName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
       </div>
-      <div class="modal-close" id="mClose">✕</div>
+      <div class="modal-close" id="mClose"><i class="fa-solid fa-xmark"></i></div>
     </div>
 
     ${!isPayingBalance ? `
-      <div class="field" style="margin-bottom:12px;">
-        <label>Payment structure</label>
-        <select id="modalPayStructureSelect" class="clean-select">
-          <option value="100" ${selectedPct === 100 ? 'selected' : ''}>Pay in Full (100%) — Instant zero-balance reservation</option>
-          <option value="20" ${selectedPct === 20 ? 'selected' : ''}>Downpayment (20%) — Balance upon vehicle pickup</option>
-          <option value="30" ${selectedPct === 30 ? 'selected' : ''}>Downpayment (30%) — Balance upon vehicle pickup</option>
-          <option value="50" ${selectedPct === 50 ? 'selected' : ''}>Downpayment (50%) — Balance upon vehicle pickup</option>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Payment Structure</label>
+        <div class="pay-structure-selector" id="modalPayStructureSelector">
+          <div class="selector-opt-card ${selectedPct === 100 ? 'active' : ''}" data-pct="100">
+            <div class="opt-radio"><i class="fa-solid ${selectedPct === 100 ? 'fa-circle-check' : 'fa-circle'}"></i></div>
+            <div class="opt-content">
+              <div class="opt-top">
+                <strong>Pay in Full (100%)</strong>
+                <span class="opt-chip opt-chip-green">Recommended</span>
+              </div>
+              <span class="opt-sub">Instant zero-balance reservation</span>
+            </div>
+          </div>
+          <div class="selector-opt-card ${selectedPct === 20 ? 'active' : ''}" data-pct="20">
+            <div class="opt-radio"><i class="fa-solid ${selectedPct === 20 ? 'fa-circle-check' : 'fa-circle'}"></i></div>
+            <div class="opt-content">
+              <div class="opt-top">
+                <strong>Downpayment (20%)</strong>
+              </div>
+              <span class="opt-sub">Pay 20% today · Balance upon vehicle meetup</span>
+            </div>
+          </div>
+        </div>
+        <select id="modalPayStructureSelect" class="clean-select" style="display:none;">
+          <option value="100" ${selectedPct === 100 ? 'selected' : ''}>Pay in Full (100%)</option>
+          <option value="20" ${selectedPct === 20 ? 'selected' : ''}>Downpayment (20%)</option>
         </select>
       </div>
     ` : ''}
@@ -632,12 +655,50 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     </div>
 
     <div class="field" style="margin-bottom:14px;">
-      <label>Payment method</label>
-      <select id="modalPaymentMethodSelect" class="clean-select">
-        <option value="card">Card</option>
-        <option value="gcash">GCash</option>
-        <option value="bank_qr">Bank transfer</option>
-        <option value="cash">Via meetup</option>
+      <label>Payment Method</label>
+      <div class="payment-methods-grid" id="modalPaymentMethodGrid">
+        <div class="pay-method-card ${selectedMethod === 'card' ? 'active' : ''}" data-method="card">
+          <div class="pm-radio"><i class="fa-solid ${selectedMethod === 'card' ? 'fa-circle-check' : 'fa-circle'}"></i></div>
+          <div class="pm-icon pm-card-icon"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="pm-info">
+            <strong class="pm-name">Card</strong>
+            <span class="pm-desc">Debit or Credit Card</span>
+          </div>
+        </div>
+
+        <div class="pay-method-card ${selectedMethod === 'gcash' ? 'active' : ''}" data-method="gcash">
+          <div class="pm-radio"><i class="fa-solid ${selectedMethod === 'gcash' ? 'fa-circle-check' : 'fa-circle'}"></i></div>
+          <div class="pm-icon pm-gcash-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+          <div class="pm-info">
+            <strong class="pm-name">GCash</strong>
+            <span class="pm-desc">Instant QR Scan</span>
+          </div>
+          <span class="pm-tag">Instant</span>
+        </div>
+
+        <div class="pay-method-card ${selectedMethod === 'bank_qr' ? 'active' : ''}" data-method="bank_qr">
+          <div class="pm-radio"><i class="fa-solid ${selectedMethod === 'bank_qr' ? 'fa-circle-check' : 'fa-circle'}"></i></div>
+          <div class="pm-icon pm-bank-icon"><i class="fa-solid fa-building-columns"></i></div>
+          <div class="pm-info">
+            <strong class="pm-name">Bank Transfer</strong>
+            <span class="pm-desc">QR Ph &amp; InstaPay</span>
+          </div>
+        </div>
+
+        <div class="pay-method-card ${selectedMethod === 'cash' ? 'active' : ''}" data-method="cash">
+          <div class="pm-radio"><i class="fa-solid ${selectedMethod === 'cash' ? 'fa-circle-check' : 'fa-circle'}"></i></div>
+          <div class="pm-icon pm-cash-icon"><i class="fa-solid fa-handshake"></i></div>
+          <div class="pm-info">
+            <strong class="pm-name">Via Meetup</strong>
+            <span class="pm-desc">Pay Cash on Handover</span>
+          </div>
+        </div>
+      </div>
+      <select id="modalPaymentMethodSelect" class="clean-select" style="display:none;">
+        <option value="card" ${selectedMethod === 'card' ? 'selected' : ''}>Card</option>
+        <option value="gcash" ${selectedMethod === 'gcash' ? 'selected' : ''}>GCash</option>
+        <option value="bank_qr" ${selectedMethod === 'bank_qr' ? 'selected' : ''}>Bank transfer</option>
+        <option value="cash" ${selectedMethod === 'cash' ? 'selected' : ''}>Via meetup</option>
       </select>
     </div>
 
@@ -672,6 +733,22 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         }
 
         renderPaymentMethodContent();
+      });
+
+      // Bind interactive structure cards in customer modal
+      modal.querySelectorAll('#modalPayStructureSelector .selector-opt-card').forEach(card => {
+        card.addEventListener('click', () => {
+          modal.querySelectorAll('#modalPayStructureSelector .selector-opt-card').forEach(c => {
+            c.classList.remove('active');
+            const ic = c.querySelector('.opt-radio i');
+            if (ic) ic.className = 'fa-regular fa-circle';
+          });
+          card.classList.add('active');
+          const activeIc = card.querySelector('.opt-radio i');
+          if (activeIc) activeIc.className = 'fa-solid fa-circle-check';
+          structureSelect.value = card.dataset.pct;
+          structureSelect.dispatchEvent(new Event('change'));
+        });
       });
     }
   }
@@ -726,7 +803,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
             ${modalProofDataUrl ? `
               <div class="proof-preview-wrap">
                 <img src="${modalProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
-                <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image">✕</button>
+                <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div style="font-size:0.75rem;color:var(--text-hi);font-weight:600;">Proof of payment attached</div>
             ` : `
@@ -742,14 +819,21 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       container.innerHTML = `
         <div class="pay-detail-panel" style="text-align:center;">
           <div class="pay-detail-heading" style="text-align:center;">Scan via Banking App (QR Ph / InstaPay)</div>
-          <div style="margin-bottom:10px;text-align:left;">
-            <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);margin-bottom:4px;display:block;">Select Banking App:</label>
-            <select id="bankSelect" class="clean-select">
-              <option value="Maya">Maya / Smart Padala</option>
-              <option value="BDO">BDO Unibank</option>
-              <option value="BPI">BPI Online</option>
-              <option value="UnionBank">UnionBank of the Philippines</option>
-              <option value="Metrobank">Metrobank Direct</option>
+          <div style="margin-bottom:12px;text-align:left;">
+            <label style="font-size:0.74rem;font-weight:700;color:var(--text-mid);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.04em;">Select Banking App:</label>
+            <div class="bank-pill-group" id="custBankPillGroup">
+              <button type="button" class="bank-pill active" data-bank="Maya"><i class="fa-solid fa-wallet"></i> Maya</button>
+              <button type="button" class="bank-pill" data-bank="BDO"><i class="fa-solid fa-building-columns"></i> BDO</button>
+              <button type="button" class="bank-pill" data-bank="BPI"><i class="fa-solid fa-building-columns"></i> BPI</button>
+              <button type="button" class="bank-pill" data-bank="UnionBank"><i class="fa-solid fa-building-columns"></i> UnionBank</button>
+              <button type="button" class="bank-pill" data-bank="Metrobank"><i class="fa-solid fa-building-columns"></i> Metrobank</button>
+            </div>
+            <select id="bankSelect" class="clean-select" style="display:none;">
+              <option value="Maya" selected>Maya</option>
+              <option value="BDO">BDO</option>
+              <option value="BPI">BPI</option>
+              <option value="UnionBank">UnionBank</option>
+              <option value="Metrobank">Metrobank</option>
             </select>
           </div>
           <div class="pay-qr-wrap">
@@ -771,7 +855,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
             ${modalProofDataUrl ? `
               <div class="proof-preview-wrap">
                 <img src="${modalProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
-                <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image">✕</button>
+                <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image"><i class="fa-solid fa-xmark"></i></button>
               </div>
               <div style="font-size:0.75rem;color:var(--text-hi);font-weight:600;">Proof of payment attached</div>
             ` : `
@@ -783,6 +867,16 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         </div>
       `;
       if (pBtn) pBtn.textContent = `Submit Payment (${fmtMoney(payNow)})`;
+
+      const bSelect = container.querySelector('#bankSelect');
+      container.querySelectorAll('.bank-pill').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          container.querySelectorAll('.bank-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (bSelect) bSelect.value = btn.dataset.bank;
+        });
+      });
     } else {
       container.innerHTML = `
         <div class="pay-detail-panel">
@@ -867,6 +961,22 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     methodSelect.addEventListener('change', () => {
       selectedMethod = methodSelect.value;
       renderPaymentMethodContent();
+    });
+
+    // Bind interactive payment method cards in customer modal
+    modal.querySelectorAll('#modalPaymentMethodGrid .pay-method-card').forEach(card => {
+      card.addEventListener('click', () => {
+        modal.querySelectorAll('#modalPaymentMethodGrid .pay-method-card').forEach(c => {
+          c.classList.remove('active');
+          const ic = c.querySelector('.pm-radio i');
+          if (ic) ic.className = 'fa-regular fa-circle';
+        });
+        card.classList.add('active');
+        const activeIc = card.querySelector('.pm-radio i');
+        if (activeIc) activeIc.className = 'fa-solid fa-circle-check';
+        methodSelect.value = card.dataset.method;
+        methodSelect.dispatchEvent(new Event('change'));
+      });
     });
   }
 
@@ -1062,16 +1172,16 @@ ISSUED AT: ${new Date().toLocaleString()}
 
   const modal = openModal(`
     <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
-      <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Payment Receipt &amp; Venue Pass</div>
+      <div style="font-weight:700;font-size:0.9rem;color:var(--text-mid);">Official Payment Receipt &amp; Venue Pass</div>
       <div class="modal-close" id="mClose" onclick="window.closeModal()">Close</div>
     </div>
     <div style="text-align:center;margin-bottom:16px;">
       <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
         <i class="fa-solid fa-circle-check" style="font-size:1.5rem;color:#fff;"></i>
       </div>
-      <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Payment Successful!</h2>
+      <h2 style="font-size:1.35rem;font-weight:800;color:var(--text-hi);margin-bottom:4px;">Payment Successful!</h2>
       <span class="badge badge-completed" style="font-size:0.75rem;">Paid via ${payMethod}</span>
-      <p class="muted" style="margin-top:6px;font-size:0.82rem;color:#64748b;">Ref / Transaction No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
+      <p class="muted" style="margin-top:6px;font-size:0.82rem;color:var(--text-mid);">Ref / Transaction No: <strong style="color:var(--text-hi);font-family:monospace;">${refCode}</strong></p>
     </div>
 
     <!-- Official Venue QR Check-In Pass -->
@@ -1087,53 +1197,53 @@ ISSUED AT: ${new Date().toLocaleString()}
         <img src="${qrImageUrl}" alt="Venue QR Pass" class="venue-qr-img" />
       </div>
 
-      <div style="font-weight:800;font-size:0.9rem;color:#0f172a;margin-bottom:4px;">
+      <div style="font-weight:800;font-size:0.9rem;color:var(--text-hi);margin-bottom:4px;">
         I-scan sa Venue para sa Mabilisang Pag-claim
       </div>
       <p class="venue-pass-instructions">
-        Ipakita ang QR code na ito sa venue counter (<strong style="color:var(--text-hi,#0f172a);">${comp.address || '123 PPC MAIN BRANCH VENUE'}</strong>). I-scan lamang ito ng staff gamit ang phone o scanner upang agad makita ang kumpletong detalye ng iyong booking.
+        Ipakita ang QR code na ito sa meetup / venue (<strong style="color:var(--text-hi,#0f172a);">${comp.address || '123 PPC MAIN BRANCH VENUE'}</strong>). I-scan lamang ito ng staff gamit ang phone o scanner upang agad makita ang kumpletong detalye ng iyong booking.
       </p>
 
       <!-- Scanned Details Preview Card -->
       <div style="margin-top:12px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;text-align:left;">
-        <div style="font-weight:700;font-size:0.78rem;color:#64748b;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-weight:700;font-size:0.78rem;color:var(--text-mid);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
           <span><i class="fa-solid fa-circle-info" style="color:var(--accent);margin-right:4px;"></i> QR Code Encoded Details</span>
           <span class="badge badge-completed" style="font-size:0.68rem;"><i class="fa-solid fa-shield-halved" style="margin-right:3px;"></i> Verified Pass</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:#1e293b;">
-          <div><span style="color:#64748b;">Customer:</span> <strong>${customerName}</strong></div>
-          <div><span style="color:#64748b;">Phone:</span> <strong>${customerPhone}</strong></div>
-          <div><span style="color:#64748b;">Vehicle:</span> <strong>${vehicleName}</strong></div>
-          <div><span style="color:#64748b;">Plate:</span> <strong>${plateNo}</strong></div>
-          <div><span style="color:#64748b;">Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
-          <div><span style="color:#64748b;">Duration:</span> <strong>${days} day(s)</strong></div>
-          <div><span style="color:#64748b;">Paid:</span> <strong style="color:#059669;">${fmtMoney(paidAmount)}</strong></div>
-          <div><span style="color:#64748b;">Status:</span> <strong style="color:${isFullPaid ? '#059669' : 'var(--accent)'};">${isFullPaid ? 'Fully Paid' : `Bal: ${fmtMoney(balDue)}`}</strong></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:var(--text-hi);">
+          <div><span style="color:var(--text-mid);">Customer:</span> <strong>${customerName}</strong></div>
+          <div><span style="color:var(--text-mid);">Phone:</span> <strong>${customerPhone}</strong></div>
+          <div><span style="color:var(--text-mid);">Vehicle:</span> <strong>${vehicleName}</strong></div>
+          <div><span style="color:var(--text-mid);">Plate:</span> <strong>${plateNo}</strong></div>
+          <div><span style="color:var(--text-mid);">Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
+          <div><span style="color:var(--text-mid);">Duration:</span> <strong>${days} day(s)</strong></div>
+          <div><span style="color:var(--text-mid);">Paid:</span> <strong style="color:#059669;">${fmtMoney(paidAmount)}</strong></div>
+          <div><span style="color:var(--text-mid);">Status:</span> <strong style="color:${isFullPaid ? '#059669' : 'var(--accent)'};">${isFullPaid ? 'Fully Paid' : `Bal: ${fmtMoney(balDue)}`}</strong></div>
         </div>
       </div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
       <i class="fa-solid fa-car" style="color:var(--accent);"></i> Reservation &amp; Vehicle Summary
     </h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:#64748b;">Customer</span><span style="font-weight:700;color:#0f172a;">${customerName}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Driver's License</span><span style="font-weight:700;color:#0f172a;">${customerLicense}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${vehicleName}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Category</span><span style="color:#0f172a;">${categoryName}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Plate Number</span><span style="color:#0f172a;">${plateNo}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Pickup Date</span><span style="color:#0f172a;font-weight:600;">${fmtDate(b.start_date)}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Return Date</span><span style="color:#0f172a;font-weight:600;">${fmtDate(b.end_date)}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Rental Period</span><span style="color:#0f172a;">${days} day(s)</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Fuel / AC</span><span style="color:#0f172a;">${fuelType} · ${hasAC ? 'With AC' : 'Non-AC'}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Customer</span><span style="font-weight:700;color:var(--text-hi);">${customerName}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Driver's License</span><span style="font-weight:700;color:var(--text-hi);">${customerLicense}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Vehicle</span><span style="font-weight:700;color:var(--text-hi);">${vehicleName}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Category</span><span style="color:var(--text-hi);">${categoryName}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Plate Number</span><span style="color:var(--text-hi);">${plateNo}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Pickup Date</span><span style="color:var(--text-hi);font-weight:600;">${fmtDate(b.start_date)}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Return Date</span><span style="color:var(--text-hi);font-weight:600;">${fmtDate(b.end_date)}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Rental Period</span><span style="color:var(--text-hi);">${days} day(s)</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Fuel / AC</span><span style="color:var(--text-hi);">${fuelType} · ${hasAC ? 'With AC' : 'Non-AC'}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
       <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Payment &amp; Receipt Summary
     </h4>
     <div class="receipt" style="margin-bottom:16px;">
       <div class="receipt-row"><span>Payment Method</span><span style="font-weight:700;color:#059669;">${payMethod}</span></div>
-      <div class="receipt-row"><span>Total Rental Cost</span><span style="font-weight:700;color:#0f172a;">${fmtMoney(b.total_amount)}</span></div>
+      <div class="receipt-row"><span>Total Rental Cost</span><span style="font-weight:700;color:var(--text-hi);">${fmtMoney(b.total_amount)}</span></div>
       <div class="receipt-row"><span>Amount Paid Now</span><span style="font-weight:700;color:#059669;">${fmtMoney(paidAmount)}</span></div>
       ${balDue > 0 ? `
         <div class="receipt-row" style="background:#eff6ff;padding:6px 8px;border-radius:6px;margin:4px 0;">
@@ -1145,24 +1255,24 @@ ISSUED AT: ${new Date().toLocaleString()}
       <div class="receipt-row receipt-total"><span>Payment Status</span><span class="badge ${balDue > 0 ? 'badge-reserved' : 'badge-completed'}">${balDue > 0 ? 'RESERVED (PARTIAL)' : 'FULL PAYMENT'}</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
       <i class="fa-solid fa-location-dot" style="color:var(--accent);"></i> Rental &amp; Pickup Venue Details
     </h4>
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:#0369a1;">Pickup Location</span><span style="color:#0f172a;font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Return Location</span><span style="color:#0f172a;font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Fuel Policy</span><span style="color:#0f172a;">Full-to-Full</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Insurance</span><span style="color:#0f172a;">Comprehensive coverage included</span></div>
+      <div class="receipt-row"><span style="color:#0369a1;">Pickup Location</span><span style="color:var(--text-hi);font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
+      <div class="receipt-row"><span style="color:#0369a1;">Return Location</span><span style="color:var(--text-hi);font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
+      <div class="receipt-row"><span style="color:#0369a1;">Fuel Policy</span><span style="color:var(--text-hi);">Full-to-Full</span></div>
+      <div class="receipt-row"><span style="color:#0369a1;">Insurance</span><span style="color:var(--text-hi);">Comprehensive coverage included</span></div>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
       <i class="fa-solid fa-headset" style="color:#059669;"></i> Support Contact
     </h4>
     <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <div class="receipt-row"><span style="color:#065f46;">Hotline</span><span style="font-weight:700;color:#0f172a;">${comp.phone || '+63 67676767'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Mobile</span><span style="font-weight:700;color:#0f172a;">${comp.mobile || '+63 917 123 4567'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Email</span><span style="font-weight:600;color:#0f172a;">${comp.email || 'vehiclerental.ph'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Address</span><span style="color:#0f172a;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Hotline</span><span style="font-weight:700;color:var(--text-hi);">${comp.phone || '+63 67676767'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Mobile</span><span style="font-weight:700;color:var(--text-hi);">${comp.mobile || '+63 917 123 4567'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Email</span><span style="font-weight:600;color:var(--text-hi);">${comp.email || 'vehiclerental.ph'}</span></div>
+      <div class="receipt-row"><span style="color:#065f46;">Address</span><span style="color:var(--text-hi);">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
     </div>
 
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;margin-bottom:16px;">
@@ -1230,7 +1340,7 @@ export async function openRefundRequestModal(bookingId) {
   const modal = openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">Request Refund</h3>
+        <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);">Request Refund</h3>
         <span class="muted" style="font-size:0.78rem;">Booking #${b.id} · ${v.name ?? 'Vehicle'}</span>
       </div>
       <div class="modal-close" id="mClose" onclick="window.closeModal()">Close</div>
@@ -1250,15 +1360,23 @@ export async function openRefundRequestModal(bookingId) {
     </div>
 
     <form id="refundReqForm">
-      <div class="field" style="margin-bottom:12px;">
+      <div class="field" style="margin-bottom:14px;">
         <label>Refund Transfer Method</label>
-        <select id="refMethod" style="font-size:0.88rem;">
-          <option value="GCash">GCash</option>
+        <div class="refund-method-pills" id="refMethodPills">
+          <button type="button" class="bank-pill active" data-ref="GCash"><i class="fa-solid fa-mobile-screen-button"></i> GCash</button>
+          <button type="button" class="bank-pill" data-ref="Maya"><i class="fa-solid fa-wallet"></i> Maya</button>
+          <button type="button" class="bank-pill" data-ref="BDO"><i class="fa-solid fa-building-columns"></i> BDO</button>
+          <button type="button" class="bank-pill" data-ref="BPI"><i class="fa-solid fa-building-columns"></i> BPI</button>
+          <button type="button" class="bank-pill" data-ref="UnionBank"><i class="fa-solid fa-building-columns"></i> UnionBank</button>
+          <button type="button" class="bank-pill" data-ref="Cash"><i class="fa-solid fa-money-bill-wave"></i> Office Cash</button>
+        </div>
+        <select id="refMethod" style="display:none;">
+          <option value="GCash" selected>GCash</option>
           <option value="Maya">Maya</option>
-          <option value="BDO">BDO Unibank</option>
+          <option value="BDO">BDO</option>
           <option value="BPI">BPI</option>
           <option value="UnionBank">UnionBank</option>
-          <option value="Cash">Office Cash Pick-up</option>
+          <option value="Cash">Cash</option>
         </select>
       </div>
 
@@ -1282,6 +1400,17 @@ export async function openRefundRequestModal(bookingId) {
       </button>
     </form>
   `);
+
+    // Bind refund method pills
+  const refMethodSelect = $('#refMethod');
+  $$('#refMethodPills .bank-pill', modal).forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      $$('#refMethodPills .bank-pill', modal).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (refMethodSelect) refMethodSelect.value = btn.dataset.ref;
+    });
+  });
 
   $('#refundReqForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1360,25 +1489,25 @@ export async function openRefundVoucherModal(bookingId) {
 
   openModal(`
     <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
-      <div style="font-weight:700;font-size:0.9rem;color:#64748b;">Official Refund &amp; Disbursement Voucher</div>
+      <div style="font-weight:700;font-size:0.9rem;color:var(--text-mid);">Official Refund &amp; Disbursement Voucher</div>
       <div class="modal-close" onclick="window.closeModal()">Close</div>
     </div>
     <div style="text-align:center;margin-bottom:18px;">
-      <h2 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Refund Disbursed Successfully</h2>
+      <h2 style="font-size:1.35rem;font-weight:800;color:var(--text-hi);margin-bottom:4px;">Refund Disbursed Successfully</h2>
       <span class="badge badge-refunded" style="font-size:0.75rem;">Transfer Completed</span>
-      <p class="muted" style="margin-top:8px;font-size:0.82rem;color:#64748b;">Voucher / Claim No: <strong style="color:#0f172a;font-family:monospace;">${refCode}</strong></p>
+      <p class="muted" style="margin-top:8px;font-size:0.82rem;color:var(--text-mid);">Voucher / Claim No: <strong style="color:var(--text-hi);font-family:monospace;">${refCode}</strong></p>
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Beneficiary Details</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">Beneficiary Details</h4>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:#64748b;">Customer Name</span><span style="font-weight:700;color:#0f172a;">${cName}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Phone Number</span><span style="color:#0f172a;">${cPhone}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Vehicle</span><span style="font-weight:700;color:#0f172a;">${v.name ?? 'Vehicle'}</span></div>
-      <div class="receipt-row"><span style="color:#64748b;">Rental Dates</span><span style="color:#0f172a;">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span></div>
-      ${b.review_notes ? `<div class="receipt-row" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:4px;"><span style="color:#64748b;">Refund Transfer Notes</span><span style="color:#b45309;font-weight:600;">${b.review_notes}</span></div>` : ''}
+      <div class="receipt-row"><span style="color:var(--text-mid);">Customer Name</span><span style="font-weight:700;color:var(--text-hi);">${cName}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Phone Number</span><span style="color:var(--text-hi);">${cPhone}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Vehicle</span><span style="font-weight:700;color:var(--text-hi);">${v.name ?? 'Vehicle'}</span></div>
+      <div class="receipt-row"><span style="color:var(--text-mid);">Rental Dates</span><span style="color:var(--text-hi);">${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span></div>
+      ${b.review_notes ? `<div class="receipt-row" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:4px;"><span style="color:var(--text-mid);">Refund Transfer Notes</span><span style="color:#b45309;font-weight:600;">${b.review_notes}</span></div>` : ''}
     </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:#0f172a;font-size:0.9rem;">Financial Summary</h4>
+    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">Financial Summary</h4>
     <div class="receipt" style="margin-bottom:16px;">
       <div class="receipt-row"><span>Total Booking Amount</span><span>${fmtMoney(b.total_amount)}</span></div>
       <div class="receipt-row"><span>Refund Status</span><span class="badge badge-refunded">COMPLETED</span></div>

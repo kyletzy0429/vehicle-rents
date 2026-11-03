@@ -233,9 +233,17 @@ async function runPollingTick() {
         }
       }
 
-      // Check if pending count changed (e.g. approved / rejected / deleted)
-      const countChanged = currentPendingIds.size !== lastKnownPendingIds.size;
-      if (countChanged) {
+      // Check if pending IDs changed (e.g. approved / rejected / new booking)
+      let idsChanged = currentPendingIds.size !== lastKnownPendingIds.size;
+      if (!idsChanged) {
+        for (const id of currentPendingIds) {
+          if (!lastKnownPendingIds.has(id)) {
+            idsChanged = true;
+            break;
+          }
+        }
+      }
+      if (idsChanged) {
         lastKnownPendingIds = currentPendingIds;
         updateNotificationBadge();
         if ((state.portal === 'staff' || state.portal === 'admin') && window.renderTab) {

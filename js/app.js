@@ -13,6 +13,10 @@ import { openRentalExtensionModal } from './rental-extension.js';
 
 if (typeof window !== 'undefined') {
   window.openRentalExtensionModal = openRentalExtensionModal;
+window.switchTab = function(tab) {
+  state.tab = (tab === 'vehicles' || tab === 'browse') ? 'browse' : tab;
+  renderShell();
+};
 }
 
 export function renderRoleSwitcherHTML(currentRole) {
@@ -102,55 +106,55 @@ export function openUserMenuModal() {
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:46px;height:46px;border-radius:50%;background:var(--primary-gradient);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px var(--accent-glow);">${initials}</div>
           <div>
-            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Roland S. Bautista'}</h3>
+            <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">${p.full_name || 'Roland S. Bautista'}</h3>
             <span style="font-size:0.78rem;color:var(--accent);font-weight:700;">System Administrator</span>
           </div>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;">Admin Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'roland.bautista@rentflow.ph'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Contact Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 992 3341'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Access Level</span><span style="font-weight:700;color:var(--accent);">Full System &amp; Financial Control</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Department</span><span style="font-weight:600;color:#0f172a;">Operations &amp; Administration</span></div>
+      <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div class="receipt-row"><span style="color:var(--text-mid);">Admin Email</span><span style="font-weight:600;color:var(--text-hi);">${p.email || state.user?.email || 'roland.bautista@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Contact Phone</span><span style="font-weight:600;color:var(--text-hi);">${p.phone || '0917 992 3341'}</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Access Level</span><span style="font-weight:700;color:var(--accent);">Full System &amp; Financial Control</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Department</span><span style="font-weight:600;color:var(--text-hi);">Operations &amp; Administration</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Administrator Controls &amp; Shortcuts</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:var(--text-hi);margin-bottom:10px;">Administrator Controls &amp; Shortcuts</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
         <button class="btn btn-ghost" id="adminGoSettings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Settings &amp; Policies</div>
-            <div style="font-size:0.75rem;color:#64748b;">Configure company profile, rental policies, and pricing rules</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">System Settings &amp; Policies</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Configure company profile, rental policies, and pricing rules</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="adminGoVehicles" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Vehicle Inventory</div>
-            <div style="font-size:0.75rem;color:#64748b;">Manage vehicles, daily rental rates, and categories</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Vehicle Inventory</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Manage vehicles, daily rental rates, and categories</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="adminGoReports" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Reports &amp; Financial Analytics</div>
-            <div style="font-size:0.75rem;color:#64748b;">View revenue summaries, payment breakdown, and accounting audit logs</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Reports &amp; Financial Analytics</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">View revenue summaries, payment breakdown, and accounting audit logs</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="adminGoCustomers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Customer Directory &amp; Licenses</div>
-            <div style="font-size:0.75rem;color:#64748b;">Inspect verified customer records and driver licenses</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Customer Directory &amp; Licenses</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Inspect verified customer records and driver licenses</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="adminGoUsers" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">System Roles &amp; Permissions</div>
-            <div style="font-size:0.75rem;color:#64748b;">Manage Administrator and Staff access</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">System Roles &amp; Permissions</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Manage Administrator and Staff access</div>
           </div>
         </button>
       </div>
@@ -165,55 +169,55 @@ export function openUserMenuModal() {
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(5,150,105,0.25);">${initials}</div>
           <div>
-            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${p.full_name || 'Sarah Jane Villanueva'}</h3>
+            <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">${p.full_name || 'Sarah Jane Villanueva'}</h3>
             <span style="font-size:0.78rem;color:#059669;font-weight:700;">Operations Staff</span>
           </div>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'sarah.villanueva@rentflow.ph'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 882 1450'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Operations Role</span><span style="font-weight:700;color:#059669;">Vehicle Dispatch &amp; Booking Approvals</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Station</span><span style="font-weight:600;color:#0f172a;">RentFlow Main Hub Operations</span></div>
+      <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div class="receipt-row"><span style="color:var(--text-mid);">Email</span><span style="font-weight:600;color:var(--text-hi);">${p.email || state.user?.email || 'sarah.villanueva@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Phone</span><span style="font-weight:600;color:var(--text-hi);">${p.phone || '0917 882 1450'}</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Operations Role</span><span style="font-weight:700;color:#059669;">Vehicle Dispatch &amp; Booking Approvals</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Station</span><span style="font-weight:600;color:var(--text-hi);">RentFlow Main Hub Operations</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Operations Shortcuts</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:var(--text-hi);margin-bottom:10px;">Operations Shortcuts</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
         <button class="btn btn-ghost" id="staffGoDashboard" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Operations Dashboard</div>
-            <div style="font-size:0.75rem;color:#64748b;">Overview of booking queue and vehicle status</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Operations Dashboard</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Overview of booking queue and vehicle status</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="staffGoScanner" style="justify-content:flex-start;padding:12px 14px;border:1px solid rgba(124,58,237,0.3);background:rgba(124,58,237,0.04);border-radius:10px;text-align:left;">
           <div>
             <div style="font-weight:700;color:var(--accent);font-size:0.9rem;"><i class="fa-solid fa-qrcode" style="margin-right:6px;"></i> Venue QR Pass Scanner</div>
-            <div style="font-size:0.75rem;color:#64748b;">Instant camera scanner &amp; pass verification</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Instant camera scanner &amp; pass verification</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="staffGoRequests" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Booking Requests &amp; Approvals</div>
-            <div style="font-size:0.75rem;color:#64748b;">Review and approve incoming reservations</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Booking Requests &amp; Approvals</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Review and approve incoming reservations</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="staffGoActive" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Active Rentals &amp; Dispatches</div>
-            <div style="font-size:0.75rem;color:#64748b;">Manage vehicles currently on road and key release</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Active Rentals &amp; Dispatches</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Manage vehicles currently on road and key release</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="staffGoReturns" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Vehicle Returns &amp; Inspections</div>
-            <div style="font-size:0.75rem;color:#64748b;">Check-in returned vehicles and verify fuel level</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Vehicle Returns &amp; Inspections</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Check-in returned vehicles and verify fuel level</div>
           </div>
         </button>
       </div>
@@ -230,47 +234,47 @@ export function openUserMenuModal() {
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:46px;height:46px;border-radius:50%;background:var(--primary-gradient);color:#fff;font-weight:800;font-size:1.1rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px var(--accent-glow);">${initials}</div>
           <div>
-            <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">${renterName}</h3>
+            <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-hi);margin:0;">${renterName}</h3>
             <span style="font-size:0.78rem;color:var(--accent);font-weight:700;">Verified Renter</span>
           </div>
         </div>
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div class="receipt-row"><span style="color:#64748b;">Email</span><span style="font-weight:600;color:#0f172a;">${p.email || state.user?.email || 'renter@rentflow.ph'}</span></div>
-        <div class="receipt-row"><span style="color:#64748b;">Phone</span><span style="font-weight:600;color:#0f172a;">${p.phone || '0917 582 9140'}</span></div>
+      <div style="background:var(--bg-surface);border:1px solid var(--glass-border);border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div class="receipt-row"><span style="color:var(--text-mid);">Email</span><span style="font-weight:600;color:var(--text-hi);">${p.email || state.user?.email || 'renter@rentflow.ph'}</span></div>
+        <div class="receipt-row"><span style="color:var(--text-mid);">Phone</span><span style="font-weight:600;color:var(--text-hi);">${p.phone || '0917 582 9140'}</span></div>
       </div>
 
-      <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:10px;">Renter Menu</h4>
+      <h4 style="font-size:0.88rem;font-weight:700;color:var(--text-hi);margin-bottom:10px;">Renter Menu</h4>
       
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
 
         <button class="btn btn-ghost" id="umAccount" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;"><i class="fa-solid fa-circle-user" style="color:var(--accent);margin-right:6px;"></i> My Account &amp; Profile</div>
-            <div style="font-size:0.75rem;color:#64748b;">Manage personal details, contact info, and driver's license</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;"><i class="fa-solid fa-circle-user" style="color:var(--accent);margin-right:6px;"></i> My Account &amp; Profile</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Manage personal details, contact info, and driver's license</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="umBookings" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Reservations &amp; Rentals</div>
-            <div style="font-size:0.75rem;color:#64748b;">View active reservations, receipts, and refund requests</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">My Reservations &amp; Rentals</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">View active reservations, receipts, and refund requests</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="umFavorites" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">My Favorites</div>
-            <div style="font-size:0.75rem;color:#64748b;">View your saved cars &amp; motorcycles</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">My Favorites</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">View your saved cars &amp; motorcycles</div>
           </div>
         </button>
 
         <button class="btn btn-ghost" id="umSupport" style="justify-content:flex-start;padding:12px 14px;border:1px solid #e2e8f0;background:#ffffff;border-radius:10px;text-align:left;">
           <div>
-            <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Support Contact</div>
-            <div style="font-size:0.75rem;color:#64748b;">Hotline: ${comp.phone || '+63 67676767'} | Email: ${comp.email || 'vehicleretal.ph'}</div>
+            <div style="font-weight:700;color:var(--text-hi);font-size:0.9rem;">Support Contact</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);">Hotline: ${comp.phone || '+63 67676767'} | Email: ${comp.email || 'vehicleretal.ph'}</div>
           </div>
         </button>
       </div>
@@ -564,7 +568,7 @@ export function renderShell() {
             <button type="button" class="hamburger-btn" id="hamburgerBtn" title="Open Navigation Menu" aria-label="Open Navigation Menu">
               <i class="fa-solid fa-bars"></i>
             </button>
-            <div style="font-weight:800;font-size:1.05rem;color:#0f172a;display:flex;align-items:center;gap:10px;">
+            <div style="font-weight:800;font-size:1.05rem;color:var(--text-hi);display:flex;align-items:center;gap:10px;">
               ${activeTabObj?.label ?? 'Dashboard'}
             </div>
           </div>

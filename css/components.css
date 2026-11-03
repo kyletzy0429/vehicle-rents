@@ -14,7 +14,7 @@
   white-space: nowrap;
   user-select: none;
   position: relative;
-  overflow: hidden;
+  line-height: 1.4;
 }
 
 .btn:active {
@@ -29,50 +29,49 @@
 }
 
 .btn-primary {
-  background: var(--primary-gradient);
+  background: var(--accent);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 14px -1px rgba(124, 58, 237, 0.35), 0 1px 3px rgba(79, 70, 229, 0.2);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-
-.btn-primary::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-  transform: skewX(-20deg);
-  transition: 0.6s ease;
-}
-
-.btn-primary:hover:not(:disabled)::after {
-  left: 150%;
+  border: 1px solid var(--accent);
+  box-shadow: 0 1px 2px rgba(42, 35, 64, 0.08);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-gradient-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px -2px rgba(124, 58, 237, 0.5), 0 2px 8px rgba(79, 70, 229, 0.3);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(42, 35, 64, 0.12);
 }
 
-.btn-ghost {
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--accent-border);
+.btn-primary:active {
+  background: #3e3260;
+  transform: translateY(1px);
+}
+
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn-ghost,
+.btn-secondary {
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
   color: var(--text-hi);
   box-shadow: var(--shadow-xs);
 }
 
-.btn-ghost:hover:not(:disabled) {
-  background: var(--accent-light);
+.btn-ghost:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-subtle);
   border-color: var(--accent);
   color: var(--accent);
-  transform: translateY(-1.5px);
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-ghost:focus-visible,
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .btn-danger {
@@ -105,10 +104,18 @@
   padding: 8px 15px;
   font-size: 0.82rem;
   border-radius: var(--radius-xs);
+  line-height: 1.35;
 }
 
 .btn-block {
   width: 100%;
+}
+
+.btn-stacked {
+  flex-direction: column !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.35 !important;
 }
 
 .field {
@@ -792,4 +799,473 @@ select option {
 
 .switch input:checked+.switch-slider:before {
   transform: translateX(22px);
+}
+
+/* ==========================================================================
+   INTERACTIVE SELECTION UI CARDS (Replaces plain <select> dropdowns)
+   ========================================================================== */
+
+/* 1. Payment Methods Grid */
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 6px;
+}
+
+@media (max-width: 480px) {
+  .payment-methods-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pay-method-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  background: var(--bg-surface, #ffffff);
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+}
+
+.pay-method-card:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.02);
+  transform: translateY(-1px);
+}
+
+.pay-method-card.active {
+  border-color: var(--accent, #7c3aed);
+  background: linear-gradient(145deg, rgba(124, 58, 237, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15), 0 0 0 1px var(--accent, #7c3aed);
+}
+
+.pm-radio {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.pay-method-card.active .pm-radio {
+  color: var(--accent, #7c3aed);
+}
+
+.pm-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.pay-method-card:hover .pm-icon {
+  transform: scale(1.08);
+}
+
+.pm-card-icon {
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+}
+
+.pm-gcash-icon {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+}
+
+.pm-bank-icon {
+  background: rgba(13, 148, 136, 0.12);
+  color: #0d9488;
+}
+
+.pm-cash-icon {
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+}
+
+.pm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pm-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-hi, #0f172a);
+  line-height: 1.2;
+}
+
+.pm-desc {
+  font-size: 0.72rem;
+  color: var(--text-mid, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pm-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* 2. Payment Structure Selector (100% vs 20%) */
+.pay-structure-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 6px;
+}
+
+@media (max-width: 520px) {
+  .pay-structure-selector {
+    grid-template-columns: 1fr;
+  }
+}
+
+.selector-opt-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-surface, #ffffff);
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.selector-opt-card:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.02);
+  transform: translateY(-1px);
+}
+
+.selector-opt-card.active {
+  border-color: var(--accent, #7c3aed);
+  background: linear-gradient(145deg, rgba(124, 58, 237, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15), 0 0 0 1px var(--accent, #7c3aed);
+}
+
+.opt-radio {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.selector-opt-card.active .opt-radio {
+  color: var(--accent, #7c3aed);
+}
+
+.opt-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.opt-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.opt-top strong {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-hi, #0f172a);
+}
+
+.opt-chip {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
+.opt-chip-green {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.25);
+}
+
+.opt-sub {
+  font-size: 0.72rem;
+  color: var(--text-mid, #64748b);
+  line-height: 1.35;
+}
+
+/* 3. Billing Type Selection Cards (Per Day vs Per KM) */
+.billing-type-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .billing-type-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.billing-opt-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 15px;
+  background: var(--bg-surface, #ffffff);
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.billing-opt-card:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.02);
+  transform: translateY(-1px);
+}
+
+.billing-opt-card.active {
+  border-color: var(--accent, #7c3aed);
+  background: linear-gradient(145deg, rgba(124, 58, 237, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15), 0 0 0 1px var(--accent, #7c3aed);
+}
+
+.opt-card-radio {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.billing-opt-card.active .opt-card-radio {
+  color: var(--accent, #7c3aed);
+}
+
+.opt-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.opt-card-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-hi, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.opt-card-title i {
+  color: var(--accent, #7c3aed);
+}
+
+.opt-card-rate {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+  line-height: 1.2;
+}
+
+.opt-card-rate small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-mid, #64748b);
+}
+
+.opt-card-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #059669;
+  margin-top: 2px;
+}
+
+/* 4. Bank Pill Group & Refund Method Pills */
+.bank-pill-group, .refund-method-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 12px 0;
+}
+
+.bank-pill {
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  border: 1.5px solid #cbd5e1;
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-mid, #475569);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.bank-pill:hover {
+  border-color: var(--accent, #7c3aed);
+  color: var(--accent, #7c3aed);
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.bank-pill.active {
+  background: var(--accent, #7c3aed);
+  border-color: var(--accent, #7c3aed);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+/* Dark Mode Support for Interactive UI Cards */
+[data-theme="dark"] .pay-method-card,
+[data-theme="dark"] .selector-opt-card,
+[data-theme="dark"] .billing-opt-card {
+  background: #171527;
+  border-color: #312b48;
+}
+
+[data-theme="dark"] .pay-method-card:hover,
+[data-theme="dark"] .selector-opt-card:hover,
+[data-theme="dark"] .billing-opt-card:hover {
+  background: #201c35;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+[data-theme="dark"] .pay-method-card.active,
+[data-theme="dark"] .selector-opt-card.active,
+[data-theme="dark"] .billing-opt-card.active {
+  background: rgba(124, 58, 237, 0.16);
+  border-color: var(--accent, #7c3aed);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--accent, #7c3aed);
+}
+
+[data-theme="dark"] .pm-name,
+[data-theme="dark"] .opt-top strong,
+[data-theme="dark"] .opt-card-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .pm-desc,
+[data-theme="dark"] .opt-sub {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .bank-pill {
+  background: #1e1b2e;
+  border-color: #3b3754;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .bank-pill:hover {
+  background: #2b2642;
+  border-color: var(--accent, #7c3aed);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .bank-pill.active {
+  background: var(--accent, #7c3aed);
+  border-color: var(--accent, #7c3aed);
+  color: #ffffff;
+}
+
+/* Custom Styled Select Dropdown (Universal across app) */
+select, .clean-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding: 10px 38px 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--glass-border);
+  background-color: var(--bg-surface, #ffffff);
+  color: var(--text-hi);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+select:hover, .clean-select:hover {
+  border-color: var(--accent);
+}
+
+select:focus, .clean-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+select option {
+  background-color: #ffffff;
+  color: #0f172a;
+  padding: 8px 12px;
+}
+
+[data-theme="dark"] select, [data-theme="dark"] .clean-select {
+  background-color: #1e293b;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+
+
+[data-theme="dark"] .btn-ghost,
+[data-theme="dark"] .btn-secondary {
+  background: #1c1833;
+  border-color: rgba(226, 220, 240, 0.16);
+  color: #f5f2fb;
+}
+
+[data-theme="dark"] .btn-ghost:hover:not(:disabled),
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background: #272244;
+  border-color: var(--accent);
+  color: #f5f2fb;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+  background: #1c1833;
+  border-color: rgba(226, 220, 240, 0.16);
+  color: #f5f2fb;
 }
