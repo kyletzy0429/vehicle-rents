@@ -72,7 +72,7 @@ export function renderLandingPage() {
       <nav class="lp-navbar-v2">
         <div class="lp-nav-inner">
           <div class="lp-brand-group">
-            <div class="lp-brand-icon"><i class="fa-solid fa-car-side"></i></div>
+            <div class="lp-brand-icon">V</div>
             <span class="lp-brand-text">Vehicle Rental System</span>
           </div>
 
@@ -416,7 +416,7 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
         <div class="auth-split-right">
           <div class="auth-split-form-wrap">
             <div class="auth-split-brand">
-              <div class="lp-brand-icon"><i class="fa-solid fa-car-side"></i></div>
+              <div class="lp-brand-icon">V</div>
               <span class="lp-brand-text">Vehicle Rental System</span>
             </div>
 
