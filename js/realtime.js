@@ -152,7 +152,7 @@ export async function triggerLiveBookingAlert(booking) {
   playNotificationChime();
 
   // 2. Show floating heads-up alert banner with Quick Approve button
-  showBookingAlertPopup(hydrated);
+
 
   // 3. Update topbar notification count badge
   updateNotificationBadge();

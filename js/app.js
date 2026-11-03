@@ -558,18 +558,9 @@ export function renderShell() {
 }
 
 function checkPendingManagerAlert() {
-  if (state.portal === 'staff' || state.portal === 'admin') {
-    try {
-      const raw = localStorage.getItem('rentflow_pending_manager_alert');
-      if (raw) {
-        localStorage.removeItem('rentflow_pending_manager_alert');
-        const alertData = JSON.parse(raw);
-        import('./utils.js').then(({ showBookingAlertPopup }) => {
-          setTimeout(() => showBookingAlertPopup(alertData), 450);
-        });
-      }
-    } catch (e) {}
-  }
+  try {
+    localStorage.removeItem('rentflow_pending_manager_alert');
+  } catch (e) {}
 }
 
 export async function renderTab(silent = false) {
