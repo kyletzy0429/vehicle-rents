@@ -4916,6 +4916,7 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
+  overflow-y: auto;
 }
 
 .clean-auth-overlay.open {
@@ -6386,7 +6387,8 @@
   border: 1px solid var(--glass-border, #E2DCF0);
   max-width: 980px;
   width: 92%;
-  min-height: 560px;
+  min-height: 520px;
+  max-height: 94vh;
   position: relative;
   overflow: hidden;
   display: grid;
@@ -6462,11 +6464,14 @@
 
 /* Right Half: Form Container (2-sign-in.png) */
 .auth-split-right {
-  padding: 40px 48px;
+  padding: 24px 36px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   background: var(--bg-surface, #ffffff);
+  overflow-y: auto;
+  max-height: 94vh;
+  box-sizing: border-box;
 }
 
 .auth-split-form-wrap {
@@ -6479,22 +6484,22 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .auth-split-headline {
   font-family: var(--font-heading, 'Fraunces', serif);
-  font-size: 2.1rem;
+  font-size: 1.85rem;
   font-weight: 600;
   color: var(--text-hi, #2A2340);
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   letter-spacing: -0.015em;
 }
 
 .auth-split-sub {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: var(--text-mid, #5E5778);
-  margin: 0 0 20px 0;
+  margin: 0 0 14px 0;
 }
 
 /* Segmented Control: [ Renter | Staff | Admin ] */
@@ -6544,7 +6549,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 12px 0 20px 0;
+  margin: 10px 0 16px 0;
   font-size: 0.85rem;
 }
 
@@ -6570,7 +6575,8 @@
 
 .auth-split-footer-text {
   text-align: center;
-  margin-top: 24px;
+  margin-top: 14px;
+  margin-bottom: 6px;
   font-size: 0.88rem;
   color: var(--text-mid, #5E5778);
 }

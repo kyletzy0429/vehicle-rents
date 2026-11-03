@@ -420,12 +420,18 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
               <span class="lp-brand-text">Vehicle Rental System</span>
             </div>
 
+            <!-- Top Mode Switcher: Sign in | Create account -->
+            <div class="auth-role-segmented-control" id="authFlowSegmented" style="margin-bottom:16px;">
+              <button type="button" class="auth-segment-pill ${mode === 'login' ? 'active' : ''}" id="flowTabLogin">Sign in</button>
+              <button type="button" class="auth-segment-pill ${mode === 'signup' ? 'active' : ''}" id="flowTabSignup">Create account</button>
+            </div>
+
             <h2 class="auth-split-headline">${mode === 'signup' ? 'Create an account' : (mode === 'forgot' ? 'Reset password' : 'Welcome back')}</h2>
-            <p class="auth-split-sub">${mode === 'signup' ? 'Enter your details to create an account.' : (mode === 'forgot' ? 'Enter your email to receive reset instructions.' : 'Sign in to continue to your account.')}</p>
+            <p class="auth-split-sub">${mode === 'signup' ? 'Enter your email and password to create an account.' : (mode === 'forgot' ? 'Enter your email to receive reset instructions.' : 'Sign in to continue to your account.')}</p>
 
             ${mode === 'login' ? `
               <!-- Segmented Role Control: Renter | Staff | Admin -->
-              <div class="auth-role-segmented-control" id="authRoleSegmented">
+              <div class="auth-role-segmented-control" id="authRoleSegmented" style="margin-bottom:16px;">
                 <button type="button" class="auth-segment-pill ${selectedRole === 'customer' ? 'active' : ''}" data-role="customer">Renter</button>
                 <button type="button" class="auth-segment-pill ${selectedRole === 'staff' ? 'active' : ''}" data-role="staff">Staff</button>
                 <button type="button" class="auth-segment-pill ${selectedRole === 'admin' ? 'active' : ''}" data-role="admin">Admin</button>
@@ -444,20 +450,8 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
                 <div class="auth-form-field">
                   <label for="cleanPassword">Password</label>
                   <div class="clean-input-pass-wrap">
-                    <input type="password" id="cleanPassword" class="clean-input" placeholder="Enter your password" required autocomplete="current-password" />
+                    <input type="password" id="cleanPassword" class="clean-input" placeholder="${mode === 'signup' ? 'Create a password (min. 6 characters)' : 'Enter your password'}" required autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" />
                     <button type="button" class="clean-eye-btn" data-target="cleanPassword" aria-label="Toggle password">
-                      <i class="fa-regular fa-eye"></i>
-                    </button>
-                  </div>
-                </div>
-              ` : ''}
-
-              ${mode === 'signup' ? `
-                <div class="auth-form-field">
-                  <label for="cleanConfirmPassword">Confirm Password</label>
-                  <div class="clean-input-pass-wrap">
-                    <input type="password" id="cleanConfirmPassword" class="clean-input" placeholder="Confirm your password" required autocomplete="new-password" />
-                    <button type="button" class="clean-eye-btn" data-target="cleanConfirmPassword" aria-label="Toggle password">
                       <i class="fa-regular fa-eye"></i>
                     </button>
                   </div>
@@ -475,7 +469,7 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
               ` : ''}
 
               <button type="submit" class="btn btn-primary btn-block" id="cleanSubmitBtn" style="padding:12px;margin-top:16px;">
-                ${mode === 'signup' ? 'Create an account' : (mode === 'forgot' ? 'Send reset link' : 'Sign in')}
+                ${mode === 'signup' ? 'Create account' : (mode === 'forgot' ? 'Send reset link' : 'Sign in')}
               </button>
 
               ${mode === 'login' ? `
@@ -551,7 +545,17 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
       });
     });
 
-    // Bind mode links
+    // Bind mode links & tabs
+    overlay.querySelector('#flowTabLogin')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      mode = 'login';
+      renderModal();
+    });
+    overlay.querySelector('#flowTabSignup')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      mode = 'signup';
+      renderModal();
+    });
     overlay.querySelector('#cleanToSignup')?.addEventListener('click', (e) => {
       e.preventDefault();
       mode = 'signup';
@@ -598,9 +602,12 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
 
       if (mode === 'signup') {
         const password = overlay.querySelector('#cleanPassword')?.value;
-        const confirmPass = overlay.querySelector('#cleanConfirmPassword')?.value;
-        if (password !== confirmPass) {
-          if (errBox) errBox.innerHTML = '<div class="clean-auth-error">Passwords do not match. Please try again.</div>';
+        if (!password) {
+          if (errBox) errBox.innerHTML = '<div class="clean-auth-error">Please enter a password.</div>';
+          return;
+        }
+        if (password.length < 6) {
+          if (errBox) errBox.innerHTML = '<div class="clean-auth-error">Password must be at least 6 characters long.</div>';
           return;
         }
 
@@ -611,7 +618,7 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
         } catch (err) {
           if (errBox) errBox.innerHTML = `<div class="clean-auth-error">${err.message || 'Error creating account'}</div>`;
           submitBtn.disabled = false;
-          submitBtn.innerHTML = 'Create an account';
+          submitBtn.innerHTML = 'Create account';
         }
         return;
       }

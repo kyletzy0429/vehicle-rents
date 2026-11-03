@@ -5,83 +5,83 @@ import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage } fro
 import { broadcastNewBookingRequest } from './realtime.js';
 
 export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') {
-  const v = state.vehicles.find(v => String(v.id) === String(id));
-  if (!v) return;
-  const fuelType = v.fuel_type ?? 'Gasoline';
-  const hasAC = v.has_ac !== undefined ? v.has_ac : true;
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+    const v = state.vehicles.find(v => String(v.id) === String(id));
+    if (!v) return;
+    const fuelType = v.fuel_type ?? 'Gasoline';
+    const hasAC = v.has_ac !== undefined ? v.has_ac : true;
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
 
-  // Compute clean initial dates: today to today + 3 days
-  const defaultEnd = new Date(today);
-  defaultEnd.setDate(defaultEnd.getDate() + 3);
-  const defaultEndStr = defaultEnd.toISOString().slice(0, 10);
-  const initStart = prefillStart || todayStr;
-  const initEnd = (prefillEnd && prefillEnd >= initStart) ? prefillEnd : defaultEndStr;
+    // Compute clean initial dates: today to today + 3 days
+    const defaultEnd = new Date(today);
+    defaultEnd.setDate(defaultEnd.getDate() + 3);
+    const defaultEndStr = defaultEnd.toISOString().slice(0, 10);
+    const initStart = prefillStart || todayStr;
+    const initEnd = (prefillEnd && prefillEnd >= initStart) ? prefillEnd : defaultEndStr;
 
-  let drivers = state.drivers || [];
-  const [{ data: fetchedDrivers }, { data: bookedIntervals }] = await Promise.all([
-    drivers.length ? Promise.resolve({ data: drivers }) : supabase.from('drivers').select('*').order('name'),
-    supabase.from('bookings').select('start_date, end_date, status').eq('vehicle_id', v.id).in('status', ['pending', 'approved', 'active', 'reserved', 'completed']).gte('end_date', todayStr).order('start_date'),
-  ]);
-  drivers = (fetchedDrivers || []).map(d => ({
-    ...d,
-    daily_fee: 900,
-    license_type: (d.license_type || 'Professional').replace(/\s*heavy\s*/gi, ' ').trim() || 'Professional'
-  }));
-  if (!drivers || drivers.length === 0) {
-    drivers = [
-      { id: '1', name: 'Eduardo Mendoza', daily_fee: 900, license_type: 'Professional', experience_years: 7, rating: 4.9, status: 'available', phone: '0917 442 8192' },
-      { id: '2', name: 'Ricardo Dalisay', daily_fee: 900, license_type: 'Professional', experience_years: 5, rating: 4.8, status: 'available', phone: '0918 553 1290' },
-      { id: '3', name: 'Noel De Guzman', daily_fee: 900, license_type: 'Professional', experience_years: 4, rating: 4.7, status: 'available', phone: '0920 119 4432' }
-    ];
-  }
-  state.drivers = drivers;
-  let selectedDriverMode = 'self';
-  let selectedDriverId = drivers.length ? String(drivers[0].id) : '';
+    let drivers = state.drivers || [];
+    const [{ data: fetchedDrivers }, { data: bookedIntervals }] = await Promise.all([
+        drivers.length ? Promise.resolve({ data: drivers }) : supabase.from('drivers').select('*').order('name'),
+        supabase.from('bookings').select('start_date, end_date, status').eq('vehicle_id', v.id).in('status', ['pending', 'approved', 'active', 'reserved', 'completed']).gte('end_date', todayStr).order('start_date'),
+    ]);
+    drivers = (fetchedDrivers || []).map(d => ({
+        ...d,
+        daily_fee: 900,
+        license_type: (d.license_type || 'Professional').replace(/\s*heavy\s*/gi, ' ').trim() || 'Professional'
+    }));
+    if (!drivers || drivers.length === 0) {
+        drivers = [
+            { id: '1', name: 'Eduardo Mendoza', daily_fee: 900, license_type: 'Professional', experience_years: 7, rating: 4.9, status: 'available', phone: '0917 442 8192' },
+            { id: '2', name: 'Ricardo Dalisay', daily_fee: 900, license_type: 'Professional', experience_years: 5, rating: 4.8, status: 'available', phone: '0918 553 1290' },
+            { id: '3', name: 'Noel De Guzman', daily_fee: 900, license_type: 'Professional', experience_years: 4, rating: 4.7, status: 'available', phone: '0920 119 4432' }
+        ];
+    }
+    state.drivers = drivers;
+    let selectedDriverMode = 'self';
+    let selectedDriverId = drivers.length ? String(drivers[0].id) : '';
 
-  // Merge both Supabase and local demo bookings
-  const localList = getLocalBookings().filter(b =>
-    (Number(b.vehicle_id) === Number(v.id) || Number(b.vehicles?.id) === Number(v.id)) &&
-    ['pending', 'approved', 'active', 'reserved', 'completed'].includes(b.status) &&
-    (b.end_date >= todayStr || !b.end_date)
-  ).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
+    // Merge both Supabase and local demo bookings
+    const localList = getLocalBookings().filter(b =>
+        (Number(b.vehicle_id) === Number(v.id) || Number(b.vehicles?.id) === Number(v.id)) &&
+        ['pending', 'approved', 'active', 'reserved', 'completed'].includes(b.status) &&
+        (b.end_date >= todayStr || !b.end_date)
+    ).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
 
-  const dbList = (bookedIntervals || []).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
-  const allBookedIntervals = [...dbList, ...localList].filter(b => b.start_date && b.end_date);
+    const dbList = (bookedIntervals || []).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
+    const allBookedIntervals = [...dbList, ...localList].filter(b => b.start_date && b.end_date);
 
-  const rate = getVehicleDailyRate(v);
-  const catName = getVehicleCategoryName(v);
-  const isMotorcycle = catName === 'Motorcycles' || (v.name || '').toLowerCase().includes('motor') || (v.name || '').toLowerCase().includes('click') || (v.name || '').toLowerCase().includes('nmax') || (v.name || '').toLowerCase().includes('adv');
-  const exactImg = getExactVehicleImage(v);
-  const seats = v.seats || (isMotorcycle ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
+    const rate = getVehicleDailyRate(v);
+    const catName = getVehicleCategoryName(v);
+    const isMotorcycle = catName === 'Motorcycles' || (v.name || '').toLowerCase().includes('motor') || (v.name || '').toLowerCase().includes('click') || (v.name || '').toLowerCase().includes('nmax') || (v.name || '').toLowerCase().includes('adv');
+    const exactImg = getExactVehicleImage(v);
+    const seats = v.seats || (isMotorcycle ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
 
-  const isAvailable = v.status === 'available';
-  const isRented = v.status === 'rented';
-  const isMaintenance = v.status === 'maintenance';
+    const isAvailable = v.status === 'available';
+    const isRented = v.status === 'rented';
+    const isMaintenance = v.status === 'maintenance';
 
-  let statusBadgeClass = isAvailable ? 'badge-available' : (isRented ? 'badge-rented' : `badge-${v.status}`);
-  let badgeContent = isAvailable ? 'Available' : (isRented ? 'Currently Rented' : (isMaintenance ? 'In Maintenance' : v.status));
+    let statusBadgeClass = isAvailable ? 'badge-available' : (isRented ? 'badge-rented' : `badge-${v.status}`);
+    let badgeContent = isAvailable ? 'Available' : (isRented ? 'Currently Rented' : (isMaintenance ? 'In Maintenance' : v.status));
 
-  // Initial Step is 2 ("Dates and driver") per 4-booking-process.png
-  let currentStep = 2;
-  let selectedDownpaymentPct = 100;
+    // Initial Step is 2 ("Dates and driver") per 4-booking-process.png
+    let currentStep = 2;
+    let selectedDownpaymentPct = 100;
 
-  const savedProfileStr = localStorage.getItem('rentflow_guest_profile');
-  const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : {};
-  const p = { ...(state.profile || {}), ...savedProfile };
+    const savedProfileStr = localStorage.getItem('rentflow_guest_profile');
+    const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : {};
+    const p = { ...(state.profile || {}), ...savedProfile };
 
-  closeModal();
+    closeModal();
 
-  let targetContainer = document.getElementById('mainView');
-  if (!targetContainer || state.portal !== 'customer') {
-    state.portal = 'customer';
-    state.tab = 'browse';
-    if (window.renderShell) window.renderShell();
-    targetContainer = document.getElementById('mainView');
-  }
+    let targetContainer = document.getElementById('mainView');
+    if (!targetContainer || state.portal !== 'customer') {
+        state.portal = 'customer';
+        state.tab = 'browse';
+        if (window.renderShell) window.renderShell();
+        targetContainer = document.getElementById('mainView');
+    }
 
-  targetContainer.innerHTML = `
+    targetContainer.innerHTML = `
     <div class="booking-page-view" style="min-height:100vh;background:var(--bg-canvas,#F5F2FB);padding-bottom:80px;">
       <!-- ═══ STEPPER BAR (Matches 4-booking-process.png) ═══ -->
       <div class="booking-stepper-v2">
@@ -362,129 +362,160 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     </div>
   `;
 
-  const start = $('#bStart');
-  const end = $('#bEnd');
-  const btnGoStep3 = $('#btnGoStep3');
-  const availMsg = $('#availabilityMsg');
-  const submitBtn = $('#submitBooking');
-  const driverCheckbox = $('#driverHireCheckbox');
-  const chargeType = $('#chargeType');
+    const start = $('#bStart');
+    const end = $('#bEnd');
+    const btnGoStep3 = $('#btnGoStep3');
+    const availMsg = $('#availabilityMsg');
+    const submitBtn = $('#submitBooking');
+    const driverCheckbox = $('#driverHireCheckbox');
+    const chargeType = $('#chargeType');
 
-  let calculatedBookingData = null;
+    let calculatedBookingData = null;
 
-  function checkAvailability() {
-    if (!start || !end) return;
-    if (!start.value || !end.value) {
-      if (btnGoStep3) btnGoStep3.disabled = true;
-      return;
+    function checkAvailability() {
+        if (!start || !end) return;
+        if (!start.value || !end.value) {
+            if (btnGoStep3) btnGoStep3.disabled = true;
+            return;
+        }
+
+        if (new Date(end.value) < new Date(start.value)) {
+            if (availMsg) availMsg.innerHTML = `<span style="color:var(--coral);font-weight:600;">Return date must be on or after pick-up date.</span>`;
+            if (btnGoStep3) btnGoStep3.disabled = true;
+            return;
+        }
+
+        if (v.status === 'maintenance') {
+            if (availMsg) availMsg.innerHTML = `<span style="color:var(--amber);font-weight:700;">This vehicle is currently undergoing scheduled maintenance.</span>`;
+            if (btnGoStep3) btnGoStep3.disabled = true;
+            return;
+        }
+
+        if (allBookedIntervals && allBookedIntervals.length) {
+            const conflict = allBookedIntervals.find(b => start.value <= b.end_date && end.value >= b.start_date);
+            if (conflict) {
+                if (availMsg) availMsg.innerHTML = `<span style="color:var(--coral);font-weight:600;">Date Conflict: Vehicle is already booked from ${fmtDate(conflict.start_date)} to ${fmtDate(conflict.end_date)}. Please select different dates.</span>`;
+                if (btnGoStep3) btnGoStep3.disabled = true;
+                return;
+            }
+        }
+
+        const days = Math.max(1, daysBetween(start.value, end.value));
+        const vehicleCost = days * rate;
+
+        let selectedDriver = null;
+        let driverFee = 0;
+        let driverDirectPayFee = 0;
+        let dId = null;
+
+        if (selectedDriverMode === 'with_driver' && !isMotorcycle) {
+            selectedDriver = drivers.find(dr => String(dr.id) === String(selectedDriverId)) || drivers[0];
+            driverFee = 900;
+            driverDirectPayFee = days > 1 ? (days - 1) * 900 : 0;
+            dId = selectedDriver ? selectedDriver.id : null;
+        }
+
+        const depositFee = 3000;
+        const totalAmount = vehicleCost + driverFee;
+
+        if (availMsg) {
+            availMsg.innerHTML = `<span style="color:var(--green);font-weight:600;">Dates available for rent! (${days} day${days > 1 ? 's' : ''})</span>`;
+        }
+        if (btnGoStep3) btnGoStep3.disabled = false;
+
+        calculatedBookingData = {
+            days,
+            isPerKm: false,
+            kmRate: rate * 0.05,
+            estKm: 0,
+            vehicleCost,
+            driverFee,
+            driverDirectPayFee,
+            selectedDriver,
+            selectedDriverMode,
+            totalAmount,
+            depositFee,
+            dId
+        };
+
+        // Update sticky summary card in 0ms!
+        const summaryDaysLabel = $('#summaryDaysLabel');
+        const summaryRateVal = $('#summaryRateVal');
+        const summaryDriverVal = $('#summaryDriverVal');
+        const summaryDepositVal = $('#summaryDepositVal');
+        const summaryTotalVal = $('#summaryTotalVal');
+
+        if (summaryDaysLabel) summaryDaysLabel.textContent = `${days} day${days > 1 ? 's' : ''}`;
+        if (summaryRateVal) summaryRateVal.textContent = `PHP ${fmtMoney(vehicleCost)}`;
+        if (summaryDriverVal) summaryDriverVal.textContent = `PHP ${fmtMoney(driverFee)}`;
+        if (summaryDepositVal) summaryDepositVal.textContent = `PHP ${fmtMoney(depositFee)}`;
+        if (summaryTotalVal) summaryTotalVal.textContent = `PHP ${fmtMoney(totalAmount + depositFee)}`;
     }
 
-    if (new Date(end.value) < new Date(start.value)) {
-      if (availMsg) availMsg.innerHTML = `<span style="color:var(--coral);font-weight:600;">Return date must be on or after pick-up date.</span>`;
-      if (btnGoStep3) btnGoStep3.disabled = true;
-      return;
+    function setStep(step) {
+        currentStep = step;
+        const s1 = $('#stepSection1'), s2 = $('#stepSection2'), s3 = $('#stepSection3');
+        const n1 = $('#stepNode1'), n2 = $('#stepNode2'), n3 = $('#stepNode3');
+        const d1 = $('#stepDiv1'), d2 = $('#stepDiv2');
+
+        if (s1) s1.classList.toggle('hidden', step !== 1);
+        if (s2) s2.classList.toggle('hidden', step !== 2);
+        if (s3) s3.classList.toggle('hidden', step !== 3);
+
+        if (n1) {
+            n1.classList.toggle('active', step === 1);
+            n1.classList.toggle('completed', step > 1);
+        }
+        if (n2) {
+            n2.classList.toggle('active', step === 2);
+            n2.classList.toggle('completed', step > 2);
+        }
+        if (n3) {
+            n3.classList.toggle('active', step === 3);
+        }
+
+        if (d1) d1.classList.toggle('active', step >= 2);
+        if (d2) d2.classList.toggle('active', step >= 3);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (step === 2) {
+            checkAvailability();
+        } else if (step === 3) {
+            renderStep3Pricing();
+        }
     }
 
-    if (v.status === 'maintenance') {
-      if (availMsg) availMsg.innerHTML = `<span style="color:var(--amber);font-weight:700;">This vehicle is currently undergoing scheduled maintenance.</span>`;
-      if (btnGoStep3) btnGoStep3.disabled = true;
-      return;
-    }
+    // Stepper & Nav Bindings
+    $('#stepNode1')?.addEventListener('click', () => {
+        state.tab = 'browse';
+        window.renderShell();
+    });
+    $('#stepNode2')?.addEventListener('click', () => setStep(2));
+    $('#stepNode3')?.addEventListener('click', () => {
+        if (calculatedBookingData) setStep(3);
+    });
+    $('#btnGoStep2')?.addEventListener('click', () => setStep(2));
+    $('#btnBackStep1')?.addEventListener('click', () => {
+        state.tab = 'browse';
+        window.renderShell();
+    });
+    $('#btnBackStep2')?.addEventListener('click', () => setStep(2));
 
-    if (allBookedIntervals && allBookedIntervals.length) {
-      const conflict = allBookedIntervals.find(b => start.value <= b.end_date && end.value >= b.start_date);
-      if (conflict) {
-        if (availMsg) availMsg.innerHTML = `<span style="color:var(--coral);font-weight:600;">Date Conflict: Vehicle is already booked from ${fmtDate(conflict.start_date)} to ${fmtDate(conflict.end_date)}. Please select different dates.</span>`;
-        if (btnGoStep3) btnGoStep3.disabled = true;
-        return;
-      }
-    }
+    // Date Change Listeners (Synchronous 0ms response)
+    start?.addEventListener('change', () => {
+        if (start.value && end) {
+            end.min = start.value;
+            if (end.value < start.value) {
+                end.value = start.value;
+            }
+        }
+        checkAvailability();
+    });
+    start?.addEventListener('input', checkAvailability);
 
-    const days = Math.max(1, daysBetween(start.value, end.value));
-    const vehicleCost = days * rate;
-
-    let selectedDriver = null;
-    let driverFee = 0;
-    let driverDirectPayFee = 0;
-    let dId = null;
-
-    if (selectedDriverMode === 'with_driver' && !isMotorcycle) {
-      selectedDriver = drivers.find(dr => String(dr.id) === String(selectedDriverId)) || drivers[0];
-      driverFee = 900;
-      driverDirectPayFee = days > 1 ? (days - 1) * 900 : 0;
-      dId = selectedDriver ? selectedDriver.id : null;
-    }
-
-    const depositFee = 3000;
-    const totalAmount = vehicleCost + driverFee;
-
-    if (availMsg) {
-      availMsg.innerHTML = `<span style="color:var(--green);font-weight:600;">Dates available for rent! (${days} day${days > 1 ? 's' : ''})</span>`;
-    }
-    if (btnGoStep3) btnGoStep3.disabled = false;
-
-    calculatedBookingData = {
-      days,
-      isPerKm: false,
-      kmRate: rate * 0.05,
-      estKm: 0,
-      vehicleCost,
-      driverFee,
-      driverDirectPayFee,
-      selectedDriver,
-      selectedDriverMode,
-      totalAmount,
-      depositFee,
-      dId
-    };
-
-    // Update sticky summary card in 0ms!
-    const summaryDaysLabel = $('#summaryDaysLabel');
-    const summaryRateVal = $('#summaryRateVal');
-    const summaryDriverVal = $('#summaryDriverVal');
-    const summaryDepositVal = $('#summaryDepositVal');
-    const summaryTotalVal = $('#summaryTotalVal');
-
-    if (summaryDaysLabel) summaryDaysLabel.textContent = `${days} day${days > 1 ? 's' : ''}`;
-    if (summaryRateVal) summaryRateVal.textContent = `PHP ${fmtMoney(vehicleCost)}`;
-    if (summaryDriverVal) summaryDriverVal.textContent = `PHP ${fmtMoney(driverFee)}`;
-    if (summaryDepositVal) summaryDepositVal.textContent = `PHP ${fmtMoney(depositFee)}`;
-    if (summaryTotalVal) summaryTotalVal.textContent = `PHP ${fmtMoney(totalAmount + depositFee)}`;
-  }
-
-  function setStep(step) {
-    currentStep = step;
-    const s1 = $('#stepSection1'), s2 = $('#stepSection2'), s3 = $('#stepSection3');
-    const n1 = $('#stepNode1'), n2 = $('#stepNode2'), n3 = $('#stepNode3');
-    const d1 = $('#stepDiv1'), d2 = $('#stepDiv2');
-
-    if (s1) s1.classList.toggle('hidden', step !== 1);
-    if (s2) s2.classList.toggle('hidden', step !== 2);
-    if (s3) s3.classList.toggle('hidden', step !== 3);
-
-    if (n1) {
-      n1.classList.toggle('active', step === 1);
-      n1.classList.toggle('completed', step > 1);
-    }
-    if (n2) {
-      n2.classList.toggle('active', step === 2);
-      n2.classList.toggle('completed', step > 2);
-    }
-    if (n3) {
-      n3.classList.toggle('active', step === 3);
-    }
-
-    if (d1) d1.classList.toggle('active', step >= 2);
-    if (d2) d2.classList.toggle('active', step >= 3);
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    if (step === 2) {
-      checkAvailability();
-    } else if (step === 3) {
-      renderStep3Pricing();
-    }
-  }
+    end?.addEventListener('change', checkAvailability);
+    end?.addEventListener('input', checkAvailability);
 
   // Stepper & Nav Bindings
   $('#stepNode1')?.addEventListener('click', () => {
@@ -687,98 +718,87 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       selectedDriverMode = driverCheckbox.checked ? 'with_driver' : 'self';
       checkAvailability();
     });
-  }
 
-  // Next to Step 3 handler
-  btnGoStep3?.addEventListener('click', () => {
-    checkAvailability();
-    if (!calculatedBookingData) {
-      toast('Please verify the rental schedule dates.', 'error');
-      return;
-    }
-    setStep(3);
-  });
+    // Step 3 Pricing & Payment Render
+    function renderStep3Pricing() {
+        if (!calculatedBookingData) return;
+        const data = calculatedBookingData;
 
-  // Step 3 Pricing & Payment Render
-  function renderStep3Pricing() {
-    if (!calculatedBookingData) return;
-    const data = calculatedBookingData;
+        let selectedPaymentMethod = 'card';
+        let uploadedProofDataUrl = null;
 
-    let selectedPaymentMethod = 'card';
-    let uploadedProofDataUrl = null;
+        const payStructure = $('#payStructureSelect');
+        const payMethodSelect = $('#paymentMethodSelect');
 
-    const payStructure = $('#payStructureSelect');
-    const payMethodSelect = $('#paymentMethodSelect');
+        // Sync Payment Structure UI
+        $$('#bPayStructureSelector .selector-opt-card').forEach(card => {
+            card.addEventListener('click', () => {
+                $$('#bPayStructureSelector .selector-opt-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                selectedDownpaymentPct = Number(card.dataset.pct || 100);
+                if (payStructure) payStructure.value = String(selectedDownpaymentPct);
+                renderPaymentDetail();
+            });
+        });
 
-    // Sync Payment Structure UI
-    $$('#bPayStructureSelector .selector-opt-card').forEach(card => {
-      card.addEventListener('click', () => {
-        $$('#bPayStructureSelector .selector-opt-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        selectedDownpaymentPct = Number(card.dataset.pct || 100);
-        if (payStructure) payStructure.value = String(selectedDownpaymentPct);
-        renderPaymentDetail();
-      });
-    });
+        // Sync Payment Method UI
+        $$('#bPaymentMethodGrid .pay-method-card').forEach(card => {
+            card.addEventListener('click', () => {
+                $$('#bPaymentMethodGrid .pay-method-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                selectedPaymentMethod = card.dataset.method;
+                if (payMethodSelect) payMethodSelect.value = selectedPaymentMethod;
+                renderPaymentDetail();
+            });
+        });
 
-    // Sync Payment Method UI
-    $$('#bPaymentMethodGrid .pay-method-card').forEach(card => {
-      card.addEventListener('click', () => {
-        $$('#bPaymentMethodGrid .pay-method-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        selectedPaymentMethod = card.dataset.method;
-        if (payMethodSelect) payMethodSelect.value = selectedPaymentMethod;
-        renderPaymentDetail();
-      });
-    });
+        function renderPaymentDetail() {
+            const detailContainer = $('#bookingPayMethodDetail');
+            if (!detailContainer) return;
 
-    function renderPaymentDetail() {
-      const detailContainer = $('#bookingPayMethodDetail');
-      if (!detailContainer) return;
+            const finalAmount = data.totalAmount + data.depositFee;
+            const isFullCash = (selectedPaymentMethod === 'cash');
+            const dueAmount = isFullCash ? 0 : (selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * (selectedDownpaymentPct / 100)));
+            const balAmount = finalAmount - dueAmount;
 
-      const finalAmount = data.totalAmount + data.depositFee;
-      const isFullCash = (selectedPaymentMethod === 'cash');
-      const dueAmount = isFullCash ? 0 : (selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * (selectedDownpaymentPct / 100)));
-      const balAmount = finalAmount - dueAmount;
+            // Update right-side summary card dynamically
+            const summaryTotalVal = $('#summaryTotalVal');
+            const summaryTotalLabel = $('.summary-total-label');
+            const summaryDepositVal = $('#summaryDepositVal');
 
-      // Update right-side summary card dynamically
-      const summaryTotalVal = $('#summaryTotalVal');
-      const summaryTotalLabel = $('.summary-total-label');
-      const summaryDepositVal = $('#summaryDepositVal');
+            if (summaryTotalVal) {
+                if (isFullCash) {
+                    if (summaryTotalLabel) summaryTotalLabel.textContent = 'Pay on Handover';
+                    summaryTotalVal.textContent = `PHP ${fmtMoney(finalAmount)}`;
+                } else if (selectedDownpaymentPct === 20) {
+                    if (summaryTotalLabel) summaryTotalLabel.textContent = 'Due Now (20% Downpayment)';
+                    summaryTotalVal.textContent = `PHP ${fmtMoney(dueAmount)}`;
+                } else {
+                    if (summaryTotalLabel) summaryTotalLabel.textContent = 'Total due now';
+                    summaryTotalVal.textContent = `PHP ${fmtMoney(finalAmount)}`;
+                }
+            }
 
-      if (summaryTotalVal) {
-        if (isFullCash) {
-          if (summaryTotalLabel) summaryTotalLabel.textContent = 'Pay on Handover';
-          summaryTotalVal.textContent = `PHP ${fmtMoney(finalAmount)}`;
-        } else if (selectedDownpaymentPct === 20) {
-          if (summaryTotalLabel) summaryTotalLabel.textContent = 'Due Now (20% Downpayment)';
-          summaryTotalVal.textContent = `PHP ${fmtMoney(dueAmount)}`;
-        } else {
-          if (summaryTotalLabel) summaryTotalLabel.textContent = 'Total due now';
-          summaryTotalVal.textContent = `PHP ${fmtMoney(finalAmount)}`;
-        }
-      }
+            let summaryBalRow = $('#summaryBalRow');
+            if (selectedDownpaymentPct === 20 && !isFullCash) {
+                if (!summaryBalRow && summaryDepositVal && summaryDepositVal.parentElement) {
+                    summaryBalRow = document.createElement('div');
+                    summaryBalRow.className = 'summary-row';
+                    summaryBalRow.id = 'summaryBalRow';
+                    summaryBalRow.style.color = 'var(--accent, #5B4B8A)';
+                    summaryBalRow.style.fontWeight = '700';
+                    summaryDepositVal.parentElement.insertAdjacentElement('afterend', summaryBalRow);
+                }
+                if (summaryBalRow) {
+                    summaryBalRow.style.display = 'flex';
+                    summaryBalRow.innerHTML = `<span>Remaining on pickup</span><strong>PHP ${fmtMoney(balAmount)}</strong>`;
+                }
+            } else if (summaryBalRow) {
+                summaryBalRow.style.display = 'none';
+            }
 
-      let summaryBalRow = $('#summaryBalRow');
-      if (selectedDownpaymentPct === 20 && !isFullCash) {
-        if (!summaryBalRow && summaryDepositVal && summaryDepositVal.parentElement) {
-          summaryBalRow = document.createElement('div');
-          summaryBalRow.className = 'summary-row';
-          summaryBalRow.id = 'summaryBalRow';
-          summaryBalRow.style.color = 'var(--accent, #5B4B8A)';
-          summaryBalRow.style.fontWeight = '700';
-          summaryDepositVal.parentElement.insertAdjacentElement('afterend', summaryBalRow);
-        }
-        if (summaryBalRow) {
-          summaryBalRow.style.display = 'flex';
-          summaryBalRow.innerHTML = `<span>Remaining on pickup</span><strong>PHP ${fmtMoney(balAmount)}</strong>`;
-        }
-      } else if (summaryBalRow) {
-        summaryBalRow.style.display = 'none';
-      }
-
-      if (selectedPaymentMethod === 'card') {
-        detailContainer.innerHTML = `
+            if (selectedPaymentMethod === 'card') {
+                detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="margin-top:14px;">
             <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;">Credit / Debit Card</div>
             <div class="booking-fields-grid">
@@ -787,9 +807,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             </div>
           </div>
         `;
-        if (submitBtn) submitBtn.textContent = `Confirm & Pay PHP ${fmtMoney(dueAmount)}`;
-      } else if (selectedPaymentMethod === 'gcash') {
-        detailContainer.innerHTML = `
+                if (submitBtn) submitBtn.textContent = `Confirm & Pay PHP ${fmtMoney(dueAmount)}`;
+            } else if (selectedPaymentMethod === 'gcash') {
+                detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="text-align:center;margin-top:14px;">
             <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
               <img src="assets/gcash-logo.webp" alt="GCash" style="width:24px;height:24px;border-radius:4px;object-fit:cover;" />
@@ -803,9 +823,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             </div>
           </div>
         `;
-        if (submitBtn) submitBtn.textContent = `Submit GCash Payment (PHP ${fmtMoney(dueAmount)})`;
-      } else if (selectedPaymentMethod === 'bank_transfer') {
-        detailContainer.innerHTML = `
+                if (submitBtn) submitBtn.textContent = `Submit GCash Payment (PHP ${fmtMoney(dueAmount)})`;
+            } else if (selectedPaymentMethod === 'bank_transfer') {
+                detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="text-align:center;margin-top:14px;">
             <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;">Bank Transfer / Maya QR</div>
             <div style="margin:8px 0;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=INSTAPAY-RENTAL-${v.id}-${dueAmount}" alt="Bank QR" style="border-radius:8px;" /></div>
@@ -816,9 +836,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             </div>
           </div>
         `;
-        if (submitBtn) submitBtn.textContent = `Submit Bank Transfer (PHP ${fmtMoney(dueAmount)})`;
-      } else if (selectedPaymentMethod === 'cash') {
-        detailContainer.innerHTML = `
+                if (submitBtn) submitBtn.textContent = `Submit Bank Transfer (PHP ${fmtMoney(dueAmount)})`;
+            } else if (selectedPaymentMethod === 'cash') {
+                detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="margin-top:14px;padding:14px;background:#FFFFFF;border:1px solid var(--glass-border);border-radius:9px;">
             <div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">Cash on Meetup / Handover</div>
             <p style="font-size:0.82rem;color:var(--text-mid);margin:0;line-height:1.4;">
@@ -826,151 +846,152 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             </p>
           </div>
         `;
-        if (submitBtn) submitBtn.textContent = `Confirm Reservation (Cash on Pickup)`;
-      }
+                if (submitBtn) submitBtn.textContent = `Confirm Reservation (Cash on Pickup)`;
+            }
+        }
+
+        renderPaymentDetail();
     }
 
-    renderPaymentDetail();
+    // Initial trigger so everything is pre-calculated on open
+    checkAvailability();
+
+    // Submit Booking Handler
+    submitBtn?.addEventListener('click', async () => {
+        if (!calculatedBookingData) return;
+
+        const rName = ($('#renterName')?.value || '').trim();
+        const rPhone = ($('#renterPhone')?.value || '').trim();
+        const rLicense = ($('#renterLicense')?.value || '').trim();
+        const rLocation = ($('#bLocation')?.value || 'Puerto Princesa Airport').trim();
+        const rTime = ($('#bTime')?.value || '09:00 AM').trim();
+
+        if (!rName) {
+            toast('Please enter your full name.', 'error');
+            $('#renterName')?.focus();
+            return;
+        }
+
+        if (!rPhone) {
+            toast('Please enter your contact mobile number.', 'error');
+            $('#renterPhone')?.focus();
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting reservation...';
+
+        const chosenMethod = $('#paymentMethodSelect')?.value || 'card';
+        const enteredRefNo = ($('#bPayRefNo')?.value || '').trim();
+        const finalAmount = calculatedBookingData.totalAmount + calculatedBookingData.depositFee;
+        const isFullCash = (chosenMethod === 'cash');
+        const paidAmount = isFullCash ? 0 : (selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * 0.2));
+        const balanceDue = isFullCash ? finalAmount : (finalAmount - paidAmount);
+
+        let targetStatus = 'confirmed';
+        let targetPaymentStatus = 'verified';
+        let targetMethodName = 'Card';
+        let finalRefNum = enteredRefNo || `BK-${Date.now().toString().slice(-8)}`;
+
+        if (chosenMethod === 'card') {
+            targetStatus = 'confirmed';
+            targetPaymentStatus = 'verified';
+            targetMethodName = 'Card';
+            finalRefNum = `CARD-${Date.now().toString().slice(-6)}`;
+        } else if (chosenMethod === 'gcash') {
+            targetStatus = 'pending_verification';
+            targetPaymentStatus = 'pending_verification';
+            targetMethodName = 'GCash';
+            finalRefNum = enteredRefNo || `GCASH-${Date.now().toString().slice(-8)}`;
+        } else if (chosenMethod === 'bank_transfer') {
+            targetStatus = 'pending_verification';
+            targetPaymentStatus = 'pending_verification';
+            targetMethodName = 'Bank Transfer';
+            finalRefNum = enteredRefNo || `TXN-${Date.now().toString().slice(-8)}`;
+        } else if (chosenMethod === 'cash') {
+            targetStatus = 'cash_on_pickup';
+            targetPaymentStatus = 'unpaid';
+            targetMethodName = 'Cash on Pickup';
+            finalRefNum = `CASH-${Date.now().toString().slice(-6)}`;
+        }
+
+        // Save profile in localStorage & state
+        state.profile = state.profile || {};
+        state.profile.full_name = rName;
+        state.profile.phone = rPhone;
+        state.profile.license_number = rLicense;
+        state.profile.address = rLocation;
+
+        try {
+            localStorage.setItem('rentflow_guest_profile', JSON.stringify({
+                full_name: rName,
+                phone: rPhone,
+                license_number: rLicense,
+                address: rLocation
+            }));
+        } catch (e) { }
+
+        const activeCustomerId = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+        const cleanDbPayload = {
+            customer_id: activeCustomerId,
+            vehicle_id: Number(v.id),
+            start_date: start.value,
+            end_date: end.value,
+            total_amount: finalAmount,
+            paid_amount: paidAmount,
+            balance_due: balanceDue,
+            payment_type: selectedDownpaymentPct === 100 ? 'full' : 'partial',
+            downpayment_percent: selectedDownpaymentPct,
+            status: targetStatus,
+            review_notes: `Meetup: ${rLocation} (${rTime}) | Method: ${targetMethodName} | Ref: ${finalRefNum}`
+        };
+
+        let newBooking = null;
+        try {
+            const { data: createdBooking, error } = await supabase.from('bookings').insert(cleanDbPayload).select().single();
+            if (!error && createdBooking) {
+                newBooking = createdBooking;
+            }
+        } catch (e) {
+            console.warn('Booking DB notice:', e);
+        }
+
+        const assignedId = newBooking?.id ? String(newBooking.id) : `bk-${Date.now().toString().slice(-6)}`;
+        const recordToSave = {
+            ...cleanDbPayload,
+            ...(newBooking || {}),
+            id: assignedId,
+            status: targetStatus,
+            payment_status: targetPaymentStatus,
+            payment_method: targetMethodName,
+            payment_ref: finalRefNum,
+            ref_number: finalRefNum,
+            customer_name: rName,
+            customer_phone: rPhone,
+            driver_license: rLicense,
+            vehicles: { ...v },
+            created_at: newBooking?.created_at || new Date().toISOString()
+        };
+
+        saveLocalBooking(recordToSave);
+        broadcastNewBookingRequest(recordToSave);
+
+        closeModal();
+        state.tab = 'bookings';
+        if (window.renderShell) {
+            window.renderShell();
+        }
+
+        toast(`Reservation created successfully! Reference: #${finalRefNum}`, 'success');
+
+        // Automatically display the receipt pass modal on screen per user requirement
+        if (window.openPaidReceiptModal) {
+            setTimeout(() => {
+                window.openPaidReceiptModal(recordToSave.id, targetMethodName, finalRefNum);
+            }, 100);
+        }
+    });
   }
-
-  // Initial trigger so everything is pre-calculated on open
-  checkAvailability();
-
-  // Submit Booking Handler
-  submitBtn?.addEventListener('click', async () => {
-    if (!calculatedBookingData) return;
-
-    const rName = ($('#renterName')?.value || '').trim();
-    const rPhone = ($('#renterPhone')?.value || '').trim();
-    const rLicense = ($('#renterLicense')?.value || '').trim();
-    const rLocation = ($('#bLocation')?.value || 'Puerto Princesa Airport').trim();
-    const rTime = ($('#bTime')?.value || '09:00 AM').trim();
-
-    if (!rName) {
-      toast('Please enter your full name.', 'error');
-      $('#renterName')?.focus();
-      return;
-    }
-
-    if (!rPhone) {
-      toast('Please enter your contact mobile number.', 'error');
-      $('#renterPhone')?.focus();
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting reservation...';
-
-    const chosenMethod = $('#paymentMethodSelect')?.value || 'card';
-    const enteredRefNo = ($('#bPayRefNo')?.value || '').trim();
-    const finalAmount = calculatedBookingData.totalAmount + calculatedBookingData.depositFee;
-    const isFullCash = (chosenMethod === 'cash');
-    const paidAmount = isFullCash ? 0 : (selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * 0.2));
-    const balanceDue = isFullCash ? finalAmount : (finalAmount - paidAmount);
-
-    let targetStatus = 'confirmed';
-    let targetPaymentStatus = 'verified';
-    let targetMethodName = 'Card';
-    let finalRefNum = enteredRefNo || `BK-${Date.now().toString().slice(-8)}`;
-
-    if (chosenMethod === 'card') {
-      targetStatus = 'confirmed';
-      targetPaymentStatus = 'verified';
-      targetMethodName = 'Card';
-      finalRefNum = `CARD-${Date.now().toString().slice(-6)}`;
-    } else if (chosenMethod === 'gcash') {
-      targetStatus = 'pending_verification';
-      targetPaymentStatus = 'pending_verification';
-      targetMethodName = 'GCash';
-      finalRefNum = enteredRefNo || `GCASH-${Date.now().toString().slice(-8)}`;
-    } else if (chosenMethod === 'bank_transfer') {
-      targetStatus = 'pending_verification';
-      targetPaymentStatus = 'pending_verification';
-      targetMethodName = 'Bank Transfer';
-      finalRefNum = enteredRefNo || `TXN-${Date.now().toString().slice(-8)}`;
-    } else if (chosenMethod === 'cash') {
-      targetStatus = 'cash_on_pickup';
-      targetPaymentStatus = 'unpaid';
-      targetMethodName = 'Cash on Pickup';
-      finalRefNum = `CASH-${Date.now().toString().slice(-6)}`;
-    }
-
-    // Save profile in localStorage & state
-    state.profile = state.profile || {};
-    state.profile.full_name = rName;
-    state.profile.phone = rPhone;
-    state.profile.license_number = rLicense;
-    state.profile.address = rLocation;
-
-    try {
-      localStorage.setItem('rentflow_guest_profile', JSON.stringify({
-        full_name: rName,
-        phone: rPhone,
-        license_number: rLicense,
-        address: rLocation
-      }));
-    } catch (e) {}
-
-    const activeCustomerId = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
-    const cleanDbPayload = {
-      customer_id: activeCustomerId,
-      vehicle_id: Number(v.id),
-      start_date: start.value,
-      end_date: end.value,
-      total_amount: finalAmount,
-      paid_amount: paidAmount,
-      balance_due: balanceDue,
-      payment_type: selectedDownpaymentPct === 100 ? 'full' : 'partial',
-      downpayment_percent: selectedDownpaymentPct,
-      status: targetStatus,
-      review_notes: `Meetup: ${rLocation} (${rTime}) | Method: ${targetMethodName} | Ref: ${finalRefNum}`
-    };
-
-    let newBooking = null;
-    try {
-      const { data: createdBooking, error } = await supabase.from('bookings').insert(cleanDbPayload).select().single();
-      if (!error && createdBooking) {
-        newBooking = createdBooking;
-      }
-    } catch (e) {
-      console.warn('Booking DB notice:', e);
-    }
-
-    const assignedId = newBooking?.id ? String(newBooking.id) : `bk-${Date.now().toString().slice(-6)}`;
-    const recordToSave = {
-      ...cleanDbPayload,
-      ...(newBooking || {}),
-      id: assignedId,
-      status: targetStatus,
-      payment_status: targetPaymentStatus,
-      payment_method: targetMethodName,
-      payment_ref: finalRefNum,
-      ref_number: finalRefNum,
-      customer_name: rName,
-      customer_phone: rPhone,
-      driver_license: rLicense,
-      vehicles: { ...v },
-      created_at: newBooking?.created_at || new Date().toISOString()
-    };
-
-    saveLocalBooking(recordToSave);
-    broadcastNewBookingRequest(recordToSave);
-
-    closeModal();
-    state.tab = 'bookings';
-    if (window.renderShell) {
-      window.renderShell();
-    }
-
-    toast(`Reservation created successfully! Reference: #${finalRefNum}`, 'success');
-
-    // Automatically display the receipt pass modal on screen per user requirement
-    if (window.openPaidReceiptModal) {
-      setTimeout(() => {
-        window.openPaidReceiptModal(recordToSave.id, targetMethodName, finalRefNum);
-      }, 100);
-    }
-  });
 }
 
 // ═══ STANDALONE BOOKING DATE SELECTION MODAL (Matches media_1793708316816_d3eb85a3.png) ═══
