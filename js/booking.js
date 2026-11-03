@@ -221,7 +221,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
                   <span class="pm-desc">Debit / Credit</span>
                 </div>
                 <div class="pay-method-card" data-method="gcash">
-                  <i class="fa-solid fa-mobile-screen-button pm-icon"></i>
+                  <img src="assets/gcash-logo.webp" alt="GCash" class="pm-icon" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />
                   <strong class="pm-name">GCash</strong>
                   <span class="pm-desc">Instant QR</span>
                 </div>
@@ -555,9 +555,12 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       } else if (selectedPaymentMethod === 'gcash') {
         detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="text-align:center;margin-top:14px;">
-            <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;">Scan QR Code via GCash</div>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+              <img src="assets/gcash-logo.webp" alt="GCash" style="width:24px;height:24px;border-radius:4px;object-fit:cover;" />
+              Scan QR Code via GCash
+            </div>
             <div style="margin:8px 0;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=GCASH-RENTAL-${v.id}-${dueAmount}" alt="GCash QR" style="border-radius:8px;" /></div>
-            <div style="font-size:0.82rem;color:var(--text-mid);">Account: 0917 582 9140 (RentFlow Palawan)</div>
+            <div style="font-size:0.82rem;color:var(--text-mid);">Account: 0917 582 9140 (Vehicle Rental System)</div>
             <div class="field" style="margin-top:10px;text-align:left;">
               <label>GCash Reference Number *</label>
               <input type="text" id="bPayRefNo" placeholder="e.g. 1002 9482 1940" class="clean-input" />

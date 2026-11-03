@@ -1805,7 +1805,7 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
           </label>
           <div class="payment-chip-grid" id="dmgPayMethodGrid">
             <div class="payment-chip selected" data-method="GCash">
-              <i class="fa-solid fa-mobile-screen"></i> GCash
+              <img src="assets/gcash-logo.webp" alt="GCash" style="width:16px;height:16px;border-radius:3px;vertical-align:middle;object-fit:cover;" /> GCash
             </div>
             <div class="payment-chip" data-method="Visa Card">
               <i class="fa-solid fa-credit-card"></i> Card
@@ -2067,7 +2067,7 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
           </label>
           <div class="payment-chip-grid" id="feePayMethodGrid">
             <div class="payment-chip" data-method="GCash">
-              <i class="fa-solid fa-mobile-screen"></i> GCash
+              <img src="assets/gcash-logo.webp" alt="GCash" style="width:16px;height:16px;border-radius:3px;vertical-align:middle;object-fit:cover;" /> GCash
             </div>
             <div class="payment-chip selected" data-method="Visa Card">
               <i class="fa-solid fa-credit-card"></i> Card

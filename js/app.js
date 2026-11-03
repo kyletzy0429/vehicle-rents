@@ -438,7 +438,7 @@ export function openPricingModal() {
 
 export function renderShell() {
   const comp = getSystemSettings().company || DEFAULT_SETTINGS.company;
-  const companyName = (comp.name && comp.name !== 'Vehicle Rental Management System') ? comp.name : 'Palawan Drive';
+  const companyName = (comp.name && comp.name !== 'Palawan Drive') ? comp.name : 'Vehicle Rental System';
   const rawTabs = PORTAL_TABS[state.portal] || [];
   const tabs = rawTabs.map(tObj => ({
     id: tObj.id,

@@ -648,7 +648,9 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
         <div class="pay-method-card ${selectedMethod === 'gcash' ? 'active' : ''}" data-method="gcash">
           <div class="pm-radio"><i class="fa-solid ${selectedMethod === 'gcash' ? 'fa-circle-check' : 'fa-circle'}"></i></div>
-          <div class="pm-icon pm-gcash-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+          <div class="pm-icon pm-gcash-icon" style="padding:0;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center;">
+            <img src="assets/gcash-logo.webp" alt="GCash" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />
+          </div>
           <div class="pm-info">
             <strong class="pm-name">GCash</strong>
             <span class="pm-desc">Instant QR Scan</span>
@@ -763,7 +765,10 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     } else if (selectedMethod === 'gcash') {
       container.innerHTML = `
         <div class="pay-detail-panel" style="text-align:center;">
-          <div class="pay-detail-heading" style="text-align:center;">Scan QR Code via GCash</div>
+          <div class="pay-detail-heading" style="text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <img src="assets/gcash-logo.webp" alt="GCash" style="width:24px;height:24px;border-radius:4px;object-fit:cover;" />
+            Scan QR Code via GCash
+          </div>
           <div class="pay-qr-wrap">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${b.id}-${payNow}" alt="GCash QR Code" />
           </div>
@@ -1154,7 +1159,7 @@ ISSUED AT: ${new Date().toLocaleString()}
     <div class="clean-receipt-modal">
       <div class="clean-receipt-header">
         <div class="clean-receipt-brand">
-          <span class="brand-pill">Palawan Drive</span>
+          <span class="brand-pill">Vehicle Rental System</span>
           <h2 class="clean-receipt-title">Booking Confirmation &amp; Digital Pass</h2>
           <span class="clean-receipt-ref">Reference Code: <strong>${refCode}</strong></span>
         </div>
@@ -1293,7 +1298,7 @@ export async function openRefundRequestModal(bookingId) {
       <div class="field" style="margin-bottom:14px;">
         <label>Refund Transfer Method</label>
         <div class="refund-method-pills" id="refMethodPills">
-          <button type="button" class="bank-pill active" data-ref="GCash"><i class="fa-solid fa-mobile-screen-button"></i> GCash</button>
+          <button type="button" class="bank-pill active" data-ref="GCash"><img src="assets/gcash-logo.webp" alt="GCash" style="width:16px;height:16px;border-radius:3px;vertical-align:middle;object-fit:cover;margin-right:4px;" /> GCash</button>
           <button type="button" class="bank-pill" data-ref="Maya"><i class="fa-solid fa-wallet"></i> Maya</button>
           <button type="button" class="bank-pill" data-ref="BDO"><i class="fa-solid fa-building-columns"></i> BDO</button>
           <button type="button" class="bank-pill" data-ref="BPI"><i class="fa-solid fa-building-columns"></i> BPI</button>

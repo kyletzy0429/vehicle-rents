@@ -72,8 +72,8 @@ export function renderLandingPage() {
       <nav class="lp-navbar-v2">
         <div class="lp-nav-inner">
           <div class="lp-brand-group">
-            <div class="lp-brand-icon">P</div>
-            <span class="lp-brand-text">Palawan Drive</span>
+            <div class="lp-brand-icon"><i class="fa-solid fa-car-side"></i></div>
+            <span class="lp-brand-text">Vehicle Rental System</span>
           </div>
 
           <div class="lp-nav-links">
@@ -94,7 +94,7 @@ export function renderLandingPage() {
       <header class="lp-hero-split-section" id="lpHero">
         <div class="lp-hero-split-grid">
           <div class="lp-hero-split-left">
-            <div class="lp-overline-tag">Vehicle rental in Palawan</div>
+            <div class="lp-overline-tag">Vehicle Rental System</div>
             <h1 class="lp-hero-main-title">Pick up the keys, not the paperwork.</h1>
             <p class="lp-hero-main-desc">
               Browse live availability, book in three steps, and get handed your vehicle with a QR check-in at the counter.
@@ -264,7 +264,7 @@ export function renderLandingPage() {
       <footer class="lp-editorial-footer">
         <div class="lp-footer-container">
           <div class="lp-footer-left">
-            <span>Palawan Drive. Vehicle Rental Management System.</span>
+            <span>Vehicle Rental System. Online Vehicle Booking &amp; Fleet Management.</span>
           </div>
           <div class="lp-footer-right">
             <a href="#lpHero">Terms</a>
@@ -416,8 +416,8 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
         <div class="auth-split-right">
           <div class="auth-split-form-wrap">
             <div class="auth-split-brand">
-              <div class="lp-brand-icon">P</div>
-              <span class="lp-brand-text">Palawan Drive</span>
+              <div class="lp-brand-icon"><i class="fa-solid fa-car-side"></i></div>
+              <span class="lp-brand-text">Vehicle Rental System</span>
             </div>
 
             <h2 class="auth-split-headline">${mode === 'signup' ? 'Create an account' : (mode === 'forgot' ? 'Reset password' : 'Welcome back')}</h2>

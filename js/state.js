@@ -319,7 +319,7 @@ export function updateLocalBookingStatus(bookingId, status, extraOrNotes = null)
 
 export const DEFAULT_SETTINGS = {
   company: {
-    name: 'Palawan Drive',
+    name: 'Vehicle Rental System',
     phone: '+63 67676767',
     mobile: '+63 917 123 4567',
     email: 'vehicleretal.ph',
@@ -366,6 +366,10 @@ export function getSystemSettings() {
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
     const company = { ...DEFAULT_SETTINGS.company, ...(parsed.company || {}) };
+
+    if (!company.name || company.name === 'Palawan Drive') {
+      company.name = 'Vehicle Rental System';
+    }
 
     if (!company.address || company.address === '123 Main Avenue, Metro Manila, Philippines' || company.address === '123 Main Ave, Makati City') {
       company.address = '123 PPC MAIN BRANCH VENUE';
