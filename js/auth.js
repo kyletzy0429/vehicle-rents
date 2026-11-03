@@ -54,519 +54,259 @@ export function renderLandingPage() {
   if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
   else document.documentElement.removeAttribute('data-theme');
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 3);
+  const nextDayStr = tomorrow.toISOString().slice(0, 10);
 
-  const vehiclePreviews = [
-    { name: 'Toyota Fortuner 2.8 V', cat: 'SUV', seats: 7, img: 'images/fortuner.webp', rate: 4200, desc: 'Premium Diesel SUV with high ground clearance, leather seats, and dual aircon.' },
-    { name: 'Toyota Vios 1.5 G CVT', cat: 'Sedan', seats: 5, img: 'images/vios.webp', rate: 2500, desc: 'Fuel-efficient subcompact sedan. Automatic transmission, ideal for city driving.' },
-    { name: 'Toyota Innova 2.8 E', cat: 'MPV', seats: 8, img: 'images/innova.webp', rate: 3200, desc: 'Spacious 8-seater MPV with powerful 2.8L Diesel engine and dual AC.' },
-    { name: 'Ford Ranger Raptor', cat: 'Pickup', seats: 5, img: 'images/raptor.webp', rate: 4500, desc: 'Heavy-duty 4x4 pickup truck with high ground clearance for provincial trips.' },
-  ];
-
-  const reviewsData = [
-    {
-      category: 'suv airport',
-      name: 'Mike Denver',
-      initials: 'MD',
-      avatarBg: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
-      role: 'Verified Renter',
-      location: 'PPC, Palawan',
-      score: '5.0',
-      time: '3d ago',
-      vehicleIcon: 'fa-car-side',
-      vehicle: 'Toyota Fortuner 2.8 V',
-      cat: 'SUV',
-      text: 'Super smooth ng booking process! Pagka-landing namin sa PPC, naka-park na agad ang Fortuner sa arrival area with instant digital key access. Mababait at very professional ang staff. Napakalinis ng sasakyan, amoy showroom bago pa!',
-      chips: ['Spotless Clean', 'PPC Airport Handover', 'Contactless Key Handover']
-    },
-    {
-      category: 'suv luxury',
-      name: 'JR Aplino',
-      initials: 'JA',
-      avatarBg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      role: 'Verified Renter',
-      location: 'PPC, Palawan',
-      score: '5.0',
-      time: '5d ago',
-      vehicleIcon: 'fa-car-side',
-      vehicle: 'Ford Ranger Raptor 4x4',
-      cat: 'Pickup',
-      text: 'Immaculate vehicle condition. Kayang-kaya ng Raptor ang long drive galing PPC papuntang El Nido nang walang aberya. Extending our trip by two days via the portal took less than two minutes without calling anyone. Truly a world-class platform!',
-      chips: ['4x4 Palawan Roadtrip', 'Instant Trip Extension', 'Comprehensive Cover']
-    },
-    {
-      category: 'city luxury',
-      name: 'Mark Vincent',
-      initials: 'MV',
-      avatarBg: 'linear-gradient(135deg, #10b981, #047857)',
-      role: 'Verified Renter',
-      location: 'PPC Palawan',
-      score: '5.0',
-      time: '1w ago',
-      vehicleIcon: 'fa-car-side',
-      vehicle: 'Toyota Vios 1.5 G CVT',
-      cat: 'Sedan',
-      text: 'Effortless rental experience. The real-time availability engine meant zero waiting for manual phone confirmations. Official digital receipt and rental agreement were generated immediately. Napakatipid pa sa gas para sa city driving dito sa PPC.',
-      chips: ['City Rental PPC', 'Instant Agreement Sync', 'High Fuel Efficiency']
-    },
-    {
-      category: 'suv city airport',
-      name: 'Ryan',
-      initials: 'R',
-      avatarBg: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      role: 'Verified Renter',
-      location: 'Palawan',
-      score: '5.0',
-      time: '1w ago',
-      vehicleIcon: 'fa-car-side',
-      vehicle: 'Toyota Innova 2.8 E',
-      cat: 'MPV',
-      text: 'Booked the 8-seater Innova para sa family trip namin sa Puerto Princesa at mga pasyalan sa Palawan. Plenty of legroom and luggage space. The vehicle was thoroughly disinfected and had GPS tracking enabled. Best rental platform in Palawan by far.',
-      chips: ['Family Vacation', '8-Seater Comfort', 'Live GPS Enabled']
-    }
+  // Live vehicles from state or fallback
+  const vehicles = (state.vehicles && state.vehicles.length > 0) ? state.vehicles.slice(0, 4) : [
+    { id: '1', name: 'Toyota Vios 1.5 G CVT', category: 'Sedan', seats: 5, transmission: 'Automatic', daily_rate: 2200, image_url: 'images/vios.webp' },
+    { id: '2', name: 'Toyota Fortuner 2.8 V', category: 'SUV', seats: 7, transmission: 'Automatic', daily_rate: 4800, image_url: 'images/fortuner.webp' },
+    { id: '3', name: 'Mitsubishi Xpander GLS', category: 'MPV', seats: 7, transmission: 'Automatic', daily_rate: 3100, image_url: 'images/xpander.webp' },
+    { id: '4', name: 'Ford Ranger Raptor', category: 'Pickup', seats: 5, transmission: 'Automatic', daily_rate: 6500, image_url: 'images/raptor.webp' }
   ];
 
   $('#app').innerHTML = `
     <div class="landing-page" data-theme="${isDark ? 'dark' : ''}">
-      <div class="ambient-aura">
-        <div class="ambient-blob-1"></div>
-        <div class="ambient-blob-2"></div>
-      </div>
+      <!-- ═══ TOP NAVBAR (Fraunces + DM Sans, Flat, No blur) ═══ -->
+      <nav class="lp-navbar-v2">
+        <div class="lp-nav-inner">
+          <div class="lp-brand-group">
+            <div class="lp-brand-icon">P</div>
+            <span class="lp-brand-text">Palawan Drive</span>
+          </div>
 
-      <!-- ═══ NAVBAR ═══ -->
-      <nav class="lp-navbar">
-        <div class="lp-navbar-inner">
-          <div class="lp-navbar-brand">
-            <div>
-              <div class="lp-navbar-title">Vehicle Rental<br>Management System</div>
-              <div class="lp-navbar-sub">Vehicle Rental System</div>
-            </div>
+          <div class="lp-nav-links">
+            <a href="#lpHero" class="lp-nav-item active">Home</a>
+            <a href="#lpFleet" class="lp-nav-item">Fleet</a>
+            <a href="#lpHowItWorks" class="lp-nav-item">How it works</a>
+            <a href="#lpReviews" class="lp-nav-item">Reviews</a>
           </div>
-          <div class="lp-navbar-links">
-            <a href="#lp-hero" class="lp-nav-link active">Home</a>
-            <a href="#lp-about" class="lp-nav-link">About</a>
-            <a href="#lp-fleet" class="lp-nav-link">Latest Deals</a>
-            <a href="#lp-perks" class="lp-nav-link">Features</a>
-            <a href="#lp-reviews" class="lp-nav-link">Reviews</a>
+
+          <div class="lp-nav-actions">
+            <button type="button" class="btn btn-ghost btn-sm" id="lpSignInBtn">Sign in</button>
+            <button type="button" class="btn btn-primary btn-sm" id="lpReserveBtn">Book a vehicle</button>
           </div>
-          <div class="lp-navbar-actions">
-            <div class="lang-select-pill" title="Language: English">
-              <span>EN</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.6rem;opacity:0.6;"></i>
-            </div>
-            <button type="button" class="topbar-icon-btn" id="lpThemeToggle" title="Toggle Theme">
-              <i class="fa-solid fa-${isDark ? 'sun' : 'moon'}" style="color:${isDark ? '#f59e0b' : 'var(--accent)'};"></i>
-            </button>
-            <button type="button" class="lp-btn-signin" id="lpSignInBtn">
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in
-            </button>
-            <button type="button" class="lp-btn-reserve" id="lpReserveBtn">
-              <i class="fa-solid fa-calendar-check"></i> View Deals
-            </button>
-          </div>
-          <button type="button" class="lp-mobile-menu-btn" id="lpMobileMenuBtn" aria-label="Menu">
-            <i class="fa-solid fa-bars"></i>
-          </button>
         </div>
       </nav>
 
-      <!-- ═══ HERO ═══ -->
-      <section class="lp-hero" id="lp-hero">
-        <div class="lp-hero-content">
-          <div class="lp-hero-tag">PREMIUM VEHICLE RENTALS</div>
-          <h1 class="lp-hero-headline">Experience Next-Gen<br>Luxury Vehicle Rentals &amp;<br><span class="lp-hero-highlight">Live Instant Handover</span></h1>
-          <p class="lp-hero-desc">Discover Palawan &amp; beyond with live vehicle availability, instant digital reservations, contactless QR check-in, and 24/7 dedicated roadside support.</p>
-          <div class="lp-hero-btns">
-            <a href="#lp-fleet" class="lp-btn-explore">Explore Available Vehicles <i class="fa-solid fa-arrow-down" style="font-size:0.8rem;"></i></a>
-            <button type="button" class="lp-btn-signin-hero" id="lpHeroSignIn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to View Deals</button>
-          </div>
-          <div class="lp-hero-stats">
-            <div class="lp-stat"><span class="lp-stat-val">4.9 / 5</span><span class="lp-stat-label">Verified Customer Reviews</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">&lt;60s</span><span class="lp-stat-label">Instant Cloud Booking</span></div>
-            <div class="lp-stat"><span class="lp-stat-val">24/7</span><span class="lp-stat-label">VIP Concierge Service</span></div>
-          </div>
-        </div>
-        <div class="lp-hero-image-wrap">
-          <img src="images/hero-fleet.jpg?v=3" alt="Premium Vehicles" class="lp-hero-img" />
-          <div class="lp-hero-availability-badge">
-            <div class="lp-avail-dot"></div>
-            <span class="lp-avail-label">LIVE AVAILABILITY</span>
-            <div class="lp-avail-count">12 of 12 Vehicles Ready</div>
-            <div class="lp-avail-sub">Instant real-time booking status</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ ABOUT ═══ -->
-      <section class="lp-section" id="lp-about">
-        <div class="lp-section-inner">
-          <div class="lp-section-tag">PLATFORM OVERVIEW</div>
-          <h2 class="lp-section-title">About Vehicle Rental Management System</h2>
-          <p class="lp-section-desc">Vehicle Rental Management System is an all-in-one vehicle rental and guest reservation platform designed to digitize vehicle bookings, live inventory tracking, digital concierge requests, and administrative operations.</p>
-
-          <div class="lp-overview-grid">
-            <div class="lp-overview-card">
-              <div class="lp-overview-icon"><i class="fa-solid fa-car"></i></div>
-              <h3 class="lp-overview-title">Application Purpose</h3>
-              <p class="lp-overview-text">The system enables guests to explore our premium selection of vehicles, view live pricing, make instant reservations, check in contactlessly with QR codes, and submit service requests directly from their personal devices.</p>
-            </div>
-            <div class="lp-overview-card">
-              <div class="lp-overview-icon"><i class="fa-solid fa-lock"></i></div>
-              <h3 class="lp-overview-title">Secure Sign-In &amp; Data Use</h3>
-              <p class="lp-overview-text">We use secure authentication to verify guest identities and associate vehicle reservations with your user account. We access only your basic profile (name and email) to issue booking confirmations and rental agreements.</p>
-            </div>
-            <div class="lp-overview-card">
-              <div class="lp-overview-icon"><i class="fa-solid fa-bolt"></i></div>
-              <h3 class="lp-overview-title">Real-Time Cloud Sync</h3>
-              <p class="lp-overview-text">Connected to real-time cloud data, our system ensures instant synchronization between guest bookings, dispatch statuses, maintenance tasks, and digital payment receipts.</p>
+      <!-- ═══ SPLIT HERO SECTION (Matches 1-homepage.png) ═══ -->
+      <header class="lp-hero-split-section" id="lpHero">
+        <div class="lp-hero-split-grid">
+          <div class="lp-hero-split-left">
+            <div class="lp-overline-tag">Vehicle rental in Palawan</div>
+            <h1 class="lp-hero-main-title">Pick up the keys, not the paperwork.</h1>
+            <p class="lp-hero-main-desc">
+              Browse live availability, book in three steps, and get handed your vehicle with a QR check-in at the counter.
+            </p>
+            <div class="lp-hero-action-row">
+              <a href="#lpFleet" class="btn btn-primary" id="lpBrowseFleetBtn">Browse the fleet</a>
+              <a href="#lpHowItWorks" class="btn btn-ghost" id="lpHowItWorksBtn">How it works</a>
             </div>
           </div>
 
-          <div class="lp-privacy-banner">
-            <div>
-              <div class="lp-privacy-title">Privacy &amp; Data Transparency</div>
-              <div class="lp-privacy-sub">We value your privacy and comply with strict data protection standards. Review our official policies at any time:</div>
-            </div>
-            <div class="lp-privacy-btns">
-              <button type="button" class="lp-btn-outline">Privacy Policy</button>
-              <button type="button" class="lp-btn-outline">Terms of Service</button>
+          <div class="lp-hero-split-right">
+            <div class="lp-hero-img-container">
+              <img src="images/hero-fleet.jpg" alt="Fleet of cars" class="lp-hero-split-photo" />
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- ═══ FEATURED FLEET / LATEST DEALS ═══ -->
-      <section class="lp-section lp-section-fleet" id="lp-fleet">
-        <div class="lp-section-inner">
-          <div class="lp-section-tag">REALTIME INVENTORY</div>
-          <h2 class="lp-section-title">Latest Deals in Palawan</h2>
-          <p class="lp-section-desc">Live pricing and availability directly connected to our verified database.</p>
+        <!-- ═══ 4-COLUMN SEARCH BAR CARD ═══ -->
+        <div class="lp-search-bar-card" id="lpSearchBar">
+          <div class="lp-search-col">
+            <span class="lp-search-label">Pick-up location</span>
+            <div class="lp-search-val">Puerto Princesa Airport</div>
+          </div>
+          <div class="lp-search-col">
+            <label for="heroPickupDate" class="lp-search-label">Pick-up date</label>
+            <input type="date" id="heroPickupDate" value="${todayStr}" class="lp-search-date-input" />
+          </div>
+          <div class="lp-search-col">
+            <label for="heroReturnDate" class="lp-search-label">Return date</label>
+            <input type="date" id="heroReturnDate" value="${nextDayStr}" class="lp-search-date-input" />
+          </div>
+          <div class="lp-search-col">
+            <label for="heroCategory" class="lp-search-label">Vehicle type</label>
+            <select id="heroCategory" class="lp-search-select">
+              <option value="all">Any</option>
+              <option value="Sedan">Sedan</option>
+              <option value="SUV">SUV</option>
+              <option value="MPV">MPV</option>
+              <option value="Pickup">Pickup</option>
+              <option value="Motorcycles">Motorcycle</option>
+            </select>
+          </div>
+          <div class="lp-search-btn-col">
+            <button type="button" class="btn btn-primary" id="heroSearchBtn">Search</button>
+          </div>
+        </div>
+      </header>
 
-          <div class="lp-fleet-grid">
-            ${vehiclePreviews.map(v => `
-              <div class="lp-fleet-card">
-                <div class="lp-fleet-img-wrap">
-                  <span class="vehicle-stage-badge">${v.cat}</span>
-                  <img src="${v.img}" alt="${v.name}" class="lp-fleet-img" loading="lazy" />
-                  <span class="lp-fleet-avail-tag"><span class="status-dot"></span> Ready</span>
-                </div>
-                <div class="lp-fleet-body">
-                  <h3 class="lp-fleet-name">${v.name}</h3>
-                  <div class="vehicle-specs-row">
-                    <span class="v-spec-pill">${v.seats} Seats</span>
-                    <span class="v-spec-pill">${v.cat}</span>
-                    <span class="v-spec-pill">Insured</span>
+      <!-- ═══ LIVE INVENTORY ("Available this week") ═══ -->
+      <section class="lp-inventory-section" id="lpFleet">
+        <div class="lp-section-container">
+          <div class="lp-section-header-left">
+            <div class="lp-overline-tag">Live inventory</div>
+            <h2 class="lp-section-heading">Available this week</h2>
+          </div>
+
+          <div class="lp-inventory-grid">
+            ${vehicles.map(v => {
+              const exactImg = v.image_url || 'images/vios.webp';
+              const rate = v.daily_rate || 2200;
+              const cat = v.category || (v.categories?.name) || 'Sedan';
+              const seats = v.seats || 5;
+              const trans = v.transmission || 'Automatic';
+              return `
+                <div class="lp-vehicle-card">
+                  <div class="lp-card-photo-panel">
+                    <img src="${exactImg}" alt="${v.name}" class="lp-card-photo" />
                   </div>
-                  <div class="lp-fleet-price">₱${v.rate.toLocaleString()} <span>per day</span></div>
-                  <p class="lp-fleet-desc">${v.desc}</p>
-                  <button type="button" class="lp-btn-booknow" data-lp-book="${v.name}" data-lp-name="${v.name}">
-                    <span>View Deal</span>
-                  </button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ PERKS / FEATURES ═══ -->
-      <section class="lp-section" id="lp-perks">
-        <div class="lp-section-inner">
-          <div class="lp-section-tag">EXCLUSIVE FEATURES</div>
-          <h2 class="lp-section-title">World-Class Rental Experience</h2>
-          <p class="lp-section-desc">Crafted for convenience, reliability, and unforgettable journeys.</p>
-
-          <div class="lp-perks-grid">
-            <div class="lp-perk-card">
-              <div class="lp-perk-icon"><i class="fa-solid fa-gauge-high"></i></div>
-              <h3>Instant Online Booking</h3>
-              <p>Reserve any vehicle in seconds with our real-time availability engine. No phone calls needed.</p>
-            </div>
-            <div class="lp-perk-card">
-              <div class="lp-perk-icon"><i class="fa-solid fa-shield-halved"></i></div>
-              <h3>Full Insurance Coverage</h3>
-              <p>Every rental includes comprehensive insurance for your total peace of mind on every trip.</p>
-            </div>
-            <div class="lp-perk-card">
-              <div class="lp-perk-icon"><i class="fa-solid fa-key"></i></div>
-              <h3>Contactless Key Handover</h3>
-              <p>Seamless digital vehicle access, GPS tracking, and digital concierge at your fingertips.</p>
-            </div>
-            <div class="lp-perk-card">
-              <div class="lp-perk-icon"><i class="fa-solid fa-truck-pickup"></i></div>
-              <h3>Airport Pickup &amp; Delivery</h3>
-              <p>Luxury airport pickup and round-the-clock vehicle delivery to your preferred location.</p>
-            </div>
-            <div class="lp-perk-card">
-              <div class="lp-perk-icon"><i class="fa-solid fa-headset"></i></div>
-              <h3>24/7 Roadside Assistance</h3>
-              <p>Real-time roadside assistance requests and instant emergency support, anytime, anywhere.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ REVIEWS ═══ -->
-      <section class="lp-section lp-section-reviews" id="lp-reviews">
-        <div class="lp-section-inner">
-          <div class="lp-section-tag"><i class="fa-solid fa-crown" style="color:#f59e0b;margin-right:6px;"></i> VERIFIED RENTER EXPERIENCES</div>
-          <h2 class="lp-section-title">Loved by Drivers Across the Philippines</h2>
-          <p class="lp-section-desc">Experience effortless vehicle rentals with guaranteed cloud-synced availability, immaculate vehicles, and 24/7 concierge assistance.</p>
-
-          <!-- Aggregate Trust Bar -->
-          <div class="lp-reviews-trust-bar">
-            <div class="lp-trust-main-score">
-              <div class="lp-trust-score-num">4.96</div>
-              <div class="lp-trust-score-meta">
-                <div class="lp-trust-stars">
-                  <i class="fa-solid fa-star"></i>
-                  <i class="fa-solid fa-star"></i>
-                  <i class="fa-solid fa-star"></i>
-                  <i class="fa-solid fa-star"></i>
-                  <i class="fa-solid fa-star"></i>
-                </div>
-                <div class="lp-trust-score-label">1,480+ Verified Trips</div>
-              </div>
-            </div>
-
-            <div class="lp-trust-divider"></div>
-
-            <div class="lp-trust-metrics">
-              <div class="lp-trust-metric-item">
-                <div class="lp-metric-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                <div class="lp-metric-info">
-                  <span class="lp-metric-val">99.8%</span>
-                  <span class="lp-metric-lbl">Showroom Cleanliness</span>
-                </div>
-              </div>
-              <div class="lp-trust-metric-item">
-                <div class="lp-metric-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                <div class="lp-metric-info">
-                  <span class="lp-metric-val">99.4%</span>
-                  <span class="lp-metric-lbl">Punctual Handover</span>
-                </div>
-              </div>
-              <div class="lp-trust-metric-item">
-                <div class="lp-metric-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                <div class="lp-metric-info">
-                  <span class="lp-metric-val">100%</span>
-                  <span class="lp-metric-lbl">Guaranteed Live Sync</span>
-                </div>
-              </div>
-              <div class="lp-trust-metric-item">
-                <div class="lp-metric-icon"><i class="fa-solid fa-headset"></i></div>
-                <div class="lp-metric-info">
-                  <span class="lp-metric-val">24/7</span>
-                  <span class="lp-metric-lbl">Roadside Concierge</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Category Filter Tabs -->
-          <div class="lp-reviews-filters" role="tablist">
-            <button type="button" class="lp-review-filter-btn active" data-filter="all"><i class="fa-solid fa-layer-group"></i> All Reviews (${reviewsData.length})</button>
-            <button type="button" class="lp-review-filter-btn" data-filter="suv"><i class="fa-solid fa-truck-monster"></i> SUVs &amp; 4x4</button>
-            <button type="button" class="lp-review-filter-btn" data-filter="luxury"><i class="fa-solid fa-gem"></i> VIP &amp; Executive</button>
-            <button type="button" class="lp-review-filter-btn" data-filter="city"><i class="fa-solid fa-city"></i> Sedans &amp; City</button>
-            <button type="button" class="lp-review-filter-btn" data-filter="airport"><i class="fa-solid fa-plane-arrival"></i> Airport Delivery</button>
-          </div>
-
-          <!-- Reviews Grid -->
-          <div class="lp-reviews-grid">
-            ${reviewsData.map(r => `
-              <div class="lp-review-card" data-category="${r.category}">
-                <i class="fa-solid fa-quote-right lp-quote-watermark"></i>
-                <div class="lp-review-card-head">
-                  <div class="lp-reviewer-profile">
-                    <div class="lp-avatar-wrap" style="background:${r.avatarBg};">
-                      ${r.initials}
-                      <span class="lp-avatar-verified" title="Verified Renter"><i class="fa-solid fa-check"></i></span>
+                  <div class="lp-card-body">
+                    <div class="lp-card-header-row">
+                      <h3 class="lp-card-title">${v.name}</h3>
+                      <span class="badge badge-available">Available</span>
                     </div>
-                    <div class="lp-reviewer-meta">
-                      <div class="lp-reviewer-name">${r.name}</div>
-                      <div class="lp-reviewer-location"><i class="fa-solid fa-location-dot" style="color:var(--accent);font-size:0.68rem;"></i> ${r.location}</div>
+                    <p class="lp-card-specs">${cat}, ${seats} seats, ${trans}</p>
+                    <div class="lp-card-footer-row">
+                      <div class="lp-card-rate-text">
+                        <strong>PHP ${fmtMoney(rate)}</strong> <small>/ day</small>
+                      </div>
+                      <button type="button" class="btn btn-ghost btn-sm lp-btn-view" data-vid="${v.id}">View</button>
                     </div>
                   </div>
-                  <div class="lp-review-card-rating">
-                    <span class="lp-score-badge"><i class="fa-solid fa-star"></i> ${r.score}</span>
-                    <div class="lp-review-time-ago">${r.time}</div>
-                  </div>
                 </div>
-
-                <div class="lp-review-vehicle-pill">
-                  <i class="fa-solid ${r.vehicleIcon}"></i>
-                  <span>Rented: <strong>${r.vehicle}</strong></span>
-                </div>
-
-                <p class="lp-review-quote">"${r.text}"</p>
-
-                <div class="lp-review-chip-list">
-                  ${r.chips.map(c => `<span class="lp-review-chip">${c}</span>`).join('')}
-                </div>
-              </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
-
-          <!-- Bottom CTA -->
-          <div class="lp-reviews-bottom-cta">
-            <div class="lp-cta-text">
-              <div class="lp-cta-pill"><i class="fa-solid fa-shield-check"></i> 100% RISK-FREE RESERVATION</div>
-              <h3>Ready to Experience First-Class Driving?</h3>
-              <p>Book online in under 60 seconds with live instant confirmation and flexible rental extensions.</p>
-            </div>
-            <div class="lp-cta-action">
-              <a href="#lp-fleet" class="lp-btn-reserve-cta" id="lpReviewBookNow">
-                <i class="fa-solid fa-car"></i> View Deals <i class="fa-solid fa-arrow-right" style="font-size:0.85rem;margin-left:4px;"></i>
-              </a>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      <!-- ═══ FOOTER ═══ -->
-      <footer class="lp-footer">
-        <div class="lp-footer-inner">
-          <div class="lp-footer-brand">
-            <div style="margin-bottom:12px;">
-              <span style="font-size:1.1rem;font-weight:800;color:var(--text-hi);">Vehicle Rental Management System</span>
-            </div>
-            <p style="color:var(--text-mid);font-size:0.88rem;line-height:1.6;max-width:280px;">Where premium vehicles meet cutting-edge real-time rental technology.</p>
+      <!-- ═══ 4-COLUMN STATS STRIP ═══ -->
+      <section class="lp-stats-strip-section">
+        <div class="lp-stats-strip-grid">
+          <div class="lp-stat-col">
+            <div class="lp-stat-num">16</div>
+            <div class="lp-stat-desc">Vehicles in the fleet</div>
           </div>
-          <div class="lp-footer-col">
-            <h4>Navigation</h4>
-            <a href="#lp-hero">Home</a>
-            <a href="#lp-about">About &amp; Purpose</a>
-            <a href="#lp-fleet">Latest Deals in Palawan</a>
-            <a href="#lp-perks">Features</a>
-            <a href="#lp-reviews">Renter Reviews</a>
+          <div class="lp-stat-col">
+            <div class="lp-stat-num">3 steps</div>
+            <div class="lp-stat-desc">From search to confirmed</div>
           </div>
-          <div class="lp-footer-col">
-            <h4>Services &amp; Legal</h4>
-            <a href="#">Instant Booking</a>
-            <a href="#" id="lpFooterGuest">Renter Portal</a>
-            <a href="#" id="lpFooterStaff">Staff &amp; Admin Sign In</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
+          <div class="lp-stat-col">
+            <div class="lp-stat-num">QR</div>
+            <div class="lp-stat-desc">Counter check-in</div>
           </div>
-          <div class="lp-footer-col">
-            <h4>Contact &amp; Location</h4>
-            <a href="#"><i class="fa-solid fa-location-dot" style="width:16px;"></i> PPC, Palawan</a>
-            <a href="#"><i class="fa-solid fa-phone" style="width:16px;"></i> +63 917 123 4567</a>
-            <a href="#"><i class="fa-solid fa-envelope" style="width:16px;"></i> support@vehiclerental.ph</a>
+          <div class="lp-stat-col">
+            <div class="lp-stat-num">24/7</div>
+            <div class="lp-stat-desc">Concierge support</div>
           </div>
         </div>
-        <div class="lp-footer-bottom">
-          © 2026 Vehicle Rental Management System. All rights reserved. Operating in Real-Time.
+      </section>
+
+      <!-- ═══ EDITORIAL HOW IT WORKS SECTION ═══ -->
+      <section class="lp-editorial-section" id="lpHowItWorks">
+        <div class="lp-section-container">
+          <div class="lp-section-header-left">
+            <div class="lp-overline-tag">Simple procedure</div>
+            <h2 class="lp-section-heading">How it works</h2>
+          </div>
+          <div class="lp-how-grid">
+            <div class="lp-how-card">
+              <span class="lp-how-num">01</span>
+              <h4 class="lp-how-title">Select dates &amp; vehicle</h4>
+              <p class="lp-how-desc">Choose from our maintained fleet of sedans, SUVs, MPVs, and 4x4 pickups with transparent daily rates.</p>
+            </div>
+            <div class="lp-how-card">
+              <span class="lp-how-num">02</span>
+              <h4 class="lp-how-title">Reserve with downpayment</h4>
+              <p class="lp-how-desc">Lock in your booking instantly using Card, GCash, or Bank Transfer, or choose cash meetup on arrival.</p>
+            </div>
+            <div class="lp-how-card">
+              <span class="lp-how-num">03</span>
+              <h4 class="lp-how-title">Scan QR &amp; drive</h4>
+              <p class="lp-how-desc">Show your digital booking pass at our airport counter. Quick vehicle inspection and you are on the road.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ EDITORIAL REVIEWS SECTION ═══ -->
+      <section class="lp-editorial-section" id="lpReviews" style="border-top:1px solid #E2DCF0;">
+        <div class="lp-section-container">
+          <div class="lp-section-header-left">
+            <div class="lp-overline-tag">Guest experiences</div>
+            <h2 class="lp-section-heading">Recent feedback</h2>
+          </div>
+          <div class="lp-reviews-editorial-grid">
+            <div class="lp-rev-card">
+              <p class="lp-rev-quote">"Super smooth ng booking. Pagka-landing sa Puerto Princesa Airport, nai-handover agad ang sasakyan within five minutes gamit ang QR pass."</p>
+              <div class="lp-rev-author">
+                <strong>Mike Denver</strong>
+                <span>Toyota Fortuner · Airport Handover</span>
+              </div>
+            </div>
+            <div class="lp-rev-card">
+              <p class="lp-rev-quote">"The 4x4 Raptor handled the long provincial drive effortlessly. When we wanted to extend our stay, the online extension took less than two minutes."</p>
+              <div class="lp-rev-author">
+                <strong>JR Aplino</strong>
+                <span>Ford Ranger Raptor · 5-day roadtrip</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ EDITORIAL FOOTER ═══ -->
+      <footer class="lp-editorial-footer">
+        <div class="lp-footer-container">
+          <div class="lp-footer-left">
+            <span>Palawan Drive. Vehicle Rental Management System.</span>
+          </div>
+          <div class="lp-footer-right">
+            <a href="#lpHero">Terms</a>
+            <a href="#lpHero">Privacy</a>
+            <a href="#lpHero">Support</a>
+          </div>
         </div>
       </footer>
     </div>
   `;
 
-  // Event listeners
-  const signInBtns = [
-    $('#lpSignInBtn'),
-    $('#lpHeroSignIn'),
-    $('#lpReserveBtn'),
-  ];
-  signInBtns.forEach(btn => {
-    if (btn) btn.addEventListener('click', () => renderAuth());
+  // Attach event handlers
+  $('#lpSignInBtn')?.addEventListener('click', () => renderAuth('login'));
+  $('#lpReserveBtn')?.addEventListener('click', () => {
+    const fleetSec = $('#lpFleet');
+    if (fleetSec) fleetSec.scrollIntoView({ behavior: 'smooth' });
+    else renderAuth('login');
   });
 
-  // Theme toggle
-  const themeBtn = $('#lpThemeToggle');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      const cur = document.documentElement.getAttribute('data-theme');
-      const next = cur === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('rentflow_theme', next);
-      renderLandingPage();
-    });
-  }
-
-  // View Deal buttons on fleet cards → prompt user: Login or Continue as Guest
-  $$('[data-lp-book]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const vName = btn.getAttribute('data-lp-book') || '';
-      openLandingDealPrompt(vName);
-    });
-  });
-
-  // Footer shortcuts
-  const fg = $('#lpFooterGuest');
-  if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); renderAuth('login'); });
-  const fs = $('#lpFooterStaff');
-  if (fs) fs.addEventListener('click', (e) => { e.preventDefault(); renderAuth('login'); });
-
-  // Mobile menu
-  const mobileBtn = $('#lpMobileMenuBtn');
-  const navLinks = document.querySelector('.lp-navbar-links');
-  if (mobileBtn && navLinks) {
-    mobileBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('lp-mobile-open');
-    });
-  }
-
-  // Filter tabs for reviews
-  const filterBtns = $$('.lp-review-filter-btn');
-  const reviewCards = $$('.lp-review-card');
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const targetFilter = btn.getAttribute('data-filter') || 'all';
-      reviewCards.forEach(card => {
-        const cats = card.getAttribute('data-category') || '';
-        if (targetFilter === 'all' || cats.includes(targetFilter)) {
-          card.style.display = 'flex';
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(8px)';
-          requestAnimationFrame(() => {
-            card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-            setTimeout(() => {
-              card.style.transform = '';
-              card.style.transition = '';
-            }, 260);
-          });
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    });
-  });
-
-  // Review Book Now CTA button
-  const reviewBookBtn = $('#lpReviewBookNow');
-  if (reviewBookBtn) {
-    reviewBookBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const fleetSec = document.querySelector('#lp-fleet');
+  $('#heroSearchBtn')?.addEventListener('click', () => {
+    const sDate = $('#heroPickupDate')?.value;
+    const eDate = $('#heroReturnDate')?.value;
+    const cat = $('#heroCategory')?.value;
+    const targetVeh = (state.vehicles || []).find(v => cat === 'all' || v.category === cat || v.categories?.name === cat) || state.vehicles?.[0];
+    if (targetVeh) {
+      openVehicleDetail(targetVeh.id, sDate, eDate);
+    } else {
+      const fleetSec = $('#lpFleet');
       if (fleetSec) fleetSec.scrollIntoView({ behavior: 'smooth' });
-    });
-  }
-
-  // Smooth scroll for anchor links
-  $$('.lp-nav-link, .lp-btn-explore, .lp-footer-col a[href^="#"]').forEach(link => {
-    link.addEventListener('click', (e) => {
-      const href = link.getAttribute('href');
-      if (href && href.startsWith('#')) {
-        e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-        if (navLinks) navLinks.classList.remove('lp-mobile-open');
-      }
-    });
+    }
   });
 
-
+  // Bind View buttons on vehicle cards
+  $$('.lp-btn-view').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const vid = btn.dataset.vid;
+      const sDate = $('#heroPickupDate')?.value;
+      const eDate = $('#heroReturnDate')?.value;
+      openVehicleDetail(vid, sDate, eDate);
+    });
+  });
 }
 
-/* ==========================================================================
-   LANDING PAGE "VIEW DEAL" PROMPT (Login as Renter vs Continue as Guest)
-   ========================================================================== */
 export function openLandingDealPrompt(vehName = '') {
   const modal = openModal(`
     <div class="clean-deal-prompt">
@@ -633,18 +373,11 @@ export function openLandingDealPrompt(vehName = '') {
    CLEAN AUTH MODAL (Purple & Lavender Theme, Working Back Button, No Gimmick Icons)
    ========================================================================== */
 export function renderAuth(initialMode = 'login', initialEmail = '') {
-  let mode = initialMode || 'login'; // 'login', 'signup', or 'forgot'
+  let mode = initialMode || 'login';
   let emailValue = initialEmail || '';
+  let selectedRole = 'customer'; // customer, staff, admin
 
-  // Ensure landing page is mounted in background if not already present
-  if (!$('#lp-hero') && !state.user) {
-    renderLandingPage();
-  }
-
-  // Remove any existing auth modal overlay
   $('#cleanAuthOverlay')?.remove();
-  $('#rentifyAuthOverlay')?.remove();
-  $('#skAuthModalOverlay')?.remove();
 
   const overlay = document.createElement('div');
   overlay.className = 'clean-auth-overlay';
@@ -662,174 +395,144 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
   }
 
   function renderModal() {
-    let title = '';
-    let subtitle = '';
-    let formHtml = '';
-    let footerHtml = '';
-
-    if (mode === 'signup') {
-      title = 'Create Account';
-      subtitle = 'Enter your email and password to create an account.';
-      formHtml = `
-        <form id="cleanAuthForm">
-          <div class="clean-field">
-            <label class="clean-label">Email Address</label>
-            <input type="email" id="cleanEmail" class="clean-input" placeholder="you@example.com" value="${emailValue}" required autocomplete="email" autofocus />
-          </div>
-
-          <div class="clean-field">
-            <label class="clean-label">Create Password</label>
-            <div class="clean-input-pass-wrap">
-              <input type="password" id="cleanPassword" class="clean-input" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password" />
-              <button type="button" class="clean-eye-btn" data-target="cleanPassword" aria-label="Toggle password">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="clean-field">
-            <label class="clean-label">Confirm Password</label>
-            <div class="clean-input-pass-wrap">
-              <input type="password" id="cleanConfirmPassword" class="clean-input" placeholder="Confirm your password" minlength="6" required autocomplete="new-password" />
-              <button type="button" class="clean-eye-btn" data-target="cleanConfirmPassword" aria-label="Toggle password">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" class="clean-submit-btn" id="cleanSubmitBtn">
-            Create Account &rarr;
-          </button>
-        </form>
-      `;
-      footerHtml = `
-        Already have an account? <a href="#" id="cleanToLogin" class="clean-purple-link">Sign in</a>
-      `;
-    } else if (mode === 'forgot') {
-      title = 'Reset Password';
-      subtitle = 'Enter your email address to receive password reset instructions.';
-      formHtml = `
-        <form id="cleanAuthForm">
-          <div class="clean-field">
-            <label class="clean-label">Email Address</label>
-            <input type="email" id="cleanEmail" class="clean-input" placeholder="you@example.com" value="${emailValue}" required autocomplete="email" autofocus />
-          </div>
-
-          <button type="submit" class="clean-submit-btn" id="cleanSubmitBtn">
-            Send Reset Link &rarr;
-          </button>
-        </form>
-      `;
-      footerHtml = `
-        Remember your password? <a href="#" id="cleanToLogin" class="clean-purple-link">Sign in</a>
-      `;
-    } else {
-      // mode === 'login'
-      title = 'Welcome Back';
-      subtitle = 'Access your bookings, manage your rentals, and explore new destinations.';
-      formHtml = `
-        <form id="cleanAuthForm">
-          <div class="clean-field">
-            <label class="clean-label">Email Address</label>
-            <input type="email" id="cleanEmail" class="clean-input" placeholder="you@example.com" value="${emailValue}" required autocomplete="email" autofocus />
-          </div>
-
-          <div class="clean-field">
-            <div class="clean-label-row">
-              <label class="clean-label">Password</label>
-              <a href="#" id="cleanForgotLink" class="clean-purple-link">Forgot password?</a>
-            </div>
-            <div class="clean-input-pass-wrap">
-              <input type="password" id="cleanPassword" class="clean-input" placeholder="••••••••" required autocomplete="current-password" />
-              <button type="button" class="clean-eye-btn" data-target="cleanPassword" aria-label="Toggle password">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" class="clean-submit-btn" id="cleanSubmitBtn">
-            Sign In &rarr;
-          </button>
-        </form>
-      `;
-      footerHtml = `
-        Don't have an account? <a href="#" id="cleanToSignup" class="clean-purple-link">Sign up</a>
-      `;
-    }
-
     overlay.innerHTML = `
-      <div class="clean-auth-card">
-        <!-- Top Navigation Bar: Working Back & Close Buttons -->
-        <div class="clean-auth-topbar">
-          <button type="button" class="clean-back-btn" id="cleanBackBtn" title="Go back">
-            <i class="fa-solid fa-arrow-left"></i> <span>Back</span>
-          </button>
-          <button type="button" class="clean-close-btn" id="cleanCloseBtn" aria-label="Close" title="Close">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+      <div class="clean-auth-split-card">
+        <!-- Close button at top right -->
+        <button type="button" class="auth-split-close-btn" id="cleanCloseBtn" aria-label="Close" title="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <!-- LEFT HALF: Photo with Floating Bottom Prompt (Matches 2-sign-in.png) -->
+        <div class="auth-split-left">
+          <img src="images/travel-vacation.jpg" alt="Travel scenery" class="auth-split-bg-img" />
+          <div class="auth-split-floating-card">
+            <h3 class="auth-split-card-title">Your next trip starts with a confirmed vehicle.</h3>
+            <p class="auth-split-card-sub">Sign in to manage bookings, favorites and receipts.</p>
+          </div>
         </div>
 
-        <div class="clean-auth-content">
-          <h2 class="clean-auth-title">${title}</h2>
-          <p class="clean-auth-sub">${subtitle}</p>
-
-          <div id="cleanAuthError"></div>
-
-          ${formHtml}
-
-          <!-- Quick Demo Access (1-Click Instant Login) -->
-          <div class="clean-demo-box">
-            <div class="clean-demo-divider">
-              <span>Quick Demo Access</span>
+        <!-- RIGHT HALF: Clean Form & Role Segmented Tabs (Matches 2-sign-in.png) -->
+        <div class="auth-split-right">
+          <div class="auth-split-form-wrap">
+            <div class="auth-split-brand">
+              <div class="lp-brand-icon">P</div>
+              <span class="lp-brand-text">Palawan Drive</span>
             </div>
-            <div class="clean-demo-grid">
-              <button type="button" class="clean-demo-btn clean-demo-renter" data-demo-role="customer" title="Instant Login as Renter">
-                <span class="clean-demo-role">Renter</span>
-                <span class="clean-demo-name">Mark Ramos</span>
-              </button>
-              <button type="button" class="clean-demo-btn clean-demo-staff" data-demo-role="staff" title="Instant Login as Staff">
-                <span class="clean-demo-role">Staff</span>
-                <span class="clean-demo-name">Sarah V.</span>
-              </button>
-              <button type="button" class="clean-demo-btn clean-demo-admin" data-demo-role="admin" title="Instant Login as Admin">
-                <span class="clean-demo-role">Admin</span>
-                <span class="clean-demo-name">Roland B.</span>
-              </button>
-            </div>
-          </div>
 
-          <div class="clean-auth-footer">
-            ${footerHtml}
+            <h2 class="auth-split-headline">${mode === 'signup' ? 'Create an account' : (mode === 'forgot' ? 'Reset password' : 'Welcome back')}</h2>
+            <p class="auth-split-sub">${mode === 'signup' ? 'Enter your details to create an account.' : (mode === 'forgot' ? 'Enter your email to receive reset instructions.' : 'Sign in to continue to your account.')}</p>
+
+            ${mode === 'login' ? `
+              <!-- Segmented Role Control: Renter | Staff | Admin -->
+              <div class="auth-role-segmented-control" id="authRoleSegmented">
+                <button type="button" class="auth-segment-pill ${selectedRole === 'customer' ? 'active' : ''}" data-role="customer">Renter</button>
+                <button type="button" class="auth-segment-pill ${selectedRole === 'staff' ? 'active' : ''}" data-role="staff">Staff</button>
+                <button type="button" class="auth-segment-pill ${selectedRole === 'admin' ? 'active' : ''}" data-role="admin">Admin</button>
+              </div>
+            ` : ''}
+
+            <div id="cleanAuthError"></div>
+
+            <form id="cleanAuthForm">
+              <div class="auth-form-field">
+                <label for="cleanEmail">Email</label>
+                <input type="email" id="cleanEmail" class="clean-input" placeholder="${selectedRole === 'customer' ? 'juan.delacruz@email.com' : (selectedRole === 'staff' ? 'staff@rentflow.ph' : 'admin@rentflow.ph')}" value="${emailValue}" required autocomplete="email" autofocus />
+              </div>
+
+              ${mode !== 'forgot' ? `
+                <div class="auth-form-field">
+                  <label for="cleanPassword">Password</label>
+                  <div class="clean-input-pass-wrap">
+                    <input type="password" id="cleanPassword" class="clean-input" placeholder="Enter your password" required autocomplete="current-password" />
+                    <button type="button" class="clean-eye-btn" data-target="cleanPassword" aria-label="Toggle password">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+              ` : ''}
+
+              ${mode === 'signup' ? `
+                <div class="auth-form-field">
+                  <label for="cleanConfirmPassword">Confirm Password</label>
+                  <div class="clean-input-pass-wrap">
+                    <input type="password" id="cleanConfirmPassword" class="clean-input" placeholder="Confirm your password" required autocomplete="new-password" />
+                    <button type="button" class="clean-eye-btn" data-target="cleanConfirmPassword" aria-label="Toggle password">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+              ` : ''}
+
+              ${mode === 'login' ? `
+                <div class="auth-options-row">
+                  <label class="auth-remember-label">
+                    <input type="checkbox" id="keepSignedIn" checked />
+                    <span>Keep me signed in</span>
+                  </label>
+                  <a href="#" id="cleanForgotLink" class="auth-forgot-link">Forgot password</a>
+                </div>
+              ` : ''}
+
+              <button type="submit" class="btn btn-primary btn-block" id="cleanSubmitBtn" style="padding:12px;margin-top:16px;">
+                ${mode === 'signup' ? 'Create an account' : (mode === 'forgot' ? 'Send reset link' : 'Sign in')}
+              </button>
+
+              ${mode === 'login' ? `
+                <button type="button" class="btn btn-ghost btn-block" id="btnGoogleAuth" style="padding:12px;margin-top:10px;">
+                  Continue with Google
+                </button>
+              ` : ''}
+            </form>
+
+            <div class="auth-split-footer-text">
+              ${mode === 'signup' ? `
+                Already have an account? <a href="#" id="cleanToLogin" class="auth-bold-link">Sign in</a>
+              ` : (mode === 'forgot' ? `
+                Remember your password? <a href="#" id="cleanToLogin" class="auth-bold-link">Sign in</a>
+              ` : `
+                New here? <a href="#" id="cleanToSignup" class="auth-bold-link">Create an account</a>
+              `)}
+            </div>
           </div>
         </div>
       </div>
     `;
 
-    // Bind Back Button (Guaranteed to work!)
-    overlay.querySelector('#cleanBackBtn')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (mode === 'signup' || mode === 'forgot') {
-        mode = 'login';
-        renderModal();
-      } else {
-        closeModal();
-      }
-    });
-
-    // Bind Close Button (Guaranteed to work!)
-    overlay.querySelector('#cleanCloseBtn')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeModal();
-    });
-
-    // Bind Backdrop Click (clicking outside closes modal)
+    // Bind Close Button
+    overlay.querySelector('#cleanCloseBtn')?.addEventListener('click', closeModal);
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeModal();
     });
 
-    // Bind Eye Toggles
+    // Bind Role Segmented Tabs (Renter | Staff | Admin)
+    overlay.querySelectorAll('.auth-segment-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        selectedRole = pill.dataset.role;
+        overlay.querySelectorAll('.auth-segment-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const emailInp = overlay.querySelector('#cleanEmail');
+        const passInp = overlay.querySelector('#cleanPassword');
+        if (selectedRole === 'staff') {
+          if (emailInp) emailInp.value = 'staff@rentflow.ph';
+          if (passInp) passInp.value = 'RentFlowStaff2026!';
+        } else if (selectedRole === 'admin') {
+          if (emailInp) emailInp.value = 'admin@rentflow.ph';
+          if (passInp) passInp.value = 'RentFlowAdmin2026!';
+        } else {
+          if (emailInp) emailInp.value = 'mark.ramos@gmail.com';
+          if (passInp) passInp.value = 'password123';
+        }
+      });
+    });
+
+    // Bind Google Auth demo click
+    overlay.querySelector('#btnGoogleAuth')?.addEventListener('click', () => {
+      closeModal();
+      switchSystemRole(selectedRole || 'customer');
+    });
+
+    // Bind Eye toggle
     overlay.querySelectorAll('.clean-eye-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -839,71 +542,53 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
         const icon = btn.querySelector('i');
         if (input.type === 'password') {
           input.type = 'text';
-          if (icon) {
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-          }
+          if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
         } else {
           input.type = 'password';
-          if (icon) {
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-          }
+          if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
         }
       });
     });
 
-    // Bind Quick Demo Access Buttons
-    overlay.querySelectorAll('[data-demo-role]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const role = btn.getAttribute('data-demo-role');
-        closeModal();
-        switchSystemRole(role);
-      });
-    });
-
-    // Bind Switch Links
+    // Bind mode links
     overlay.querySelector('#cleanToSignup')?.addEventListener('click', (e) => {
       e.preventDefault();
       mode = 'signup';
       renderModal();
     });
-
     overlay.querySelector('#cleanToLogin')?.addEventListener('click', (e) => {
       e.preventDefault();
       mode = 'login';
       renderModal();
     });
-
     overlay.querySelector('#cleanForgotLink')?.addEventListener('click', (e) => {
       e.preventDefault();
       mode = 'forgot';
       renderModal();
     });
 
-    // Form Submission
+    // Form submission
     const form = overlay.querySelector('#cleanAuthForm');
     const errBox = overlay.querySelector('#cleanAuthError');
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = overlay.querySelector('#cleanSubmitBtn');
+      const submitBtn = overlay.querySelector('#cleanSubmitBtn');
       const email = overlay.querySelector('#cleanEmail')?.value.trim();
       emailValue = email;
 
       if (errBox) errBox.innerHTML = '';
 
       if (mode === 'forgot') {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending link…';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending link…';
         try {
           await supabase.auth.resetPasswordForEmail(email);
           toast(`Password reset instructions sent to ${email}`, 'info');
           mode = 'login';
           renderModal();
         } catch (err) {
-          toast('Notice: Please check your email inbox for password reset instructions.', 'info');
+          toast('Check your email for reset instructions.', 'info');
           mode = 'login';
           renderModal();
         }
@@ -913,45 +598,36 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
       if (mode === 'signup') {
         const password = overlay.querySelector('#cleanPassword')?.value;
         const confirmPass = overlay.querySelector('#cleanConfirmPassword')?.value;
-
         if (password !== confirmPass) {
-          if (errBox) errBox.innerHTML = '<div class="clean-auth-error">Passwords do not match. Pakisuri muli.</div>';
+          if (errBox) errBox.innerHTML = '<div class="clean-auth-error">Passwords do not match. Please try again.</div>';
           return;
         }
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
-
-        const fullName = email.split('@')[0];
-        const phone = '';
-
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
         try {
-          await handleAuthenticateSignup(email, password, fullName, phone, closeModal);
+          await handleAuthenticateSignup(email, password, email.split('@')[0], '', closeModal);
         } catch (err) {
-          const errMsg = err.message || 'An error occurred';
-          if (errBox) {
-            errBox.innerHTML = `<div class="clean-auth-error">${errMsg.includes('already registered') ? 'Registered na ang email na ito. Pakipindot ang "Sign in".' : errMsg}</div>`;
-          }
-          btn.disabled = false;
-          btn.innerHTML = 'Create Account &rarr;';
+          if (errBox) errBox.innerHTML = `<div class="clean-auth-error">${err.message || 'Error creating account'}</div>`;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Create an account';
         }
         return;
       }
 
       // mode === 'login'
       const password = overlay.querySelector('#cleanPassword')?.value;
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
 
       try {
         await handleAuthenticateLogin(email, password, closeModal);
       } catch (err) {
-        const errMsg = err.message || 'An error occurred';
         if (errBox) {
-          errBox.innerHTML = `<div class="clean-auth-error">${errMsg.includes('Invalid') ? 'Maling email o password. Pakisuri at subukan muli.' : errMsg}</div>`;
+          errBox.innerHTML = `<div class="clean-auth-error">${err.message || 'Invalid email or password.'}</div>`;
         }
-        btn.disabled = false;
-        btn.innerHTML = 'Sign In &rarr;';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Sign in';
       }
     });
   }
