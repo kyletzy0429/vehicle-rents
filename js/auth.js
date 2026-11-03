@@ -1,7 +1,7 @@
 import { supabase } from './config.js';
 import { state, DEMO_ACCOUNTS, getActiveRole, setActiveRole, getActiveCustomerKey, setActiveCustomerKey } from './state.js';
 import { $, $$, toast, openModal, closeModal, fmtMoney } from './utils.js';
-import { loadCategories, loadVehicles } from './vehicles.js';
+import { loadCategories, loadVehicles, getCleanVehicleName } from './vehicles.js';
 import { openVehicleDetail } from './booking.js';
 
 let authMode = 'login';
@@ -158,20 +158,22 @@ export function renderLandingPage() {
               const cat = v.category || (v.categories?.name) || 'Sedan';
               const seats = v.seats || 5;
               const trans = v.transmission || 'Automatic';
+              const cleanName = getCleanVehicleName(v.name);
+              const cleanRate = Math.round(Number(rate)).toLocaleString('en-US');
               return `
                 <div class="lp-vehicle-card">
                   <div class="lp-card-photo-panel">
-                    <img src="${exactImg}" alt="${v.name}" class="lp-card-photo" />
+                    <img src="${exactImg}" alt="${cleanName}" class="lp-card-photo" />
                   </div>
                   <div class="lp-card-body">
                     <div class="lp-card-header-row">
-                      <h3 class="lp-card-title">${v.name}</h3>
+                      <h3 class="lp-card-title">${cleanName}</h3>
                       <span class="badge badge-available">Available</span>
                     </div>
                     <p class="lp-card-specs">${cat}, ${seats} seats, ${trans}</p>
                     <div class="lp-card-footer-row">
                       <div class="lp-card-rate-text">
-                        <strong>PHP ${fmtMoney(rate)}</strong> <small>/ day</small>
+                        <strong>PHP ${cleanRate}</strong> <small>/ day</small>
                       </div>
                       <button type="button" class="btn btn-ghost btn-sm lp-btn-view" data-vid="${v.id}">View</button>
                     </div>

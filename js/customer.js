@@ -32,10 +32,10 @@ export async function renderCustomerFavorites(view) {
     </div>
   `;
 
-  $$('#favGrid .vehicle-card').forEach(card => card.addEventListener('click', () => openVehicleDetail(Number(card.dataset.id))));
-  $$('#favGrid .vehicle-book-pill-btn').forEach(btn => btn.addEventListener('click', (e) => {
+  $$('#favGrid .vehicle-card, #favGrid .renter-vehicle-card').forEach(card => card.addEventListener('click', () => openVehicleDetail(card.dataset.id)));
+  $$('#favGrid [data-book-btn], #favGrid .card-view-btn, #favGrid .vehicle-book-pill-btn').forEach(btn => btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    openVehicleDetail(Number(btn.dataset.bookBtn));
+    openVehicleDetail(btn.dataset.bookBtn);
   }));
   $$('#favGrid .vehicle-fav-btn, #favGrid .fav-heart-btn').forEach(btn => btn.addEventListener('click', (e) => {
     e.stopPropagation();

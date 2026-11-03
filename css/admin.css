@@ -735,6 +735,7 @@ tr:hover td {
 }
 
 @media (max-width: 900px) {
+
   .sidebar,
   .admin-sidebar {
     position: fixed;
@@ -775,10 +776,12 @@ tr:hover td {
 }
 
 @media (max-width: 550px) {
+
   .kpi-row-grid,
   .grid-stats {
     grid-template-columns: 1fr;
   }
+
   .portal-header-row {
     flex-direction: column;
   }

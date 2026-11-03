@@ -430,8 +430,8 @@ export function renderBrowse(view) {
 
     if (browseFilter !== 'all') {
       const f = browseFilter.toLowerCase();
-      if (f === 'sedan') return vCat.includes('sedan') || vName.includes('vios') || vName.includes('city');
-      if (f === 'suv') return vCat.includes('suv') || vName.includes('fortuner') || vName.includes('montero') || vName.includes('everest');
+      if (f === 'sedan') return vCat.includes('sedan') || vName.includes('vios') || vName.includes('city') || vName.includes('mirage') || vName.includes('wigo');
+      if (f === 'suv') return vCat.includes('suv') || vName.includes('fortuner') || vName.includes('montero') || vName.includes('everest') || vName.includes('raptor') || vName.includes('ranger');
       if (f === 'mpv') return vCat.includes('mpv') || vCat.includes('crossover') || vName.includes('xpander') || vName.includes('innova') || vName.includes('rush') || vName.includes('veloz');
       if (f === 'van') return vCat.includes('van') || vName.includes('hiace') || vName.includes('commuter') || vName.includes('urvan');
       if (f === 'motorcycle' || f === 'motorcycles') return vCat.includes('motor') || vName.includes('click') || vName.includes('nmax') || vName.includes('adv');
@@ -550,33 +550,75 @@ export function renderBrowse(view) {
   });
 }
 
+export function getCleanVehicleName(raw) {
+  if (!raw) return 'Vehicle';
+  if (/Ranger\s*Raptor/i.test(raw)) return 'Ford Ranger Raptor';
+  if (/Montero\s*Sport/i.test(raw)) return 'Montero Sport GT';
+  if (/Vios/i.test(raw)) return 'Toyota Vios';
+  if (/Innova/i.test(raw)) return 'Toyota Innova';
+  if (/Fortuner/i.test(raw)) return 'Toyota Fortuner 2.8 V';
+  if (/Xpander/i.test(raw)) return 'Xpander GLS';
+  if (/Mirage/i.test(raw)) return 'Mitsubishi Mirage G4';
+  if (/Wigo/i.test(raw)) return 'Toyota Wigo';
+  if (/HiAce/i.test(raw)) return 'Toyota HiAce Commuter';
+  if (/NMAX/i.test(raw)) return 'Yamaha NMAX 155';
+  if (/ADV/i.test(raw)) return 'Honda ADV 160';
+  if (/Click/i.test(raw)) return 'Honda Click 125i';
+
+  return String(raw)
+    .replace(/\s*\((?:Motorcycle|Van|SUV|Sedan|MPV)\)/gi, '')
+    .replace(/\s+(?:2\.0L|1\.5|2\.8|1\.0|2\.4|2\.5)\b[^,]*/gi, '')
+    .replace(/\s+(?:Bi-Turbo|CVT|AT|MT|4x2|4x4|Diesel|Commuter|Deluxe)\b.*/gi, '')
+    .trim();
+}
+
+export function getCleanCategoryLabel(catName, vName, seats) {
+  let cat = String(catName || '').trim();
+  const name = String(vName || '').toLowerCase();
+  if (name.includes('raptor') || name.includes('pickup') || name.includes('ranger')) {
+    cat = 'Pickup';
+  } else if (/motor/i.test(cat) || name.includes('adv') || name.includes('click') || name.includes('nmax')) {
+    cat = 'Motorcycle';
+  } else if (/sedan/i.test(cat) || name.includes('vios') || name.includes('mirage') || name.includes('wigo')) {
+    cat = 'Sedan';
+  } else if (/suv/i.test(cat) || name.includes('fortuner') || name.includes('montero')) {
+    cat = 'SUV';
+  } else if (/mpv/i.test(cat) || /cross/i.test(cat) || name.includes('innova') || name.includes('xpander')) {
+    cat = 'MPV';
+  } else if (/van/i.test(cat) || name.includes('hiace') || name.includes('urvan')) {
+    cat = 'Van';
+  }
+  return `${cat}, ${seats} seats`;
+}
+
 export function vehicleCardHTML(v) {
   const exactImg = getExactVehicleImage(v);
   const rate = getVehicleDailyRate(v);
   const catName = getVehicleCategoryName(v);
-  const isAvailable = v.status === 'available';
+  const isAvailable = (v.status || 'available').toLowerCase() === 'available';
   const seats = v.seats || (catName.toLowerCase().includes('motor') ? 2 : (catName.toLowerCase().includes('van') ? 14 : (catName.toLowerCase().includes('mpv') || catName.toLowerCase().includes('suv') ? 7 : 5)));
+  const cleanName = getCleanVehicleName(v.name);
+  const cleanMeta = getCleanCategoryLabel(catName, v.name, seats);
+  const cleanRate = Math.round(Number(rate || 0)).toLocaleString('en-US');
 
   return `
-    <div class="renter-vehicle-card vehicle-card" data-id="${v.id}" style="background:#ffffff;border:1px solid #E2DCF0;border-radius:14px;padding:16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(42,35,64,0.03);cursor:pointer;transition:transform 0.15s ease, border-color 0.15s ease;">
+    <div class="renter-vehicle-card vehicle-card" data-id="${v.id}" style="background:#ffffff;border:1px solid #E2DCF0;border-radius:14px;padding:16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(42,35,64,0.03);cursor:pointer;transition:transform 0.15s ease, border-color 0.15s ease;box-sizing:border-box;">
       <div style="height:140px;background:#ffffff;display:flex;align-items:center;justify-content:center;padding:10px;margin-bottom:12px;">
-        <img src="${exactImg}" alt="${v.name}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy" />
+        <img src="${exactImg}" alt="${cleanName}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy" />
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
-        <h3 style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:#2A2340;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${v.name}</h3>
-        <span class="soft-pill ${isAvailable ? 'soft-pill-mint' : 'soft-pill-amber'}">
+        <h3 style="font-family:'Fraunces',serif;font-size:1.06rem;font-weight:600;color:#2A2340;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${v.name}">${cleanName}</h3>
+        <span class="soft-pill ${isAvailable ? 'soft-pill-mint' : 'soft-pill-amber'}" style="flex-shrink:0;">
           ${isAvailable ? 'Available' : 'Few left'}
         </span>
       </div>
-      <p style="font-size:0.82rem;color:#8C86A3;margin:0 0 14px 0;">${catName}, ${seats} seats</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid #f1f5f9;">
-        <div>
-          <span style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;color:#2A2340;">PHP ${fmtMoney(rate)}</span>
-          <span style="font-size:0.78rem;color:#8C86A3;">/ day</span>
+      <p style="font-size:0.82rem;color:#8C86A3;margin:0 0 16px 0;">${cleanMeta}</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid #f1f5f9;">
+        <div style="display:flex;align-items:baseline;gap:4px;white-space:nowrap;flex-shrink:0;">
+          <strong style="font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;color:#2A2340;letter-spacing:-0.01em;">PHP ${cleanRate}</strong>
+          <span style="font-size:0.8rem;color:#8C86A3;">/ day</span>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm vehicle-book-pill-btn" data-book-btn="${v.id}" style="padding:6px 18px;border-radius:8px;border:1px solid #E2DCF0;color:#5E5778;background:#ffffff;">
-          View
-        </button>
+        <button type="button" class="card-view-btn" data-book-btn="${v.id}">View</button>
       </div>
     </div>
   `;
