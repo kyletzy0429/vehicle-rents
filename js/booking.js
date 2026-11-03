@@ -128,18 +128,90 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
           <!-- ═══ STEP 2: DATES AND DRIVER (Matches 4-booking-process.png) ═══ -->
           <div class="step-content" id="stepSection2">
-            <!-- Card 1: Trip Details -->
+            <!-- Card 1: Trip Details with Interactive Availability Calendar (Matches 7-renter-availability & date selection) -->
             <div class="booking-section-card">
-              <h4 class="section-card-title">Trip details</h4>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+                <h4 class="section-card-title" style="margin:0;">Trip details</h4>
+                <div style="font-size:0.8rem;color:var(--text-mid);display:flex;align-items:center;gap:6px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block;"></span>
+                  <span>Live Vehicle Availability</span>
+                </div>
+              </div>
+
+              <!-- Pick-up & Return Date Selector Boxes (Matches media_1793708316816_d3eb85a3.png) -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                <div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--text-mid);margin-bottom:6px;">Pick-up date</div>
+                  <div id="boxPickUpDate" class="cal-date-box active">
+                    <span id="dispPickUpDate" style="font-size:0.95rem;font-weight:600;color:var(--text-hi);">${fmtDate(initStart)}</span>
+                    <span style="font-size:0.8rem;color:#94a3b8;font-weight:400;">calendar</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--text-mid);margin-bottom:6px;">Return date</div>
+                  <div id="boxReturnDate" class="cal-date-box">
+                    <span id="dispReturnDate" style="font-size:0.92rem;font-weight:500;color:var(--text-hi);">${fmtDate(initEnd)}</span>
+                    <span style="font-size:0.8rem;color:#94a3b8;font-weight:400;">calendar</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hidden native inputs for form & contract compatibility -->
+              <input type="hidden" id="bStart" value="${initStart}" />
+              <input type="hidden" id="bEnd" value="${initEnd}" />
+
+              <!-- Calendar Container (Matches media_1793708316816_d3eb85a3.png) -->
+              <div class="cal-date-picker-wrap" style="padding:4px 0 14px 0;margin-bottom:18px;">
+                <!-- Calendar Month Navigation -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 2px;">
+                  <button type="button" class="btn btn-ghost" id="btnCalPrevMonth" style="width:34px;height:34px;padding:0;border-radius:8px;border:1px solid var(--glass-border,#E2DCF0);display:flex;align-items:center;justify-content:center;color:var(--text-hi);font-size:0.95rem;background:var(--bg-surface,#ffffff);" title="Previous month">
+                    &lt;
+                  </button>
+                  <h4 id="calMonthYearTitle" style="font-family:'Fraunces',serif;font-size:1.18rem;font-weight:700;color:var(--text-hi);margin:0;">
+                    November 2026
+                  </h4>
+                  <button type="button" class="btn btn-ghost" id="btnCalNextMonth" style="width:34px;height:34px;padding:0;border-radius:8px;border:1px solid var(--glass-border,#E2DCF0);display:flex;align-items:center;justify-content:center;color:var(--text-hi);font-size:0.95rem;background:var(--bg-surface,#ffffff);" title="Next month">
+                    &gt;
+                  </button>
+                </div>
+
+                <!-- Weekday Headers -->
+                <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:6px;text-align:center;margin-bottom:8px;font-size:0.8rem;font-weight:500;color:var(--text-mid);">
+                  <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+
+                <!-- Calendar Days Grid -->
+                <div id="calDaysGrid" style="display:grid;grid-template-columns:repeat(7, 1fr);gap:6px;margin-bottom:14px;"></div>
+
+                <!-- Calendar Legend -->
+                <div style="display:flex;align-items:center;justify-content:flex-start;gap:16px;flex-wrap:wrap;font-size:0.75rem;color:var(--text-mid);padding-top:12px;margin-bottom:12px;">
+                  <div class="cal-legend-item">
+                    <span class="cal-legend-pill" style="background:#eaf7ee;border:1px solid #ccebd5;"></span>
+                    <span>Free for this vehicle</span>
+                  </div>
+                  <div class="cal-legend-item">
+                    <span class="cal-legend-pill" style="background:#fce8e6;border:1px solid #fad2cf;"></span>
+                    <span>Already booked</span>
+                  </div>
+                  <div class="cal-legend-item">
+                    <span class="cal-legend-pill" style="background:#3b2e58;"></span>
+                    <span>Your dates</span>
+                  </div>
+                  <div class="cal-legend-item">
+                    <span class="cal-legend-pill" style="background:#ffffff;border:2px solid #2a2340;"></span>
+                    <span>Today</span>
+                  </div>
+                </div>
+
+                <!-- Availability & Price Summary -->
+                <div id="calSummaryLine" style="font-size:0.98rem;font-weight:700;color:#1e6b37;">
+                  Available: 4 days, PHP 19,200
+                </div>
+              </div>
+
+              <!-- Location & Time Inputs -->
               <div class="booking-fields-grid">
-                <div class="field">
-                  <label for="bStart">Pick-up date</label>
-                  <input type="date" id="bStart" min="${todayStr}" value="${initStart}" class="clean-input" />
-                </div>
-                <div class="field">
-                  <label for="bEnd">Return date</label>
-                  <input type="date" id="bEnd" min="${todayStr}" value="${initEnd}" class="clean-input" />
-                </div>
                 <div class="field">
                   <label for="bLocation">Pick-up location</label>
                   <input type="text" id="bLocation" value="${p.address || 'Puerto Princesa Airport'}" class="clean-input" />
@@ -430,19 +502,183 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   });
   $('#btnBackStep2')?.addEventListener('click', () => setStep(2));
 
-  // Date Change Listeners (Synchronous 0ms response)
-  start?.addEventListener('change', () => {
-    if (start.value && end) {
-      end.min = start.value;
-      if (end.value < start.value) {
-        end.value = start.value;
+  // ═══ Calendar State & Handlers (Matches media_1793708316816_d3eb85a3.png) ═══
+  let selectedStart = initStart;
+  let selectedEnd = initEnd;
+  let selectingTarget = 'start';
+  let calDateObj = new Date(initStart || todayStr);
+  if (isNaN(calDateObj.getTime())) calDateObj = new Date();
+  let calYear = calDateObj.getFullYear();
+  let calMonth = calDateObj.getMonth();
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  function renderCalendarDays() {
+    const titleEl = $('#calMonthYearTitle');
+    if (titleEl) titleEl.textContent = `${monthNames[calMonth]} ${calYear}`;
+
+    const grid = $('#calDaysGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const firstDayIndex = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.style.height = '38px';
+      grid.appendChild(emptyCell);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isPast = dateStr < todayStr;
+      const isToday = dateStr === todayStr;
+
+      // Booked days for THIS vehicle
+      const isBooked = allBookedIntervals.some(b => dateStr >= b.start_date && dateStr <= b.end_date);
+
+      const isStart = selectedStart && dateStr === selectedStart;
+      const isEnd = selectedEnd && dateStr === selectedEnd;
+      const isInRange = selectedStart && selectedEnd && dateStr > selectedStart && dateStr < selectedEnd;
+
+      const cell = document.createElement('div');
+      cell.className = 'cal-day-cell';
+      cell.textContent = day;
+
+      if (isStart || isEnd) {
+        cell.classList.add(isStart ? 'range-start' : 'range-end');
+      } else if (isInRange) {
+        cell.classList.add('in-range');
+      } else if (isBooked) {
+        cell.classList.add('booked');
+        cell.title = 'Already booked for this vehicle';
+      } else if (isPast) {
+        cell.classList.add('past');
+      } else {
+        cell.classList.add('free');
+        cell.title = 'Available for this vehicle';
+      }
+
+      if (isToday) {
+        cell.classList.add('today');
+      }
+
+      if (!isBooked && !isPast) {
+        cell.addEventListener('click', () => {
+          handleDaySelection(dateStr);
+        });
+      }
+
+      grid.appendChild(cell);
+    }
+
+    updateDateDisplayBoxes();
+  }
+
+  function handleDaySelection(dateStr) {
+    if (selectingTarget === 'start') {
+      selectedStart = dateStr;
+      if (selectedEnd && selectedEnd < selectedStart) {
+        selectedEnd = '';
+      }
+      selectingTarget = 'end';
+    } else {
+      if (dateStr < selectedStart) {
+        selectedStart = dateStr;
+        selectedEnd = '';
+        selectingTarget = 'end';
+      } else {
+        selectedEnd = dateStr;
+        selectingTarget = 'start';
       }
     }
+
+    if (start) start.value = selectedStart;
+    if (end) end.value = selectedEnd || selectedStart;
+
+    renderCalendarDays();
+    checkAvailability();
+  }
+
+  function updateDateDisplayBoxes() {
+    const dispStart = $('#dispPickUpDate');
+    const dispEnd = $('#dispReturnDate');
+    const boxStart = $('#boxPickUpDate');
+    const boxEnd = $('#boxReturnDate');
+
+    if (dispStart) dispStart.textContent = selectedStart ? fmtDate(selectedStart) : 'Select date';
+    if (dispEnd) dispEnd.textContent = selectedEnd ? fmtDate(selectedEnd) : 'Select date';
+
+    if (boxStart && boxEnd) {
+      boxStart.classList.toggle('active', selectingTarget === 'start');
+      boxEnd.classList.toggle('active', selectingTarget === 'end');
+    }
+
+    const summary = $('#calSummaryLine');
+    if (summary) {
+      if (selectedStart && selectedEnd) {
+        const conflict = allBookedIntervals.find(b => selectedStart <= b.end_date && selectedEnd >= b.start_date);
+        if (conflict) {
+          summary.innerHTML = `<span style="color:var(--coral,#dc2626);font-weight:700;">Date conflict: Booked from ${fmtDate(conflict.start_date)} to ${fmtDate(conflict.end_date)}</span>`;
+        } else {
+          const days = Math.max(1, daysBetween(selectedStart, selectedEnd));
+          const total = days * rate;
+          summary.innerHTML = `Available: ${days} ${days === 1 ? 'day' : 'days'}, PHP ${fmtMoney(total).replace('₱', '').trim()}`;
+        }
+      } else if (selectedStart) {
+        summary.innerHTML = `<span style="color:var(--accent,#5B4B8A);font-weight:600;">Pick-up: ${fmtDate(selectedStart)} · Select return date on calendar</span>`;
+      }
+    }
+  }
+
+  $('#boxPickUpDate')?.addEventListener('click', () => {
+    selectingTarget = 'start';
+    updateDateDisplayBoxes();
+  });
+
+  $('#boxReturnDate')?.addEventListener('click', () => {
+    selectingTarget = 'end';
+    updateDateDisplayBoxes();
+  });
+
+  $('#btnCalPrevMonth')?.addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) {
+      calMonth = 11;
+      calYear--;
+    }
+    renderCalendarDays();
+  });
+
+  $('#btnCalNextMonth')?.addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) {
+      calMonth = 0;
+      calYear++;
+    }
+    renderCalendarDays();
+  });
+
+  // Initial Calendar Render
+  renderCalendarDays();
+
+  // Date Change Listeners (Synchronous 0ms response)
+  start?.addEventListener('change', () => {
+    selectedStart = start.value;
+    renderCalendarDays();
     checkAvailability();
   });
   start?.addEventListener('input', checkAvailability);
 
-  end?.addEventListener('change', checkAvailability);
+  end?.addEventListener('change', () => {
+    selectedEnd = end.value;
+    renderCalendarDays();
+    checkAvailability();
+  });
   end?.addEventListener('input', checkAvailability);
 
   // Driver Checkbox Listener
@@ -735,4 +971,271 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       }, 100);
     }
   });
+}
+
+// ═══ STANDALONE BOOKING DATE SELECTION MODAL (Matches media_1793708316816_d3eb85a3.png) ═══
+export async function openBookingDatePickerModal({ vehicle, initialStart = '', initialEnd = '', onConfirm = null }) {
+  const v = vehicle;
+  if (!v) return;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let curStart = initialStart || todayStr;
+  let curEnd = initialEnd || initialStart || todayStr;
+
+  const rate = getVehicleDailyRate(v);
+  const catName = getVehicleCategoryName(v);
+  const exactImg = getExactVehicleImage(v);
+  const isMotorcycle = catName === 'Motorcycles' || (v.name || '').toLowerCase().includes('motor') || (v.name || '').toLowerCase().includes('click');
+  const seats = v.seats || (isMotorcycle ? 2 : (catName.toLowerCase().includes('van') ? 14 : 7));
+
+  // Fetch booked intervals
+  const [{ data: bookedIntervals }] = await Promise.all([
+    supabase.from('bookings').select('start_date, end_date, status').eq('vehicle_id', v.id).in('status', ['pending', 'approved', 'active', 'reserved', 'completed']).gte('end_date', todayStr).order('start_date')
+  ]);
+
+  const localList = getLocalBookings().filter(b =>
+    (Number(b.vehicle_id) === Number(v.id) || Number(b.vehicles?.id) === Number(v.id)) &&
+    ['pending', 'approved', 'active', 'reserved', 'completed'].includes(b.status) &&
+    (b.end_date >= todayStr || !b.end_date)
+  ).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
+
+  const dbList = (bookedIntervals || []).map(b => ({ start_date: (b.start_date || '').slice(0, 10), end_date: (b.end_date || '').slice(0, 10) }));
+  const allIntervals = [...dbList, ...localList].filter(b => b.start_date && b.end_date);
+
+  let targetField = 'start';
+  let dateObj = new Date(curStart || todayStr);
+  if (isNaN(dateObj.getTime())) dateObj = new Date();
+  let mYear = dateObj.getFullYear();
+  let mMonth = dateObj.getMonth();
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const modalHtml = `
+    <div class="date-picker-modal">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="width:68px;height:68px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+            <img src="${exactImg}" alt="${v.name}" style="width:100%;height:100%;object-fit:contain;" />
+          </div>
+          <div>
+            <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;color:var(--text-hi,#2a2340);margin:0 0 4px 0;">
+              ${v.name}
+            </h3>
+            <p style="font-size:0.85rem;color:var(--text-mid,#5e5778);margin:0;">
+              ${catName}, ${seats} seats | PHP ${fmtMoney(rate).replace('₱', '').trim()} / day
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" id="mCloseDatePick" style="padding:6px 16px;font-size:0.85rem;border-radius:8px;">
+          Close
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+        <div>
+          <div style="font-size:0.8rem;font-weight:600;color:var(--text-mid);margin-bottom:6px;">Pick-up date</div>
+          <div id="mBoxPickUp" class="cal-date-box active">
+            <span id="mDispPickUp" style="font-size:0.95rem;font-weight:600;color:var(--text-hi);">${fmtDate(curStart)}</span>
+            <span style="font-size:0.8rem;color:#94a3b8;font-weight:400;">calendar</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:0.8rem;font-weight:600;color:var(--text-mid);margin-bottom:6px;">Return date</div>
+          <div id="mBoxReturn" class="cal-date-box">
+            <span id="mDispReturn" style="font-size:0.92rem;font-weight:500;color:var(--text-hi);">${fmtDate(curEnd)}</span>
+            <span style="font-size:0.8rem;color:#94a3b8;font-weight:400;">calendar</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cal-date-picker-wrap" style="padding:0;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 2px;">
+          <button type="button" class="btn btn-ghost" id="mCalPrevMonth" style="width:34px;height:34px;padding:0;border-radius:8px;border:1px solid var(--glass-border,#E2DCF0);display:flex;align-items:center;justify-content:center;color:var(--text-hi);font-size:0.95rem;background:#ffffff;">
+            &lt;
+          </button>
+          <h4 id="mCalMonthTitle" style="font-family:'Fraunces',serif;font-size:1.18rem;font-weight:700;color:var(--text-hi);margin:0;">
+            ${monthNames[mMonth]} ${mYear}
+          </h4>
+          <button type="button" class="btn btn-ghost" id="mCalNextMonth" style="width:34px;height:34px;padding:0;border-radius:8px;border:1px solid var(--glass-border,#E2DCF0);display:flex;align-items:center;justify-content:center;color:var(--text-hi);font-size:0.95rem;background:#ffffff;">
+            &gt;
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:6px;text-align:center;margin-bottom:8px;font-size:0.8rem;font-weight:500;color:var(--text-mid);">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+
+        <div id="mCalGrid" style="display:grid;grid-template-columns:repeat(7, 1fr);gap:6px;margin-bottom:14px;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:flex-start;gap:16px;flex-wrap:wrap;font-size:0.75rem;color:var(--text-mid);padding-top:12px;margin-bottom:12px;">
+          <div class="cal-legend-item">
+            <span class="cal-legend-pill" style="background:#eaf7ee;border:1px solid #ccebd5;"></span>
+            <span>Free for this vehicle</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-pill" style="background:#fce8e6;border:1px solid #fad2cf;"></span>
+            <span>Already booked</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-pill" style="background:#3b2e58;"></span>
+            <span>Your dates</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-pill" style="background:#ffffff;border:2px solid #2a2340;"></span>
+            <span>Today</span>
+          </div>
+        </div>
+
+        <div id="mCalSummary" style="font-size:0.98rem;font-weight:700;color:#1e6b37;">
+          Available: 4 days, PHP 19,200
+        </div>
+      </div>
+    </div>
+  `;
+
+  openModal(modalHtml);
+
+  function refreshModalCal() {
+    const titleEl = document.getElementById('mCalMonthTitle');
+    if (titleEl) titleEl.textContent = `${monthNames[mMonth]} ${mYear}`;
+
+    const grid = document.getElementById('mCalGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const firstDay = new Date(mYear, mMonth, 1).getDay();
+    const daysCount = new Date(mYear, mMonth + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.style.height = '38px';
+      grid.appendChild(empty);
+    }
+
+    for (let day = 1; day <= daysCount; day++) {
+      const dateStr = `${mYear}-${String(mMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isPast = dateStr < todayStr;
+      const isToday = dateStr === todayStr;
+      const isBooked = allIntervals.some(b => dateStr >= b.start_date && dateStr <= b.end_date);
+      const isStart = curStart && dateStr === curStart;
+      const isEnd = curEnd && dateStr === curEnd;
+      const isInRange = curStart && curEnd && dateStr > curStart && dateStr < curEnd;
+
+      const cell = document.createElement('div');
+      cell.className = 'cal-day-cell';
+      cell.textContent = day;
+
+      if (isStart || isEnd) {
+        cell.classList.add(isStart ? 'range-start' : 'range-end');
+      } else if (isInRange) {
+        cell.classList.add('in-range');
+      } else if (isBooked) {
+        cell.classList.add('booked');
+        cell.title = 'Already booked for this vehicle';
+      } else if (isPast) {
+        cell.classList.add('past');
+      } else {
+        cell.classList.add('free');
+        cell.title = 'Available for this vehicle';
+      }
+
+      if (isToday) {
+        cell.classList.add('today');
+      }
+
+      if (!isBooked && !isPast) {
+        cell.addEventListener('click', () => {
+          if (targetField === 'start') {
+            curStart = dateStr;
+            if (curEnd && curEnd < curStart) curEnd = '';
+            targetField = 'end';
+          } else {
+            if (dateStr < curStart) {
+              curStart = dateStr;
+              curEnd = '';
+              targetField = 'end';
+            } else {
+              curEnd = dateStr;
+              targetField = 'start';
+            }
+          }
+          refreshModalCal();
+          if (onConfirm) onConfirm(curStart, curEnd || curStart);
+        });
+      }
+
+      grid.appendChild(cell);
+    }
+
+    const dispP = document.getElementById('mDispPickUp');
+    const dispR = document.getElementById('mDispReturn');
+    const boxP = document.getElementById('mBoxPickUp');
+    const boxR = document.getElementById('mBoxReturn');
+
+    if (dispP) dispP.textContent = curStart ? fmtDate(curStart) : 'Select date';
+    if (dispR) dispR.textContent = curEnd ? fmtDate(curEnd) : 'Select date';
+
+    if (boxP && boxR) {
+      boxP.classList.toggle('active', targetField === 'start');
+      boxR.classList.toggle('active', targetField === 'end');
+    }
+
+    const sumEl = document.getElementById('mCalSummary');
+    if (sumEl) {
+      if (curStart && curEnd) {
+        const conflict = allIntervals.find(b => curStart <= b.end_date && curEnd >= b.start_date);
+        if (conflict) {
+          sumEl.innerHTML = `<span style="color:var(--coral,#dc2626);font-weight:700;">Date conflict: Booked from ${fmtDate(conflict.start_date)} to ${fmtDate(conflict.end_date)}</span>`;
+        } else {
+          const days = Math.max(1, daysBetween(curStart, curEnd));
+          const total = days * rate;
+          sumEl.innerHTML = `Available: ${days} ${days === 1 ? 'day' : 'days'}, PHP ${fmtMoney(total).replace('₱', '').trim()}`;
+        }
+      } else if (curStart) {
+        sumEl.innerHTML = `<span style="color:var(--accent,#5B4B8A);font-weight:600;">Pick-up: ${fmtDate(curStart)} · Select return date on calendar</span>`;
+      }
+    }
+  }
+
+  document.getElementById('mBoxPickUp')?.addEventListener('click', () => {
+    targetField = 'start';
+    refreshModalCal();
+  });
+
+  document.getElementById('mBoxReturn')?.addEventListener('click', () => {
+    targetField = 'end';
+    refreshModalCal();
+  });
+
+  document.getElementById('mCalPrevMonth')?.addEventListener('click', () => {
+    mMonth--;
+    if (mMonth < 0) {
+      mMonth = 11;
+      mYear--;
+    }
+    refreshModalCal();
+  });
+
+  document.getElementById('mCalNextMonth')?.addEventListener('click', () => {
+    mMonth++;
+    if (mMonth > 11) {
+      mMonth = 0;
+      mYear++;
+    }
+    refreshModalCal();
+  });
+
+  document.getElementById('mCloseDatePick')?.addEventListener('click', () => {
+    closeModal();
+  });
+
+  refreshModalCal();
+}
+
+if (typeof window !== 'undefined') {
+  window.openBookingDatePickerModal = openBookingDatePickerModal;
 }

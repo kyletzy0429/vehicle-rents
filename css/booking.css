@@ -775,3 +775,144 @@
   box-shadow: 0 0 0 1.5px var(--accent, #5B4B8A) !important;
 }
 
+/* ═══ Vehicle Calendar Date Selection Component (Matches 7-renter-availability & date selection) ═══ */
+.cal-date-picker-wrap {
+  background: var(--bg-surface, #ffffff);
+  border-radius: 14px;
+  padding: 16px 0 8px 0;
+}
+
+.cal-date-box {
+  border-radius: 8px;
+  padding: 10px 14px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background: var(--bg-surface, #ffffff);
+  border: 1.5px solid var(--glass-border, #E2DCF0);
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.cal-date-box.active {
+  border: 2px solid var(--accent, #5B4B8A) !important;
+  box-shadow: 0 0 0 3px var(--accent-light, #E9E3F7);
+}
+
+.cal-day-cell {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  user-select: none;
+  transition: all 0.12s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.cal-day-cell.free {
+  background: #eaf7ee;
+  color: #1e6b37;
+}
+
+.cal-day-cell.free:hover {
+  background: #d4f2dc;
+  transform: scale(1.04);
+}
+
+.cal-day-cell.booked {
+  background: #fce8e6;
+  color: #c5221f;
+  cursor: not-allowed;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.cal-day-cell.past {
+  background: transparent;
+  color: #94a3b8;
+  cursor: default;
+  pointer-events: none;
+}
+
+.cal-day-cell.range-start,
+.cal-day-cell.range-end {
+  background: #3b2e58 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(42, 35, 64, 0.2);
+}
+
+.cal-day-cell.in-range {
+  background: #e8e2f4 !important;
+  color: #2a2340 !important;
+  font-weight: 600 !important;
+}
+
+.cal-day-cell.today {
+  border: 2px solid #2a2340 !important;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--text-mid, #5E5778);
+  font-weight: 500;
+}
+
+.cal-legend-pill {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.date-picker-modal {
+  max-width: 580px;
+  width: 100%;
+  background: var(--bg-surface, #ffffff);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .cal-day-cell.free {
+  background: rgba(30, 107, 55, 0.25);
+  color: #86efac;
+}
+
+[data-theme="dark"] .cal-day-cell.booked {
+  background: rgba(197, 34, 31, 0.25);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .cal-day-cell.past {
+  background: rgba(255, 255, 255, 0.03);
+  color: #475569;
+}
+
+[data-theme="dark"] .cal-day-cell.range-start,
+[data-theme="dark"] .cal-day-cell.range-end {
+  background: #8b5cf6 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .cal-day-cell.in-range {
+  background: rgba(139, 92, 246, 0.25) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .cal-day-cell.today {
+  outline: 2px solid #f8fafc;
+}
+
