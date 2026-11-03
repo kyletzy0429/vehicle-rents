@@ -366,7 +366,7 @@ export function openPricingModal() {
 
 export function renderShell() {
   const comp = getSystemSettings().company || DEFAULT_SETTINGS.company;
-  const companyName = comp.name || 'Palawan Drive';
+  const companyName = (comp.name && comp.name !== 'Vehicle Rental Management System') ? comp.name : 'Palawan Drive';
   const tabs = PORTAL_TABS[state.portal] || [];
   if (!state.tab || !tabs.find(t => t.id === state.tab)) state.tab = tabs[0]?.id;
 
@@ -542,6 +542,9 @@ export function renderShell() {
         </nav>
 
         <div class="sidebar-footer">
+          <div style="margin-bottom:8px;">
+            ${renderRoleSwitcherHTML(state.portal)}
+          </div>
           <div class="user-chip" id="userProfileChip" title="Click for User Menu" style="width:100%;cursor:pointer;">
             <div class="user-avatar">${initials}</div>
             <div class="user-meta" style="flex:1;">

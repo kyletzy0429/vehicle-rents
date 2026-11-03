@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
 import { state, getVehicleOverrides, saveVehicleOverride } from './state.js';
-import { $, $$, fmtMoney, maskPlate, toast, emptyState } from './utils.js';
+import { $, $$, fmtMoney, fmtDate, maskPlate, toast, emptyState } from './utils.js';
 import { openVehicleDetail } from './booking.js';
 
 export { getVehicleOverrides, saveVehicleOverride };

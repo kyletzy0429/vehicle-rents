@@ -72,13 +72,7 @@
   border-bottom: 2px solid var(--accent, #5B4B8A);
 }
 
-@media (max-width: 900px) {
-  .portal-header-nav {
-    display: none !important;
-  }
-}
-
-/* Minimalist squircle hamburger menu button */
+/* Minimalist squircle hamburger menu button - only visible on mobile under 900px */
 .guest-menu-btn {
   width: 38px;
   height: 38px;
@@ -87,7 +81,7 @@
   border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #0f172a;
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -95,6 +89,15 @@
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .guest-menu-btn {
+    display: inline-flex;
+  }
+  .portal-header-nav {
+    display: none !important;
+  }
 }
 
 .guest-menu-btn:hover {

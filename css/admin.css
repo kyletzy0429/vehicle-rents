@@ -146,17 +146,23 @@
   gap: 10px;
 }
 
-/* ── Topbar ── */
+/* ── Topbar: Clean layout (Desktop hides topbar matching 5-staff-portal.png & 6-admin-portal.png; Mobile shows topbar with hamburger button) ── */
 .main-topbar {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 48px;
+  padding: 12px 20px;
   background: #ffffff;
   border-bottom: 1px solid var(--glass-border, #E2DCF0);
   position: sticky;
   top: 0;
   z-index: 40;
+}
+
+@media (max-width: 900px) {
+  .main-topbar {
+    display: flex;
+  }
 }
 
 .user-chip {

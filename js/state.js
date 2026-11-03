@@ -319,7 +319,7 @@ export function updateLocalBookingStatus(bookingId, status, extraOrNotes = null)
 
 export const DEFAULT_SETTINGS = {
   company: {
-    name: 'Vehicle Rental Management System',
+    name: 'Palawan Drive',
     phone: '+63 67676767',
     mobile: '+63 917 123 4567',
     email: 'vehicleretal.ph',
