@@ -259,19 +259,19 @@ export async function renderMyBookings(view) {
 
         <div class="booking-filter-tabs ${returnDueBooking ? 'has-top-alert' : ''}">
           <button type="button" class="booking-tab-btn active" data-bfilter="all">
-            <i class="fa-solid fa-list-ul"></i> All Bookings <span class="booking-tab-badge">${bookings.length}</span>
+            All Bookings <span class="booking-tab-badge">${bookings.length}</span>
           </button>
           <button type="button" class="booking-tab-btn" data-bfilter="pending">
-            <i class="fa-solid fa-hourglass-half"></i> Pending <span class="booking-tab-badge">${pendingCount}</span>
+            Pending <span class="booking-tab-badge">${pendingCount}</span>
           </button>
           <button type="button" class="booking-tab-btn" data-bfilter="active">
-            <i class="fa-solid fa-car"></i> Active &amp; Approved <span class="booking-tab-badge">${activeCount}</span>
+            Active &amp; Approved <span class="booking-tab-badge">${activeCount}</span>
           </button>
           <button type="button" class="booking-tab-btn" data-bfilter="completed">
-            <i class="fa-solid fa-circle-check"></i> Completed <span class="booking-tab-badge">${completedCount}</span>
+            Completed <span class="booking-tab-badge">${completedCount}</span>
           </button>
           <button type="button" class="booking-tab-btn" data-bfilter="cancelled">
-            <i class="fa-solid fa-ban"></i> Cancelled <span class="booking-tab-badge">${cancelledCount}</span>
+            Cancelled <span class="booking-tab-badge">${cancelledCount}</span>
           </button>
         </div>
       </div>
@@ -1151,126 +1151,76 @@ ISSUED AT: ${new Date().toLocaleString()}
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(qrDataPayload)}`;
 
   const modal = openModal(`
-    <div class="modal-head" style="margin-bottom:12px;padding-bottom:8px;">
-      <div style="font-weight:700;font-size:0.9rem;color:var(--text-mid);">Official Payment Receipt &amp; Venue Pass</div>
-      <div class="modal-close" id="mClose" onclick="window.closeModal()">Close</div>
-    </div>
-    <div style="text-align:center;margin-bottom:16px;">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
-        <i class="fa-solid fa-circle-check" style="font-size:1.5rem;color:#fff;"></i>
-      </div>
-      <h2 style="font-size:1.35rem;font-weight:800;color:var(--text-hi);margin-bottom:4px;">Payment Successful!</h2>
-      <span class="badge badge-completed" style="font-size:0.75rem;">Paid via ${payMethod}</span>
-      <p class="muted" style="margin-top:6px;font-size:0.82rem;color:var(--text-mid);">Ref / Transaction No: <strong style="color:var(--text-hi);font-family:monospace;">${refCode}</strong></p>
-    </div>
-
-    <!-- Official Venue QR Check-In Pass -->
-    <div class="venue-pass-card">
-      <div class="venue-pass-badge">
-        <i class="fa-solid fa-qrcode"></i> Venue Express Pickup QR Pass
-      </div>
-      <div>
-        <span class="venue-pass-ref"><i class="fa-solid fa-ticket" style="margin-right:4px;"></i> Pass Code: ${refCode}</span>
-      </div>
-
-      <div class="venue-qr-wrapper">
-        <img src="${qrImageUrl}" alt="Venue QR Pass" class="venue-qr-img" />
-      </div>
-
-      <div style="font-weight:800;font-size:0.9rem;color:var(--text-hi);margin-bottom:4px;">
-        I-scan sa Venue para sa Mabilisang Pag-claim
-      </div>
-      <p class="venue-pass-instructions">
-        Ipakita ang QR code na ito sa meetup / venue (<strong style="color:var(--text-hi,#0f172a);">${comp.address || '123 PPC MAIN BRANCH VENUE'}</strong>). I-scan lamang ito ng staff gamit ang phone o scanner upang agad makita ang kumpletong detalye ng iyong booking.
-      </p>
-
-      <!-- Scanned Details Preview Card -->
-      <div style="margin-top:12px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;text-align:left;">
-        <div style="font-weight:700;font-size:0.78rem;color:var(--text-mid);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
-          <span><i class="fa-solid fa-circle-info" style="color:var(--accent);margin-right:4px;"></i> QR Code Encoded Details</span>
-          <span class="badge badge-completed" style="font-size:0.68rem;"><i class="fa-solid fa-shield-halved" style="margin-right:3px;"></i> Verified Pass</span>
+    <div class="clean-receipt-modal">
+      <div class="clean-receipt-header">
+        <div class="clean-receipt-brand">
+          <span class="brand-pill">Palawan Drive</span>
+          <h2 class="clean-receipt-title">Booking Confirmation &amp; Digital Pass</h2>
+          <span class="clean-receipt-ref">Reference Code: <strong>${refCode}</strong></span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:var(--text-hi);">
-          <div><span style="color:var(--text-mid);">Customer:</span> <strong>${customerName}</strong></div>
-          <div><span style="color:var(--text-mid);">Phone:</span> <strong>${customerPhone}</strong></div>
-          <div><span style="color:var(--text-mid);">Vehicle:</span> <strong>${vehicleName}</strong></div>
-          <div><span style="color:var(--text-mid);">Plate:</span> <strong>${plateNo}</strong></div>
-          <div><span style="color:var(--text-mid);">Dates:</span> <strong>${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</strong></div>
-          <div><span style="color:var(--text-mid);">Duration:</span> <strong>${days} day(s)</strong></div>
-          <div><span style="color:var(--text-mid);">Paid:</span> <strong style="color:#059669;">${fmtMoney(paidAmount)}</strong></div>
-          <div><span style="color:var(--text-mid);">Status:</span> <strong style="color:${isFullPaid ? '#059669' : 'var(--accent)'};">${isFullPaid ? 'Fully Paid' : `Bal: ${fmtMoney(balDue)}`}</strong></div>
+        <button type="button" class="modal-close" id="mClose" onclick="window.closeModal && window.closeModal()" aria-label="Close Receipt">&times;</button>
+      </div>
+
+      <div class="clean-receipt-status ${isFullPaid ? 'is-paid' : 'is-partial'}">
+        <div class="status-icon-circle">
+          <i class="fa-solid fa-${isFullPaid ? 'circle-check' : 'clock-rotate-left'}"></i>
+        </div>
+        <div class="status-content">
+          <div class="status-title">${isFullPaid ? 'Payment Verified &amp; Confirmed' : (payMethod.includes('Cash') ? 'Reservation Confirmed (Pay on Pickup)' : `Downpayment (${b.downpayment_percent || 20}%) Confirmed`)}</div>
+          <div class="status-subtitle">Payment Method: ${payMethod} &bull; Issued: ${fmtDate(b.created_at || new Date())}</div>
         </div>
       </div>
-    </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
-      <i class="fa-solid fa-car" style="color:var(--accent);"></i> Reservation &amp; Vehicle Summary
-    </h4>
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:var(--text-mid);">Customer</span><span style="font-weight:700;color:var(--text-hi);">${customerName}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Driver's License</span><span style="font-weight:700;color:var(--text-hi);">${customerLicense}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Vehicle</span><span style="font-weight:700;color:var(--text-hi);">${vehicleName}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Category</span><span style="color:var(--text-hi);">${categoryName}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Plate Number</span><span style="color:var(--text-hi);">${plateNo}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Pickup Date</span><span style="color:var(--text-hi);font-weight:600;">${fmtDate(b.start_date)}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Return Date</span><span style="color:var(--text-hi);font-weight:600;">${fmtDate(b.end_date)}</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Rental Period</span><span style="color:var(--text-hi);">${days} day(s)</span></div>
-      <div class="receipt-row"><span style="color:var(--text-mid);">Fuel / AC</span><span style="color:var(--text-hi);">${fuelType} · ${hasAC ? 'With AC' : 'Non-AC'}</span></div>
-    </div>
-
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
-      <i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Payment &amp; Receipt Summary
-    </h4>
-    <div class="receipt" style="margin-bottom:16px;">
-      <div class="receipt-row"><span>Payment Method</span><span style="font-weight:700;color:#059669;">${payMethod}</span></div>
-      <div class="receipt-row"><span>Total Rental Cost</span><span style="font-weight:700;color:var(--text-hi);">${fmtMoney(b.total_amount)}</span></div>
-      <div class="receipt-row"><span>Amount Paid Now</span><span style="font-weight:700;color:#059669;">${fmtMoney(paidAmount)}</span></div>
-      ${balDue > 0 ? `
-        <div class="receipt-row" style="background:#eff6ff;padding:6px 8px;border-radius:6px;margin:4px 0;">
-          <span style="color:#1d4ed8;font-weight:600;">Remaining Balance Due at Pickup</span>
-          <span style="font-weight:800;color:#1d4ed8;">${fmtMoney(balDue)}</span>
+      <div class="clean-receipt-body-grid">
+        <!-- Digital QR Pass Card -->
+        <div class="clean-pass-card">
+          <div class="pass-header-tag">
+            <i class="fa-solid fa-qrcode"></i> Express Venue Pass
+          </div>
+          <div class="pass-qr-frame">
+            <img src="${qrImageUrl}" alt="Venue QR Pass" class="pass-qr-image" />
+          </div>
+          <div class="pass-code-display">${refCode}</div>
+          <p class="pass-instruction">
+            Present this QR pass upon vehicle collection at <strong>${comp.address || '123 PPC Main Branch Venue'}</strong>.
+          </p>
         </div>
-      ` : ''}
-      <div class="divider"></div>
-      <div class="receipt-row receipt-total"><span>Payment Status</span><span class="badge ${balDue > 0 ? 'badge-reserved' : 'badge-completed'}">${balDue > 0 ? 'RESERVED (PARTIAL)' : 'FULL PAYMENT'}</span></div>
-    </div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
-      <i class="fa-solid fa-location-dot" style="color:var(--accent);"></i> Rental &amp; Pickup Venue Details
-    </h4>
-    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;margin-bottom:14px;">
-      <div class="receipt-row"><span style="color:#0369a1;">Pickup Location</span><span style="color:var(--text-hi);font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Return Location</span><span style="color:var(--text-hi);font-weight:600;">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Fuel Policy</span><span style="color:var(--text-hi);">Full-to-Full</span></div>
-      <div class="receipt-row"><span style="color:#0369a1;">Insurance</span><span style="color:var(--text-hi);">Comprehensive coverage included</span></div>
-    </div>
+        <!-- Reservation & Payment Details -->
+        <div class="clean-details-card">
+          <div class="details-section-heading">Reservation Details</div>
+          <div class="details-row"><span class="d-label">Vehicle</span><strong class="d-val">${vehicleName}</strong></div>
+          <div class="details-row"><span class="d-label">Category &amp; Plate</span><span class="d-val">${categoryName} &bull; ${plateNo}</span></div>
+          <div class="details-row"><span class="d-label">Rental Schedule</span><span class="d-val">${fmtDate(b.start_date)} &rarr; ${fmtDate(b.end_date)} (${days} day${days > 1 ? 's' : ''})</span></div>
+          <div class="details-row"><span class="d-label">Renter Name</span><span class="d-val">${customerName} (${customerPhone})</span></div>
 
-    <h4 style="margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-hi);font-size:0.9rem;">
-      <i class="fa-solid fa-headset" style="color:#059669;"></i> Support Contact
-    </h4>
-    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <div class="receipt-row"><span style="color:#065f46;">Hotline</span><span style="font-weight:700;color:var(--text-hi);">${comp.phone || '+63 67676767'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Mobile</span><span style="font-weight:700;color:var(--text-hi);">${comp.mobile || '+63 917 123 4567'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Email</span><span style="font-weight:600;color:var(--text-hi);">${comp.email || 'vehiclerental.ph'}</span></div>
-      <div class="receipt-row"><span style="color:#065f46;">Address</span><span style="color:var(--text-hi);">${comp.address || '123 PPC MAIN BRANCH VENUE'}</span></div>
-    </div>
+          <div class="details-separator"></div>
 
-    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;margin-bottom:16px;">
-      <h4 style="margin:0 0 8px 0;display:flex;align-items:center;gap:6px;color:#92400e;font-size:0.88rem;">
-        <i class="fa-solid fa-triangle-exclamation"></i> Important Instructions
-      </h4>
-      <p style="font-size:0.82rem;color:#78350f;line-height:1.6;margin:0;">
-        Pumunta sa venue nang hindi bababa sa <strong>15 minuto bago</strong> ang scheduled pickup time. Ipakita ang <strong>QR Code Pass</strong> sa itaas kasama ang iyong <strong>driver's license</strong> at <strong>1 valid ID</strong>.
-      </p>
-    </div>
+          <div class="details-section-heading">Payment Summary</div>
+          <div class="details-row"><span class="d-label">Total Rental Cost</span><strong class="d-val">PHP ${fmtMoney(b.total_amount)}</strong></div>
+          <div class="details-row"><span class="d-label">Amount Paid</span><strong class="d-val" style="color:#059669;">PHP ${fmtMoney(paidAmount)}</strong></div>
+          ${!isFullPaid && balDue > 0 ? `
+            <div class="details-row balance-highlight-row">
+              <span class="d-label">Remaining Balance Due at Pickup</span>
+              <strong class="d-val" style="color:var(--accent, #5B4B8A);">PHP ${fmtMoney(balDue)}</strong>
+            </div>
+          ` : `
+            <div class="details-row">
+              <span class="d-label">Payment Status</span>
+              <strong class="d-val" style="color:#059669;">Paid in Full (PHP 0.00 Due)</strong>
+            </div>
+          `}
+        </div>
+      </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button type="button" class="btn btn-ghost btn-block" id="printPaidReceiptBtn" onclick="window.print()" style="flex:1;">
-        <i class="fa-solid fa-print" style="margin-right:6px;"></i> Print Official Receipt &amp; QR Pass
-      </button>
-      <button type="button" class="btn btn-primary btn-block" id="closePaidReceiptBtn" onclick="window.closeModal()" style="flex:1;">
-        <i class="fa-solid fa-check" style="margin-right:6px;"></i> Done
-      </button>
+      <div class="clean-receipt-actions">
+        <button type="button" class="btn btn-ghost" id="printPaidReceiptBtn" onclick="window.print()">
+          <i class="fa-solid fa-print"></i> Print Receipt
+        </button>
+        <button type="button" class="btn btn-primary" id="closePaidReceiptBtn" onclick="window.closeModal && window.closeModal()">
+          Done &amp; View Bookings
+        </button>
+      </div>
     </div>
   `);
 

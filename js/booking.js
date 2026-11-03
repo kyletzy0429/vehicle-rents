@@ -475,25 +475,20 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     const payMethodSelect = $('#paymentMethodSelect');
 
     // Sync Payment Structure UI
-    $$('#bPayStructureSelector .selector-opt-card', modal).forEach(card => {
+    $$('#bPayStructureSelector .selector-opt-card').forEach(card => {
       card.addEventListener('click', () => {
-        $$('#bPayStructureSelector .selector-opt-card', modal).forEach(c => {
-          c.classList.remove('active');
-          c.style.background = '#FFFFFF';
-          c.style.color = 'var(--text-hi)';
-        });
+        $$('#bPayStructureSelector .selector-opt-card').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
-        card.style.background = 'var(--accent)';
-        card.style.color = '#FFFFFF';
         selectedDownpaymentPct = Number(card.dataset.pct || 100);
+        if (payStructure) payStructure.value = String(selectedDownpaymentPct);
         renderPaymentDetail();
       });
     });
 
     // Sync Payment Method UI
-    $$('#bPaymentMethodGrid .pay-method-card', modal).forEach(card => {
+    $$('#bPaymentMethodGrid .pay-method-card').forEach(card => {
       card.addEventListener('click', () => {
-        $$('#bPaymentMethodGrid .pay-method-card', modal).forEach(c => c.classList.remove('active'));
+        $$('#bPaymentMethodGrid .pay-method-card').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         selectedPaymentMethod = card.dataset.method;
         if (payMethodSelect) payMethodSelect.value = selectedPaymentMethod;
@@ -505,7 +500,46 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       const detailContainer = $('#bookingPayMethodDetail');
       if (!detailContainer) return;
 
-      const dueAmount = selectedDownpaymentPct === 100 ? (data.totalAmount + data.depositFee) : Math.round(data.totalAmount * 0.2);
+      const finalAmount = data.totalAmount + data.depositFee;
+      const isFullCash = (selectedPaymentMethod === 'cash');
+      const dueAmount = isFullCash ? 0 : (selectedDownpaymentPct === 100 ? finalAmount : Math.round(finalAmount * (selectedDownpaymentPct / 100)));
+      const balAmount = finalAmount - dueAmount;
+
+      // Update right-side summary card dynamically
+      const summaryTotalVal = $('#summaryTotalVal');
+      const summaryTotalLabel = $('.summary-total-label');
+      const summaryDepositVal = $('#summaryDepositVal');
+
+      if (summaryTotalVal) {
+        if (isFullCash) {
+          if (summaryTotalLabel) summaryTotalLabel.textContent = 'Pay on Handover';
+          summaryTotalVal.textContent = `PHP ${fmtMoney(finalAmount)}`;
+        } else if (selectedDownpaymentPct === 20) {
+          if (summaryTotalLabel) summaryTotalLabel.textContent = 'Due Now (20% Downpayment)';
+          summaryTotalVal.textContent = `PHP ${fmtMoney(dueAmount)}`;
+        } else {
+          if (summaryTotalLabel) summaryTotalLabel.textContent = 'Total due now';
+          summaryTotalVal.textContent = `PHP ${fmtMoney(finalAmount)}`;
+        }
+      }
+
+      let summaryBalRow = $('#summaryBalRow');
+      if (selectedDownpaymentPct === 20 && !isFullCash) {
+        if (!summaryBalRow && summaryDepositVal && summaryDepositVal.parentElement) {
+          summaryBalRow = document.createElement('div');
+          summaryBalRow.className = 'summary-row';
+          summaryBalRow.id = 'summaryBalRow';
+          summaryBalRow.style.color = 'var(--accent, #5B4B8A)';
+          summaryBalRow.style.fontWeight = '700';
+          summaryDepositVal.parentElement.insertAdjacentElement('afterend', summaryBalRow);
+        }
+        if (summaryBalRow) {
+          summaryBalRow.style.display = 'flex';
+          summaryBalRow.innerHTML = `<span>Remaining on pickup</span><strong>PHP ${fmtMoney(balAmount)}</strong>`;
+        }
+      } else if (summaryBalRow) {
+        summaryBalRow.style.display = 'none';
+      }
 
       if (selectedPaymentMethod === 'card') {
         detailContainer.innerHTML = `
@@ -690,5 +724,12 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     }
 
     toast(`Reservation created successfully! Reference: #${finalRefNum}`, 'success');
+
+    // Automatically display the receipt pass modal on screen per user requirement
+    if (window.openPaidReceiptModal) {
+      setTimeout(() => {
+        window.openPaidReceiptModal(recordToSave.id, targetMethodName, finalRefNum);
+      }, 100);
+    }
   });
 }

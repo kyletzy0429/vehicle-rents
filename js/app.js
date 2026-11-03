@@ -450,12 +450,6 @@ export function renderShell() {
             </button>
 
             ${renderRoleSwitcherHTML(state.portal)}
-
-            <button type="button" id="topUserMenuBtn" class="topbar-user-pill" title="${state.profile?.full_name || 'User'}">
-              <div class="topbar-user-avatar">${initials}</div>
-              <span class="topbar-user-name">${firstName}</span>
-              <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;opacity:0.6;"></i>
-            </button>
           </div>
         </div>
         <main id="mainView" class="${state.portal === 'customer' ? 'customer-main-view' : 'admin-main-view'}"><div class="loading-spin"></div></main>

@@ -736,3 +736,42 @@
     width: 100%;
   }
 }
+
+/* ── Clean Payment Structure Selector (Step 3) ── */
+.pay-structure-selector {
+  display: flex !important;
+  gap: 12px !important;
+  margin-bottom: 16px !important;
+}
+
+.pay-structure-selector .selector-opt-card {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 13px 18px !important;
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--glass-border, #E2DCF0) !important;
+  border-radius: var(--radius-md, 12px) !important;
+  color: var(--text-hi, #2A2340) !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  user-select: none !important;
+}
+
+.pay-structure-selector .selector-opt-card:hover {
+  border-color: var(--accent, #5B4B8A) !important;
+  background: #FAF8FE !important;
+}
+
+.pay-structure-selector .selector-opt-card.active {
+  background: #F3EEFA !important;
+  border-color: var(--accent, #5B4B8A) !important;
+  color: var(--accent, #5B4B8A) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 0 1.5px var(--accent, #5B4B8A) !important;
+}
+

@@ -85,26 +85,18 @@ textarea {
   padding: 10px 14px !important;
 }
 
-@media (max-width: 900px) {
-  .main-topbar,
-  .portal-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 10px 14px !important;
-    gap: 8px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    position: sticky;
-    top: 0;
-    z-index: 40;
-  }
-}
-
-@media (min-width: 901px) {
-  .main-topbar {
-    display: none !important;
-  }
+.main-topbar,
+.portal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 18px !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 
 .portal-header-left {
