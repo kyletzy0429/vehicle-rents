@@ -1245,7 +1245,7 @@ export async function renderStaffReturns(view, activeSubTab = 'returns') {
                 <tr>
                   <td>
                     <span style="font-weight:700;font-family:monospace;font-size:0.85rem;color:var(--text-hi);">${d.id}</span>
-                    <div style="font-size:0.7rem;color:var(--text-mid);">${fmtDate(d.created_at)}</div>
+                    <div style="font-size:0.7rem;color:var(--text-mid);">${d.booking_ref ? `<span class="badge badge-primary font-mono" style="font-size:0.68rem;padding:0 4px;margin-right:3px;">${d.booking_ref}</span> · ` : ''}${fmtDate(d.created_at)}</div>
                   </td>
                   <td>
                     <div style="font-weight:700;color:var(--text-hi);">${d.vehicle_name || 'Vehicle'}</div>
@@ -1322,7 +1322,7 @@ export async function renderStaffReturns(view, activeSubTab = 'returns') {
                   </td>
                   <td>
                     <div style="font-weight:700;color:var(--text-hi);">${f.vehicle_name || 'Vehicle'}</div>
-                    <div style="font-size:0.75rem;color:var(--text-mid);">${f.customer_name || 'Customer'} · #${f.booking_id || 'N/A'}</div>
+                    <div style="font-size:0.75rem;color:var(--text-mid);">${f.customer_name || 'Customer'} · ${f.booking_ref ? `<span class="badge badge-primary font-mono" style="font-size:0.68rem;padding:0 4px;">${f.booking_ref}</span>` : `#${f.booking_id || 'N/A'}`}</div>
                   </td>
                   <td>
                     <strong style="font-size:0.82rem;color:var(--text-hi);">${f.fee_label || f.category}</strong>
@@ -1441,6 +1441,7 @@ export async function openReturnModal(bookingId) {
   const vPlate = b.vehicles?.plate_number || 'N/A';
   const cName = b.profiles?.full_name || getBookingCustomerName(b) || 'Customer';
   const cPhone = b.profiles?.phone || getBookingCustomerPhone(b) || '';
+  const bRef = b.ref_number || (b.payment_ref && !b.payment_ref.includes(' ') && b.payment_ref.length <= 25 ? b.payment_ref : `BK-${b.id}`);
 
   openModal(`
     <div class="modal-head" style="margin-bottom:16px;">
@@ -1466,6 +1467,8 @@ export async function openReturnModal(bookingId) {
               <span>Plate: <strong style="font-family:monospace;letter-spacing:0.5px;">${vPlate}</strong></span>
               <span>·</span>
               <span>Booking #${b.id}</span>
+              <span>·</span>
+              <span class="badge badge-primary font-mono" style="font-size:0.72rem;letter-spacing:0.5px;padding:1px 6px;">${bRef}</span>
             </div>
           </div>
         </div>
@@ -1673,6 +1676,34 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
+      <!-- Quick Search Booking by Reference Code / Plate -->
+      <div class="field" style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;justify-content:space-between;">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-magnifying-glass" style="color:var(--accent);"></i> Quick Search by Reference Code
+          </span>
+          <span class="muted" style="font-size:0.72rem;font-weight:500;">Type Ref (e.g. BK-79), Plate, or Customer</span>
+        </label>
+        <div style="position:relative;display:flex;align-items:center;">
+          <i class="fa-solid fa-barcode" style="position:absolute;left:14px;color:var(--accent);font-size:0.95rem;pointer-events:none;"></i>
+          <input 
+            type="text" 
+            id="dmgRefSearchInput" 
+            placeholder="Type Reference Code (e.g. BK-79), Plate (904-CLK), or Customer..." 
+            style="width:100%;padding:10px 36px 10px 38px;border-radius:10px;font-family:monospace;font-size:0.88rem;letter-spacing:0.3px;border:1.5px solid var(--glass-border);background:var(--bg-surface,#ffffff);color:var(--text-hi);" 
+          />
+          <button 
+            type="button" 
+            id="btnDmgClearSearch" 
+            class="btn btn-ghost" 
+            style="position:absolute;right:8px;padding:4px 8px;font-size:0.75rem;display:none;color:var(--text-mid);" 
+            title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div id="dmgSearchMatchFeedback" style="font-size:0.75rem;margin-top:5px;display:none;font-weight:600;"></div>
+      </div>
+
       <!-- Select Booking Dropdown -->
       <div class="field" style="margin-bottom:14px;">
         <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
@@ -1680,27 +1711,46 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
         </label>
         <select id="dmgBookingSelect" class="clean-select" style="font-size:0.88rem;width:100%;border-radius:10px;">
           <option value="">-- Choose active or recent rental --</option>
-          ${activeAndCompleted.map(b => `
-            <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} data-vname="${b.vehicles?.name || 'Vehicle'}" data-vplate="${b.vehicles?.plate_number || ''}" data-cname="${b.profiles?.full_name || 'Customer'}" data-cphone="${b.profiles?.phone || ''}">
-              #${b.id} · ${b.vehicles?.name || 'Vehicle'} (${b.vehicles?.plate_number || 'No plate'}) — ${b.profiles?.full_name || 'Customer'}
+          ${activeAndCompleted.map(b => {
+            const bRef = b.ref_number || (b.payment_ref && !b.payment_ref.includes(' ') && b.payment_ref.length <= 25 ? b.payment_ref : `BK-${b.id}`);
+            const vName = b.vehicles?.name || b.vehicle_name || 'Vehicle';
+            const vPlate = b.vehicles?.plate_number || b.plate_number || 'No plate';
+            const cName = b.profiles?.full_name || b.customer_name || getBookingCustomerName(b) || 'Customer';
+            const cPhone = b.profiles?.phone || b.customer_phone || getBookingCustomerPhone(b) || '';
+            return `
+            <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} 
+              data-ref="${bRef}" 
+              data-vname="${vName}" 
+              data-vplate="${vPlate}" 
+              data-cname="${cName}" 
+              data-cphone="${cPhone}">
+              Ref: ${bRef} · #${b.id} · ${vName} (${vPlate}) — ${cName}
             </option>
-          `).join('')}
+            `;
+          }).join('')}
         </select>
       </div>
 
       <!-- Selected Rental Summary Card -->
       <div id="dmgBookingInfoCard" class="hidden" style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
               <i class="fa-solid fa-car"></i>
             </div>
             <div>
               <div style="font-weight:800;font-size:0.95rem;color:var(--text-hi);" id="dispDmgVehicle">Vehicle</div>
-              <div style="font-size:0.75rem;color:var(--text-mid);">Plate: <strong id="dispDmgPlate" style="font-family:monospace;letter-spacing:0.5px;">---</strong></div>
+              <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">Plate: <strong id="dispDmgPlate" style="font-family:monospace;letter-spacing:0.5px;">---</strong></div>
             </div>
           </div>
           <div style="text-align:right;">
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px;">
+              <span style="font-size:0.72rem;color:var(--text-mid);font-weight:600;">Reference Code:</span>
+              <span class="badge badge-primary font-mono" id="dispDmgRef" style="font-size:0.76rem;letter-spacing:0.5px;padding:2px 8px;font-weight:800;">---</span>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnCopyDmgRef" style="padding:2px 6px;font-size:0.7rem;line-height:1;" title="Copy Reference Code">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </div>
             <div style="font-size:0.85rem;font-weight:700;color:var(--text-hi);" id="dispDmgCustomer">Customer</div>
             <div style="font-size:0.75rem;color:var(--text-mid);" id="dispDmgPhone">---</div>
           </div>
@@ -1712,6 +1762,7 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
       <input type="hidden" id="dmgPlateNumber" />
       <input type="hidden" id="dmgCustomerName" />
       <input type="hidden" id="dmgCustomerPhone" />
+      <input type="hidden" id="dmgBookingRef" />
 
       <!-- Damage Component -->
       <div class="field" style="margin-bottom:14px;">
@@ -1858,6 +1909,12 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
   $('#mClose')?.addEventListener('click', closeModal);
 
   const bSelect = $('#dmgBookingSelect');
+  const refSearchInp = $('#dmgRefSearchInput');
+  const btnClearSearch = $('#btnDmgClearSearch');
+  const matchFeedback = $('#dmgSearchMatchFeedback');
+  const refDisp = $('#dispDmgRef');
+  const btnCopyRef = $('#btnCopyDmgRef');
+  const bookingRefInp = $('#dmgBookingRef');
   const vNameInp = $('#dmgVehicleName');
   const vPlateInp = $('#dmgPlateNumber');
   const cNameInp = $('#dmgCustomerName');
@@ -1879,6 +1936,8 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
   bSelect?.addEventListener('change', () => {
     const opt = bSelect.options[bSelect.selectedIndex];
     if (opt && opt.value) {
+      const bRef = opt.dataset.ref || `BK-${opt.value}`;
+      if (bookingRefInp) bookingRefInp.value = bRef;
       vNameInp.value = opt.dataset.vname || '';
       vPlateInp.value = opt.dataset.vplate || '';
       cNameInp.value = opt.dataset.cname || '';
@@ -1891,13 +1950,108 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
         $('#dispDmgPlate').textContent = opt.dataset.vplate || 'N/A';
         $('#dispDmgCustomer').textContent = opt.dataset.cname || 'Customer';
         $('#dispDmgPhone').textContent = opt.dataset.cphone || 'No phone';
+        if (refDisp) refDisp.textContent = bRef;
       }
     } else {
       $('#dmgBookingInfoCard')?.classList.add('hidden');
+      if (bookingRefInp) bookingRefInp.value = '';
+      if (refDisp) refDisp.textContent = '---';
     }
   });
 
+  // Copy Reference Code
+  btnCopyRef?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const code = refDisp?.textContent?.trim();
+    if (code && code !== '---') {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          toast(`Reference code ${code} copied to clipboard!`, 'info');
+        }).catch(() => {
+          toast(`Copied: ${code}`, 'info');
+        });
+      } else {
+        toast(`Copied: ${code}`, 'info');
+      }
+    }
+  });
+
+  // Live Quick Search by Ref Code, Booking ID, Plate, or Customer Name
+  function performDmgSearch() {
+    const rawQuery = (refSearchInp?.value || '').trim();
+    const query = rawQuery.toLowerCase();
+    const queryClean = query.replace(/^bk-?/, '').trim();
+
+    if (btnClearSearch) {
+      btnClearSearch.style.display = rawQuery ? 'block' : 'none';
+    }
+
+    if (!rawQuery) {
+      Array.from(bSelect.options).forEach(opt => {
+        opt.hidden = false;
+      });
+      if (matchFeedback) matchFeedback.style.display = 'none';
+      return;
+    }
+
+    let matchedOpt = null;
+    let matchCount = 0;
+
+    Array.from(bSelect.options).forEach((opt, idx) => {
+      if (idx === 0) {
+        opt.hidden = false;
+        return;
+      }
+      const refVal = (opt.dataset.ref || '').toLowerCase();
+      const idVal = String(opt.value || '').toLowerCase();
+      const plateVal = (opt.dataset.vplate || '').toLowerCase();
+      const nameVal = (opt.dataset.cname || '').toLowerCase();
+      const vnameVal = (opt.dataset.vname || '').toLowerCase();
+      const phoneVal = (opt.dataset.cphone || '').toLowerCase();
+
+      const isMatch = 
+        refVal.includes(query) ||
+        refVal.replace(/^bk-?/, '').includes(queryClean) ||
+        idVal === query ||
+        idVal === queryClean ||
+        plateVal.includes(query) ||
+        nameVal.includes(query) ||
+        vnameVal.includes(query) ||
+        phoneVal.includes(query);
+
+      opt.hidden = !isMatch;
+      if (isMatch) {
+        matchCount++;
+        if (!matchedOpt) matchedOpt = opt;
+      }
+    });
+
+    if (matchedOpt) {
+      bSelect.value = matchedOpt.value;
+      bSelect.dispatchEvent(new Event('change'));
+      if (matchFeedback) {
+        matchFeedback.style.display = 'block';
+        matchFeedback.innerHTML = `<span style="color:#059669;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle-check"></i> Matched Ref: <strong>${matchedOpt.dataset.ref}</strong> (${matchedOpt.dataset.vname} · ${matchedOpt.dataset.cname})</span>`;
+      }
+    } else {
+      bSelect.value = '';
+      bSelect.dispatchEvent(new Event('change'));
+      if (matchFeedback) {
+        matchFeedback.style.display = 'block';
+        matchFeedback.innerHTML = `<span style="color:#dc2626;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle-exclamation"></i> No rental booking found matching "${rawQuery}".</span>`;
+      }
+    }
+  }
+
+  refSearchInp?.addEventListener('input', performDmgSearch);
+  btnClearSearch?.addEventListener('click', () => {
+    if (refSearchInp) refSearchInp.value = '';
+    performDmgSearch();
+    refSearchInp?.focus();
+  });
+
   if (preSelectedBookingId && bSelect) {
+    bSelect.value = String(preSelectedBookingId);
     bSelect.dispatchEvent(new Event('change'));
   }
 
@@ -1947,10 +2101,13 @@ export function openRecordDamageModal(allBookings, view, preSelectedBookingId = 
     const vName = vNameInp.value.trim() || 'Vehicle';
     const cName = cNameInp.value.trim() || 'Customer';
     const netDue = recalc();
+    const bOpt = bSelect.options[bSelect.selectedIndex];
+    const bRef = bOpt?.dataset?.ref || bookingRefInp?.value || (bSelect.value ? `BK-${bSelect.value}` : 'BK-REF');
 
     const record = {
       id: `DMG-${Date.now().toString().slice(-4)}`,
       booking_id: bSelect.value || '1',
+      booking_ref: bRef,
       vehicle_name: vName,
       plate_number: vPlateInp.value.trim(),
       customer_name: cName,
@@ -1989,6 +2146,34 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
         <div class="modal-close" id="mClose">Close</div>
       </div>
 
+      <!-- Quick Search Booking by Reference Code / Plate -->
+      <div class="field" style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;justify-content:space-between;">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-magnifying-glass" style="color:var(--accent);"></i> Quick Search by Reference Code
+          </span>
+          <span class="muted" style="font-size:0.72rem;font-weight:500;">Type Ref (e.g. BK-79), Plate, or Customer</span>
+        </label>
+        <div style="position:relative;display:flex;align-items:center;">
+          <i class="fa-solid fa-barcode" style="position:absolute;left:14px;color:var(--accent);font-size:0.95rem;pointer-events:none;"></i>
+          <input 
+            type="text" 
+            id="feeRefSearchInput" 
+            placeholder="Type Reference Code (e.g. BK-79), Plate (904-CLK), or Customer..." 
+            style="width:100%;padding:10px 36px 10px 38px;border-radius:10px;font-family:monospace;font-size:0.88rem;letter-spacing:0.3px;border:1.5px solid var(--glass-border);background:var(--bg-surface,#ffffff);color:var(--text-hi);" 
+          />
+          <button 
+            type="button" 
+            id="btnFeeClearSearch" 
+            class="btn btn-ghost" 
+            style="position:absolute;right:8px;padding:4px 8px;font-size:0.75rem;display:none;color:var(--text-mid);" 
+            title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div id="feeSearchMatchFeedback" style="font-size:0.75rem;margin-top:5px;display:none;font-weight:600;"></div>
+      </div>
+
       <!-- Select Booking Dropdown -->
       <div class="field" style="margin-bottom:14px;">
         <label style="font-weight:700;font-size:0.82rem;display:flex;align-items:center;gap:6px;">
@@ -1996,29 +2181,48 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
         </label>
         <select id="feeBookingSelect" class="clean-select" style="font-size:0.88rem;width:100%;border-radius:10px;">
           <option value="">-- Choose active or recent rental --</option>
-          ${activeAndCompleted.map(b => `
-            <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} data-vname="${b.vehicles?.name || 'Vehicle'}" data-cname="${b.profiles?.full_name || 'Customer'}">
-              #${b.id} · ${b.vehicles?.name || 'Vehicle'} — ${b.profiles?.full_name || 'Customer'}
+          ${activeAndCompleted.map(b => {
+            const bRef = b.ref_number || (b.payment_ref && !b.payment_ref.includes(' ') && b.payment_ref.length <= 25 ? b.payment_ref : `BK-${b.id}`);
+            const vName = b.vehicles?.name || b.vehicle_name || 'Vehicle';
+            const vPlate = b.vehicles?.plate_number || b.plate_number || 'No plate';
+            const cName = b.profiles?.full_name || b.customer_name || getBookingCustomerName(b) || 'Customer';
+            const cPhone = b.profiles?.phone || b.customer_phone || getBookingCustomerPhone(b) || '';
+            return `
+            <option value="${b.id}" ${String(b.id) === String(preSelectedBookingId) ? 'selected' : ''} 
+              data-ref="${bRef}" 
+              data-vname="${vName}" 
+              data-vplate="${vPlate}" 
+              data-cname="${cName}" 
+              data-cphone="${cPhone}">
+              Ref: ${bRef} · #${b.id} · ${vName} (${vPlate}) — ${cName}
             </option>
-          `).join('')}
+            `;
+          }).join('')}
         </select>
       </div>
 
       <!-- Selected Rental Summary Card -->
       <div id="feeBookingInfoCard" class="hidden" style="background:var(--bg-subtle,#F5F2FB);border:1px solid var(--glass-border,#E2DCF0);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--accent-light,#E9E3F7);color:var(--accent,#5B4B8A);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
               <i class="fa-solid fa-car"></i>
             </div>
             <div>
               <div style="font-weight:800;font-size:0.95rem;color:var(--text-hi);" id="dispFeeVehicle">Vehicle</div>
-              <div style="font-size:0.75rem;color:var(--text-mid);">Rental Vehicle</div>
+              <div style="font-size:0.75rem;color:var(--text-mid);margin-top:2px;">Plate: <strong id="dispFeePlate" style="font-family:monospace;letter-spacing:0.5px;">---</strong></div>
             </div>
           </div>
           <div style="text-align:right;">
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px;">
+              <span style="font-size:0.72rem;color:var(--text-mid);font-weight:600;">Ref Code:</span>
+              <span class="badge badge-primary font-mono" id="dispFeeRef" style="font-size:0.76rem;letter-spacing:0.5px;padding:2px 8px;font-weight:800;">---</span>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnCopyFeeRef" style="padding:2px 6px;font-size:0.7rem;line-height:1;" title="Copy Reference Code">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </div>
             <div style="font-size:0.85rem;font-weight:700;color:var(--text-hi);" id="dispFeeCustomer">Customer</div>
-            <div style="font-size:0.75rem;color:var(--text-mid);">Account Holder</div>
+            <div style="font-size:0.75rem;color:var(--text-mid);" id="dispFeePhone">---</div>
           </div>
         </div>
       </div>
@@ -2026,6 +2230,9 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
       <!-- Hidden inputs for code compatibility -->
       <input type="hidden" id="feeCustomerName" />
       <input type="hidden" id="feeVehicleName" />
+      <input type="hidden" id="feePlateNumber" />
+      <input type="hidden" id="feeCustomerPhone" />
+      <input type="hidden" id="feeBookingRef" />
 
       <!-- Fee Category & Amount -->
       <div class="detail-grid" style="gap:12px;margin-bottom:14px;">
@@ -2120,29 +2327,138 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
   $('#mClose')?.addEventListener('click', closeModal);
 
   const bSelect = $('#feeBookingSelect');
+  const refSearchInp = $('#feeRefSearchInput');
+  const btnClearSearch = $('#btnFeeClearSearch');
+  const matchFeedback = $('#feeSearchMatchFeedback');
+  const refDisp = $('#dispFeeRef');
+  const btnCopyRef = $('#btnCopyFeeRef');
+  const bookingRefInp = $('#feeBookingRef');
   const cNameInp = $('#feeCustomerName');
   const vNameInp = $('#feeVehicleName');
+  const vPlateInp = $('#feePlateNumber');
+  const cPhoneInp = $('#feeCustomerPhone');
   const catSelect = $('#feeCategorySelect');
   const amtInp = $('#feeAmount');
 
   bSelect?.addEventListener('change', () => {
     const opt = bSelect.options[bSelect.selectedIndex];
     if (opt && opt.value) {
+      const bRef = opt.dataset.ref || `BK-${opt.value}`;
+      if (bookingRefInp) bookingRefInp.value = bRef;
       cNameInp.value = opt.dataset.cname || '';
       vNameInp.value = opt.dataset.vname || '';
+      if (vPlateInp) vPlateInp.value = opt.dataset.vplate || '';
+      if (cPhoneInp) cPhoneInp.value = opt.dataset.cphone || '';
 
       const card = $('#feeBookingInfoCard');
       if (card) {
         card.classList.remove('hidden');
         $('#dispFeeVehicle').textContent = opt.dataset.vname || 'Vehicle';
+        $('#dispFeePlate').textContent = opt.dataset.vplate || 'N/A';
         $('#dispFeeCustomer').textContent = opt.dataset.cname || 'Customer';
+        $('#dispFeePhone').textContent = opt.dataset.cphone || 'Account Holder';
+        if (refDisp) refDisp.textContent = bRef;
       }
     } else {
       $('#feeBookingInfoCard')?.classList.add('hidden');
+      if (bookingRefInp) bookingRefInp.value = '';
+      if (refDisp) refDisp.textContent = '---';
     }
   });
 
+  // Copy Reference Code
+  btnCopyRef?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const code = refDisp?.textContent?.trim();
+    if (code && code !== '---') {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          toast(`Reference code ${code} copied to clipboard!`, 'info');
+        }).catch(() => {
+          toast(`Copied: ${code}`, 'info');
+        });
+      } else {
+        toast(`Copied: ${code}`, 'info');
+      }
+    }
+  });
+
+  // Live Quick Search for Fees
+  function performFeeSearch() {
+    const rawQuery = (refSearchInp?.value || '').trim();
+    const query = rawQuery.toLowerCase();
+    const queryClean = query.replace(/^bk-?/, '').trim();
+
+    if (btnClearSearch) {
+      btnClearSearch.style.display = rawQuery ? 'block' : 'none';
+    }
+
+    if (!rawQuery) {
+      Array.from(bSelect.options).forEach(opt => {
+        opt.hidden = false;
+      });
+      if (matchFeedback) matchFeedback.style.display = 'none';
+      return;
+    }
+
+    let matchedOpt = null;
+    let matchCount = 0;
+
+    Array.from(bSelect.options).forEach((opt, idx) => {
+      if (idx === 0) {
+        opt.hidden = false;
+        return;
+      }
+      const refVal = (opt.dataset.ref || '').toLowerCase();
+      const idVal = String(opt.value || '').toLowerCase();
+      const plateVal = (opt.dataset.vplate || '').toLowerCase();
+      const nameVal = (opt.dataset.cname || '').toLowerCase();
+      const vnameVal = (opt.dataset.vname || '').toLowerCase();
+      const phoneVal = (opt.dataset.cphone || '').toLowerCase();
+
+      const isMatch = 
+        refVal.includes(query) ||
+        refVal.replace(/^bk-?/, '').includes(queryClean) ||
+        idVal === query ||
+        idVal === queryClean ||
+        plateVal.includes(query) ||
+        nameVal.includes(query) ||
+        vnameVal.includes(query) ||
+        phoneVal.includes(query);
+
+      opt.hidden = !isMatch;
+      if (isMatch) {
+        matchCount++;
+        if (!matchedOpt) matchedOpt = opt;
+      }
+    });
+
+    if (matchedOpt) {
+      bSelect.value = matchedOpt.value;
+      bSelect.dispatchEvent(new Event('change'));
+      if (matchFeedback) {
+        matchFeedback.style.display = 'block';
+        matchFeedback.innerHTML = `<span style="color:#059669;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle-check"></i> Matched Ref: <strong>${matchedOpt.dataset.ref}</strong> (${matchedOpt.dataset.vname} · ${matchedOpt.dataset.cname})</span>`;
+      }
+    } else {
+      bSelect.value = '';
+      bSelect.dispatchEvent(new Event('change'));
+      if (matchFeedback) {
+        matchFeedback.style.display = 'block';
+        matchFeedback.innerHTML = `<span style="color:#dc2626;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle-exclamation"></i> No rental booking found matching "${rawQuery}".</span>`;
+      }
+    }
+  }
+
+  refSearchInp?.addEventListener('input', performFeeSearch);
+  btnClearSearch?.addEventListener('click', () => {
+    if (refSearchInp) refSearchInp.value = '';
+    performFeeSearch();
+    refSearchInp?.focus();
+  });
+
   if (preSelectedBookingId && bSelect) {
+    bSelect.value = String(preSelectedBookingId);
     bSelect.dispatchEvent(new Event('change'));
   }
 
@@ -2170,10 +2486,13 @@ export function openAddCustomFeeModal(allBookings, view, preSelectedBookingId = 
   $('#btnSaveFeeRecord')?.addEventListener('click', () => {
     const amt = Number(amtInp.value || 0);
     const catOpt = catSelect.options[catSelect.selectedIndex];
+    const bOpt = bSelect.options[bSelect.selectedIndex];
+    const bRef = bOpt?.dataset?.ref || bookingRefInp?.value || (bSelect.value ? `BK-${bSelect.value}` : 'BK-REF');
 
     const fee = {
       id: `FEE-${Date.now().toString().slice(-4)}`,
       booking_id: bSelect.value || '1',
+      booking_ref: bRef,
       vehicle_name: vNameInp.value.trim() || 'Vehicle',
       customer_name: cNameInp.value.trim() || 'Customer',
       fee_type: catSelect.value,
@@ -2208,7 +2527,10 @@ export function openDamageAssessmentSlipModal(record) {
         <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--glass-border);">
           <div>
             <div style="font-size:0.7rem;color:var(--text-mid);text-transform:uppercase;">ASSESSMENT VOUCHER</div>
-            <strong style="font-family:monospace;font-size:1rem;color:var(--text-hi);">${record.id}</strong>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <strong style="font-family:monospace;font-size:1rem;color:var(--text-hi);">${record.id}</strong>
+              ${record.booking_ref ? `<span class="badge badge-primary font-mono" style="font-size:0.75rem;letter-spacing:0.5px;">${record.booking_ref}</span>` : ''}
+            </div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:0.7rem;color:var(--text-mid);text-transform:uppercase;">DATE &amp; TIME</div>
