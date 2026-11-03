@@ -206,7 +206,7 @@ export async function renderCustomerProfile(view) {
 
 export async function renderMyBookings(view) {
   let dbBookings = [];
-  const currentCustomerId = state.user?.id || '8bebdf37-d488-4e10-bb84-63a01c157c3a';
+  const currentCustomerId = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
   try {
     const { data, error } = await supabase
       .from('bookings')
@@ -601,57 +601,44 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
   const modal = openModal(`
     <div class="modal-head">
       <div>
-        <h3 style="font-size:1.15rem;font-weight:800;color:#0f172a;">${isPayingBalance ? 'Pay Remaining Balance' : 'Complete Booking Payment'}</h3>
+        <h3 style="font-size:1.15rem;font-weight:800;color:var(--text-hi);">${isPayingBalance ? 'Pay Remaining Balance' : 'Complete Booking Payment'}</h3>
         <span class="muted" style="font-size:0.78rem;">${vehicleName} · ${fmtDate(b.start_date)} → ${fmtDate(b.end_date)}</span>
       </div>
-      <div class="modal-close" id="mClose">Close</div>
+      <div class="modal-close" id="mClose">✕</div>
     </div>
 
     ${!isPayingBalance ? `
-      <label style="font-size:0.8rem;font-weight:700;color:#0f172a;margin-bottom:6px;display:block;">Choose Payment Option</label>
-      <div class="pay-tier-grid" id="tierGrid">
-        <div class="pay-tier-btn ${selectedPct === 100 ? 'active' : ''}" data-pct="100">
-          <div class="tier-label">100% Full Payment</div>
-          <div class="tier-amount">${fmtMoney(totalAmount)}</div>
-          <div class="tier-sub">No balance at pickup</div>
-        </div>
-        <div class="pay-tier-btn ${selectedPct === 20 ? 'active' : ''}" data-pct="20">
-          <div class="tier-label">20% Downpayment</div>
-          <div class="tier-amount">${fmtMoney(getCalculatedPayNow(20))}</div>
-          <div class="tier-sub">Balance ${fmtMoney(getCalculatedBalance(20))}</div>
-        </div>
-        <div class="pay-tier-btn ${selectedPct === 30 ? 'active' : ''}" data-pct="30">
-          <div class="tier-label">30% Deposit</div>
-          <div class="tier-amount">${fmtMoney(getCalculatedPayNow(30))}</div>
-          <div class="tier-sub">Balance ${fmtMoney(getCalculatedBalance(30))}</div>
-        </div>
-        <div class="pay-tier-btn ${selectedPct === 50 ? 'active' : ''}" data-pct="50">
-          <div class="tier-label">50% Deposit</div>
-          <div class="tier-amount">${fmtMoney(getCalculatedPayNow(50))}</div>
-          <div class="tier-sub">Balance ${fmtMoney(getCalculatedBalance(50))}</div>
-        </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Payment structure</label>
+        <select id="modalPayStructureSelect" class="clean-select">
+          <option value="100" ${selectedPct === 100 ? 'selected' : ''}>Pay in Full (100%) — Instant zero-balance reservation</option>
+          <option value="20" ${selectedPct === 20 ? 'selected' : ''}>Downpayment (20%) — Balance upon vehicle pickup</option>
+          <option value="30" ${selectedPct === 30 ? 'selected' : ''}>Downpayment (30%) — Balance upon vehicle pickup</option>
+          <option value="50" ${selectedPct === 50 ? 'selected' : ''}>Downpayment (50%) — Balance upon vehicle pickup</option>
+        </select>
       </div>
     ` : ''}
 
-    <div class="receipt" id="paymentSummaryBox" style="margin-bottom:16px;">
+    <div class="receipt" id="paymentSummaryBox" style="margin-bottom:14px;">
       <div class="receipt-row"><span>Total Rental Cost</span><span>${fmtMoney(totalAmount)}</span></div>
       ${isPayingBalance ? `
         <div class="receipt-row"><span>Already Paid (Deposit)</span><span style="color:#059669;font-weight:700;">${fmtMoney(currentPaid)}</span></div>
         <div class="receipt-row receipt-total"><span>Remaining Balance Due Now</span><span style="color:var(--accent);">${fmtMoney(currentBalance)}</span></div>
       ` : `
         <div class="receipt-row"><span>Reservation Option</span><span id="summaryTierLabel" style="font-weight:700;">${selectedPct === 100 ? 'Full Payment (100%)' : `${selectedPct}% Partial Downpayment`}</span></div>
-        <div class="receipt-row"><span>Balance Due at Pickup</span><span id="summaryBalance" style="color:#64748b;">${fmtMoney(balanceDue)}</span></div>
+        <div class="receipt-row"><span>Balance Due at Pickup</span><span id="summaryBalance" style="color:var(--text-mid);">${fmtMoney(balanceDue)}</span></div>
         <div class="receipt-row receipt-total"><span>Amount Payable Now</span><span id="summaryPayNow" style="color:var(--accent);">${fmtMoney(payNow)}</span></div>
       `}
     </div>
 
-    <div class="pay-method-grid">
-      <div class="pay-method-btn active" data-pay-method="gcash">GCash QR</div>
-      <div class="pay-method-btn" data-pay-method="visa">Visa</div>
-      <div class="pay-method-btn" data-pay-method="applepay">Apple Pay</div>
-      <div class="pay-method-btn" data-pay-method="bank_qr">Bank QR</div>
-      <div class="pay-method-btn" data-pay-method="card">Mastercard</div>
-      <div class="pay-method-btn" data-pay-method="cash">Pay on Cash</div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>Payment method</label>
+      <select id="modalPaymentMethodSelect" class="clean-select">
+        <option value="card">Card</option>
+        <option value="gcash">GCash</option>
+        <option value="bank_qr">Bank transfer</option>
+        <option value="cash">Via meetup</option>
+      </select>
     </div>
 
     <div id="payContent"></div>
@@ -663,11 +650,10 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
   if (mClose) mClose.addEventListener('click', closeModal);
 
   if (!isPayingBalance) {
-    modal.querySelectorAll('.pay-tier-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        modal.querySelectorAll('.pay-tier-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedPct = Number(btn.dataset.pct);
+    const structureSelect = modal.querySelector('#modalPayStructureSelect');
+    if (structureSelect) {
+      structureSelect.addEventListener('change', () => {
+        selectedPct = Number(structureSelect.value);
         payNow = getCalculatedPayNow(selectedPct);
         balanceDue = getCalculatedBalance(selectedPct);
 
@@ -681,13 +667,13 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         const pBtn = modal.querySelector('#payBtn');
         if (pBtn) {
           pBtn.textContent = selectedMethod === 'cash'
-            ? `Confirm Cash Reservation (${fmtMoney(payNow)})`
+            ? `Confirm Reservation via Meetup (${fmtMoney(payNow)})`
             : `Confirm Payment of ${fmtMoney(payNow)}`;
         }
 
         renderPaymentMethodContent();
       });
-    });
+    }
   }
 
   let modalProofDataUrl = null;
@@ -699,54 +685,53 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
 
     if (selectedMethod === 'cash') {
       container.innerHTML = `
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
-          <div style="font-weight:700;font-size:0.95rem;color:#166534;margin-bottom:4px;">Pay on Cash (Venue Pickup)</div>
-          <p style="font-size:0.82rem;color:#15803d;margin:0 0 12px 0;line-height:1.4;">
-            Magbayad ng cash nang direkta sa branch counter bago kunin ang susi ng sasakyan.
+        <div class="pay-detail-panel" style="text-align:center;">
+          <div class="pay-detail-heading" style="text-align:center;">Via Meetup</div>
+          <p style="font-size:0.82rem;color:var(--text-mid);margin:0 0 12px 0;line-height:1.45;">
+            Pay in cash directly upon vehicle meetup / handover. No online payment required today.
           </p>
-          <div style="background:#ffffff;border:1px dashed #86efac;border-radius:8px;padding:12px;text-align:left;font-size:0.78rem;color:#334155;">
+          <div style="background:var(--bg-surface);border:1px solid var(--accent-border);border-radius:8px;padding:12px 14px;text-align:left;font-size:0.8rem;color:var(--text-mid);">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-              <span style="color:#64748b;">Halaga na babayaran sa venue:</span>
-              <strong style="color:#166534;font-size:0.9rem;">${fmtMoney(payNow)}</strong>
+              <span>Payable upon Meetup:</span>
+              <strong style="color:var(--text-hi);">${fmtMoney(payNow)}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;">
-              <span style="color:#64748b;">Pickup Counter / Venue:</span>
-              <strong style="color:#0f172a;">123 PPC MAIN BRANCH VENUE</strong>
+              <span>Meetup Option:</span>
+              <strong style="color:var(--text-hi);">Agreed Meetup / Delivery Location</strong>
             </div>
           </div>
         </div>
       `;
-      if (pBtn) pBtn.textContent = `Confirm Reservation (Cash on Pickup)`;
+      if (pBtn) pBtn.textContent = `Confirm Reservation (Via Meetup)`;
     } else if (selectedMethod === 'gcash') {
       container.innerHTML = `
-        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
-          <div style="font-size:0.8rem;font-weight:700;color:#1e40af;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-            1. Scan QR Code via GCash
+        <div class="pay-detail-panel" style="text-align:center;">
+          <div class="pay-detail-heading" style="text-align:center;">Scan QR Code via GCash</div>
+          <div class="pay-qr-wrap">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${b.id}-${payNow}" alt="GCash QR Code" />
           </div>
-          <div style="width:170px;height:170px;background:#ffffff;border:3px solid var(--accent);border-radius:12px;margin:0 auto 12px auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--accent-glow);position:relative;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GCASH-RENTAL-${b.id}-${payNow}" alt="GCash QR Code" style="width:100%;height:100%;object-fit:contain;" />
+          <div class="pay-account-info">
+            <div class="pay-account-name">RentFlow Vehicles Inc.</div>
+            <div class="pay-account-num">Account: 0917 582 9140</div>
           </div>
-          <div style="font-weight:700;font-size:0.9rem;color:#0f172a;margin-bottom:2px;">RentFlow Vehicles Inc.</div>
-          <div style="font-size:0.78rem;color:#475569;font-weight:600;">Account No: <span style="font-family:monospace;">0917 •••• 4567</span></div>
-          <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Official GCash Express Merchant (Privacy Protected)</div>
+          <div class="pay-amount-line">Amount to Pay: <strong>${fmtMoney(payNow)}</strong></div>
         </div>
-        <div class="field">
-          <label style="font-weight:700;font-size:0.8rem;">2. GCash Reference Number <span style="color:#ef4444;">*</span></label>
-          <input type="text" id="payRefNo" placeholder="e.g. 1002 9482 1102" value="${b.payment_ref && !b.payment_ref.startsWith('BK-') && !b.payment_ref.startsWith('CASH-') ? b.payment_ref : ''}" required />
+        <div class="field" style="margin-top:12px;">
+          <label style="font-weight:600;font-size:0.78rem;">Reference Number *</label>
+          <input type="text" id="payRefNo" placeholder="Enter GCash reference number" value="${b.payment_ref && !b.payment_ref.startsWith('BK-') && !b.payment_ref.startsWith('CASH-') ? b.payment_ref : ''}" required />
         </div>
         <div class="field" style="margin-top:10px;">
-          <label style="font-weight:700;font-size:0.8rem;">3. Upload Proof of Payment (Receipt Screenshot) <span style="font-weight:400;color:#64748b;">(Optional)</span></label>
+          <label style="font-weight:600;font-size:0.78rem;">Proof of Payment (Screenshot) (Optional)</label>
           <div class="proof-upload-box" id="mProofDropzone">
             ${modalProofDataUrl ? `
               <div class="proof-preview-wrap">
                 <img src="${modalProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
                 <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image">✕</button>
               </div>
-              <div style="font-size:0.75rem;color:#059669;font-weight:700;"><i class="fa-solid fa-check"></i> Proof of payment attached</div>
+              <div style="font-size:0.75rem;color:var(--text-hi);font-weight:600;">Proof of payment attached</div>
             ` : `
-              <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.8rem;color:var(--accent);margin-bottom:4px;display:block;"></i>
-              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">Click to Upload or Drag Receipt Screenshot</div>
-              <div style="font-size:0.72rem;color:#64748b;">Supports JPG, PNG, or mobile screenshot</div>
+              <div style="font-size:0.82rem;font-weight:600;color:var(--text-hi);">Click or Drag Receipt Screenshot</div>
+              <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Supports JPG, PNG, or Screenshot</div>
             `}
             <input type="file" id="mProofInput" accept="image/*" style="display:none;" />
           </div>
@@ -755,13 +740,11 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       if (pBtn) pBtn.textContent = `Submit Payment (${fmtMoney(payNow)})`;
     } else if (selectedMethod === 'bank_qr') {
       container.innerHTML = `
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;">
-          <div style="font-size:0.8rem;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-            1. InstaPay / QR Ph Payment
-          </div>
-          <div style="margin-bottom:10px;">
-            <label style="font-size:0.7rem;color:#166534;">Select your bank app</label>
-            <select id="bankSelect" style="font-size:0.82rem;padding:6px 10px;margin-top:2px;">
+        <div class="pay-detail-panel" style="text-align:center;">
+          <div class="pay-detail-heading" style="text-align:center;">Scan via Banking App (QR Ph / InstaPay)</div>
+          <div style="margin-bottom:10px;text-align:left;">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-mid);margin-bottom:4px;display:block;">Select Banking App:</label>
+            <select id="bankSelect" class="clean-select">
               <option value="Maya">Maya / Smart Padala</option>
               <option value="BDO">BDO Unibank</option>
               <option value="BPI">BPI Online</option>
@@ -769,135 +752,62 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
               <option value="Metrobank">Metrobank Direct</option>
             </select>
           </div>
-          <div style="width:170px;height:170px;background:#ffffff;border:3px solid #059669;border-radius:12px;margin:0 auto 12px auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(5,150,105,0.15);">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INSTAPAY-RENTAL-${b.id}-${payNow}" alt="Bank QR Code" style="width:100%;height:100%;object-fit:contain;" />
+          <div class="pay-qr-wrap">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INSTAPAY-RENTAL-${b.id}-${payNow}" alt="Bank QR Code" />
           </div>
-          <div style="font-weight:700;font-size:0.9rem;color:#0f172a;margin-bottom:2px;">RentFlow Official Account</div>
-          <div style="font-size:0.78rem;color:#475569;font-weight:600;">Account: <span style="font-family:monospace;">0012 •••• 8899</span></div>
-          <div style="font-size:0.72rem;color:#64748b;margin-top:4px;">Secured by QR Ph & InstaPay Philippines</div>
+          <div class="pay-account-info">
+            <div class="pay-account-name">RentFlow Official Account</div>
+            <div class="pay-account-num">Account: 0012 3456 8899</div>
+          </div>
+          <div class="pay-amount-line">Amount to Pay: <strong>${fmtMoney(payNow)}</strong></div>
         </div>
-        <div class="field">
-          <label style="font-weight:700;font-size:0.8rem;">2. Bank Reference / Transaction ID <span style="color:#ef4444;">*</span></label>
-          <input type="text" id="payRefNo" placeholder="e.g. TXN-99482019" value="${b.payment_ref && !b.payment_ref.startsWith('BK-') && !b.payment_ref.startsWith('CASH-') ? b.payment_ref : ''}" required />
+        <div class="field" style="margin-top:12px;">
+          <label style="font-weight:600;font-size:0.78rem;">Bank Reference / Transaction ID *</label>
+          <input type="text" id="payRefNo" placeholder="Enter bank transaction ID" value="${b.payment_ref && !b.payment_ref.startsWith('BK-') && !b.payment_ref.startsWith('CASH-') ? b.payment_ref : ''}" required />
         </div>
         <div class="field" style="margin-top:10px;">
-          <label style="font-weight:700;font-size:0.8rem;">3. Upload Proof of Payment (Receipt Screenshot) <span style="font-weight:400;color:#64748b;">(Optional)</span></label>
+          <label style="font-weight:600;font-size:0.78rem;">Proof of Payment (Screenshot) (Optional)</label>
           <div class="proof-upload-box" id="mProofDropzone">
             ${modalProofDataUrl ? `
               <div class="proof-preview-wrap">
                 <img src="${modalProofDataUrl}" class="proof-preview-img" alt="Proof Preview" />
                 <button type="button" class="proof-remove-btn" id="mRemoveProofBtn" title="Remove image">✕</button>
               </div>
-              <div style="font-size:0.75rem;color:#059669;font-weight:700;"><i class="fa-solid fa-check"></i> Proof of payment attached</div>
+              <div style="font-size:0.75rem;color:var(--text-hi);font-weight:600;">Proof of payment attached</div>
             ` : `
-              <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.8rem;color:#059669;margin-bottom:4px;display:block;"></i>
-              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">Click to Upload or Drag Bank Receipt Screenshot</div>
-              <div style="font-size:0.72rem;color:#64748b;">Supports JPG, PNG, or mobile screenshot</div>
+              <div style="font-size:0.82rem;font-weight:600;color:var(--text-hi);">Click or Drag Bank Receipt Screenshot</div>
+              <div style="font-size:0.72rem;color:var(--text-mid);margin-top:2px;">Supports JPG, PNG, or Screenshot</div>
             `}
             <input type="file" id="mProofInput" accept="image/*" style="display:none;" />
           </div>
         </div>
       `;
       if (pBtn) pBtn.textContent = `Submit Payment (${fmtMoney(payNow)})`;
-    } else if (selectedMethod === 'visa') {
-      container.innerHTML = `
-        <div class="visa-card-box">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <div class="visa-chip"></div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:800;letter-spacing:0.05em;">
-              <span style="font-weight:900;letter-spacing:0.12em;font-size:1.05rem;color:#ffffff;">VISA</span>
-            </div>
-          </div>
-          <div style="font-family:monospace;font-size:1.15rem;letter-spacing:0.18em;margin-bottom:12px;text-shadow:0 1px 2px rgba(0,0,0,0.3);">
-            4111 •••• •••• 4892
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-            <div>
-              <div style="font-size:0.62rem;opacity:0.8;text-transform:uppercase;">CARDHOLDER</div>
-              <div style="font-size:0.85rem;font-weight:700;">${b.customer_name || state.profile?.full_name || 'MARK LEST RAMOS'}</div>
-            </div>
-            <div>
-              <div style="font-size:0.62rem;opacity:0.8;text-transform:uppercase;">EXPIRES</div>
-              <div style="font-size:0.85rem;font-weight:700;">10/28</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Cardholder Name</label>
-          <input type="text" id="visaName" value="${b.customer_name || state.profile?.full_name || 'Mark Lester Ramos'}" placeholder="Name on Card" required />
-        </div>
-        <div class="field">
-          <label>Visa Card Number</label>
-          <div style="position:relative;">
-            <input type="text" id="visaNumber" value="4111 2026 8892 4892" placeholder="4xxx •••• •••• xxxx" maxlength="19" required />
-            <i class="fa-solid fa-credit-card" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:1.1rem;"></i>
-          </div>
-        </div>
-        <div class="detail-grid">
-          <div class="field">
-            <label>Expiry Date</label>
-            <input type="text" id="visaExp" value="10/28" placeholder="MM/YY" maxlength="5" required />
-          </div>
-          <div class="field">
-            <label>CVV / CVC</label>
-            <input type="password" id="visaCvv" value="882" placeholder="•••" maxlength="3" required />
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:#059669;margin-top:6px;">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Protected by <strong>3D Secure 2.0</strong> Bank-Grade Encryption</span>
-        </div>
-      `;
-      if (pBtn) pBtn.textContent = `Pay ${fmtMoney(payNow)} with Visa`;
-    } else if (selectedMethod === 'applepay') {
-      container.innerHTML = `
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;">
-          <div style="width:48px;height:48px;background:var(--primary-gradient);color:#ffffff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;">
-            <i class="fa-solid fa-wallet"></i>
-          </div>
-          <h4 style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:4px;">Apple Pay Ready</h4>
-          <p style="font-size:0.8rem;color:#64748b;margin:0 0 16px 0;line-height:1.4;">
-            Pay securely with Touch ID, Face ID, or your Apple Watch. Your real card details are never stored on device or shared with merchant.
-          </p>
-
-          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;padding:12px 14px;text-align:left;font-size:0.8rem;margin-bottom:14px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-              <span style="color:#64748b;">Apple Wallet Device:</span>
-              <strong style="color:#0f172a;">iPhone (Passbook Device •••• 1024)</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span style="color:#64748b;">Total Authorization:</span>
-              <strong style="color:var(--accent);font-size:0.95rem;">${fmtMoney(payNow)}</strong>
-            </div>
-          </div>
-
-          <button type="button" class="btn btn-primary btn-block" id="applePayDirectBtn" style="padding:12px;font-size:0.95rem;font-weight:700;">
-            <i class="fa-solid fa-wallet"></i> Pay with Apple Pay
-          </button>
-        </div>
-      `;
-      if (pBtn) pBtn.textContent = `Pay ${fmtMoney(payNow)} with Apple Pay`;
-
-      const apDirect = container.querySelector('#applePayDirectBtn');
-      if (apDirect) {
-        apDirect.addEventListener('click', () => {
-          if (pBtn) pBtn.click();
-        });
-      }
     } else {
       container.innerHTML = `
-        <div class="field"><label>Cardholder Name</label><input type="text" placeholder="Name on Card" /></div>
-        <div class="field"><label>Card Number</label><input type="text" placeholder="5412 •••• •••• 4242" maxlength="19" /></div>
-        <div class="detail-grid">
-          <div class="field"><label>Expiry Date</label><input type="text" placeholder="MM/YY" /></div>
-          <div class="field"><label>CVC / CVV</label><input type="password" placeholder="•••" maxlength="4" /></div>
+        <div class="pay-detail-panel">
+          <div class="pay-detail-heading">Card Information</div>
+          <div class="field" style="margin-bottom:8px;">
+            <label>Cardholder Name</label>
+            <input type="text" id="visaName" value="${b.customer_name || state.profile?.full_name || ''}" placeholder="Name on Card" required />
+          </div>
+          <div class="field" style="margin-bottom:8px;">
+            <label>Card Number</label>
+            <input type="text" id="visaNumber" placeholder="4xxx •••• •••• xxxx" maxlength="19" required />
+          </div>
+          <div class="detail-grid" style="gap:10px;">
+            <div class="field">
+              <label>Expiry Date</label>
+              <input type="text" id="visaExp" placeholder="MM/YY" maxlength="5" required />
+            </div>
+            <div class="field">
+              <label>CVV / CVC</label>
+              <input type="password" id="visaCvv" placeholder="•••" maxlength="4" required />
+            </div>
+          </div>
         </div>
-        <p class="muted" style="font-size:0.76rem;color:#64748b;">
-          Encrypted 256-bit SSL Card Payment.
-        </p>
       `;
-      if (pBtn) pBtn.textContent = `Confirm Payment of ${fmtMoney(payNow)}`;
+      if (pBtn) pBtn.textContent = `Submit Payment (${fmtMoney(payNow)})`;
     }
 
     // Attach listeners for proof upload
@@ -950,16 +860,17 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
     reader.readAsDataURL(file);
   }
 
-  renderPaymentMethodContent();
-
-  modal.querySelectorAll('.pay-method-btn').forEach(tab => {
-    tab.addEventListener('click', () => {
-      modal.querySelectorAll('.pay-method-btn').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      selectedMethod = tab.dataset.payMethod;
+  const methodSelect = modal.querySelector('#modalPaymentMethodSelect');
+  if (methodSelect) {
+    methodSelect.value = selectedMethod === 'visa' || selectedMethod === 'mastercard' || selectedMethod === 'applepay' ? 'card' : selectedMethod;
+    selectedMethod = methodSelect.value;
+    methodSelect.addEventListener('change', () => {
+      selectedMethod = methodSelect.value;
       renderPaymentMethodContent();
     });
-  });
+  }
+
+  renderPaymentMethodContent();
 
   const payBtn = modal.querySelector('#payBtn');
   if (payBtn) {
@@ -974,21 +885,18 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       }
 
       payBtn.disabled = true;
-      payBtn.textContent = selectedMethod === 'cash' ? 'Confirming Cash Reservation…' : 'Submitting Payment…';
+      payBtn.textContent = selectedMethod === 'cash' ? 'Confirming Meetup Reservation…' : 'Submitting Payment…';
 
-      const methodName = selectedMethod === 'cash' ? 'Cash on Pickup'
-        : selectedMethod === 'gcash' ? 'GCash QR'
-        : selectedMethod === 'bank_qr' ? 'Bank QR Ph'
-        : selectedMethod === 'visa' ? 'Visa Card'
-        : selectedMethod === 'applepay' ? 'Apple Pay'
-        : 'Mastercard';
+      const methodName = selectedMethod === 'cash' ? 'Via Meetup'
+        : selectedMethod === 'gcash' ? 'GCash'
+        : selectedMethod === 'bank_qr' ? 'Bank Transfer (QR Ph)'
+        : 'Card';
 
       const newTotalPaid = selectedMethod === 'cash' ? currentPaid : (currentPaid + payNow);
       const newBalance = selectedMethod === 'cash' ? (totalAmount - currentPaid) : Math.max(0, totalAmount - newTotalPaid);
       const newPaymentType = newBalance === 0 ? 'full' : 'partial';
       const finalRefNo = selectedMethod === 'cash' ? `CASH-${bookingId}-${Date.now().toString().slice(-4)}`
-        : selectedMethod === 'visa' ? `VISA-${Date.now().toString().slice(-6)}`
-        : selectedMethod === 'applepay' ? `APAY-${Date.now().toString().slice(-6)}`
+        : selectedMethod === 'card' ? `CARD-${Date.now().toString().slice(-6)}`
         : (refNo || `RCPT-${bookingId}`);
 
       // Determine target reservation and payment status
@@ -1018,7 +926,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
         receipt_no: finalRefNo,
         payment_method: methodName,
         proof_image: modalProofDataUrl || b.proof_image || null,
-        review_notes: selectedMethod === 'cash' ? 'Pay on Cash selected.' : (selectedMethod === 'gcash' || selectedMethod === 'bank_qr' ? 'Payment submitted with reference number. Awaiting staff review.' : 'Payment authorized and verified.')
+        review_notes: selectedMethod === 'cash' ? 'Via Meetup selected. Pay upon meetup / handover.' : (selectedMethod === 'gcash' || selectedMethod === 'bank_qr' ? 'Payment submitted with reference number. Awaiting staff review.' : 'Payment authorized and verified.')
       };
 
       // Update local storage booking immediately
@@ -1057,7 +965,7 @@ export async function openPaymentModal(bookingId, isPayingBalance = false) {
       if (targetStatus === 'pending_verification') {
         toast(`Payment submitted! Reference #${finalRefNo}. Reservation status is now Pending Verification.`, 'success');
       } else if (targetStatus === 'cash_on_pickup') {
-        toast(`Reservation confirmed! Status: Cash on Pickup. Pay at counter upon vehicle meetup/pickup.`, 'success');
+        toast(`Reservation confirmed! Status: Cash on Pickup. Pay cash upon vehicle meetup.`, 'success');
       } else {
         toast(`Payment verified via ${methodName}! Reservation confirmed, vehicle is ready for release.`, 'success');
       }

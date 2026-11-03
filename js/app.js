@@ -6,8 +6,8 @@ import {
   getRoleDisplayName, getNotifications, openNotificationsModal, updateNotificationBadge
 } from './utils.js';
 import { renderAuth, renderLandingPage, logout, bootstrapSession, switchSystemRole } from './auth.js';
-import { renderCustomer } from './customer.js?v=2.6';
-import { renderStaff, renderAdmin } from './admin.js?v=2.6';
+import { renderCustomer } from './customer.js';
+import { renderStaff, renderAdmin } from './admin.js';
 import { initRealtimeSync } from './realtime.js';
 import { openRentalExtensionModal } from './rental-extension.js';
 

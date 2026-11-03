@@ -10,7 +10,7 @@ export const state = {
 
 export const DEMO_ACCOUNTS = {
   customer: {
-    id: '8bebdf37-d488-4e10-bb84-63a01c157c3a',
+    id: '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0',
     email: 'mark.ramos@gmail.com',
     full_name: 'Mark Lester Ramos',
     displayName: 'Mark Lester Ramos',
@@ -20,7 +20,7 @@ export const DEMO_ACCOUNTS = {
     license_number: 'N02-19-482019'
   },
   customer1: {
-    id: '8bebdf37-d488-4e10-bb84-63a01c157c3a',
+    id: '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0',
     email: 'mark.ramos@gmail.com',
     full_name: 'Mark Lester Ramos',
     displayName: 'Mark Lester Ramos',
@@ -161,9 +161,9 @@ export function getLocalBookings() {
       balance_due: 5000,
       status: 'cash_on_pickup',
       payment_status: 'unpaid',
-      payment_method: 'Pay on Cash',
+      payment_method: 'Via Meetup',
       payment_type: 'full',
-      review_notes: 'Pay on Cash selected. Customer to pay at counter upon pickup.',
+      review_notes: 'Via Meetup selected. Customer to pay upon meetup / pickup.',
       created_at: new Date(now - 3600000 * 4).toISOString()
     },
     {

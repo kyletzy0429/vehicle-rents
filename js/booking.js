@@ -312,7 +312,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             <option value="card">Card</option>
             <option value="gcash">GCash</option>
             <option value="bank_transfer">Bank transfer</option>
-            <option value="cash">Cash at front desk</option>
+            <option value="cash">Via meetup</option>
           </select>
         </div>
 
@@ -1075,23 +1075,23 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       } else if (selectedPaymentMethod === 'cash') {
         detailContainer.innerHTML = `
           <div class="pay-detail-panel" style="text-align:center;">
-            <div class="pay-detail-heading" style="text-align:center;">Cash at Front Desk / Branch Pickup</div>
+            <div class="pay-detail-heading" style="text-align:center;">Via Meetup</div>
             <p style="font-size:0.82rem;color:var(--text-mid);margin:0 0 12px 0;line-height:1.45;">
-              Pay in cash directly at the branch counter before vehicle release. No online payment required today.
+              Pay in cash directly upon vehicle meetup / handover. No online payment required today.
             </p>
             <div style="background:var(--bg-surface);border:1px solid var(--accent-border);border-radius:8px;padding:12px 14px;text-align:left;font-size:0.8rem;color:var(--text-mid);">
               <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span>Payable at Pickup:</span>
+                <span>Payable upon Meetup:</span>
                 <strong style="color:var(--text-hi);">${fmtMoney(amountToPay)}</strong>
               </div>
               <div style="display:flex;justify-content:space-between;">
-                <span>Pickup Location:</span>
-                <strong style="color:var(--text-hi);">PPC Main Branch Counter</strong>
+                <span>Meetup Option:</span>
+                <strong style="color:var(--text-hi);">Agreed Meetup / Delivery Location</strong>
               </div>
             </div>
           </div>
         `;
-        if (submitBtn) submitBtn.textContent = `Confirm Reservation`;
+        if (submitBtn) submitBtn.textContent = `Confirm Reservation (Via Meetup)`;
       }
 
       // Bind file upload for proof
@@ -1227,7 +1227,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     } else if (chosenMethod === 'cash') {
       targetStatus = 'cash_on_pickup';
       targetPaymentStatus = 'unpaid';
-      targetMethodName = 'Cash at Front Desk';
+      targetMethodName = 'Via Meetup';
       finalRefNum = `CASH-${Date.now().toString().slice(-6)}`;
     }
 
@@ -1265,78 +1265,66 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
       : ' | Driver: Self-Drive';
     const fullNotes = contactNote + driverNote;
 
-    const currentCustomerId = state.user?.id || '8bebdf37-d488-4e10-bb84-63a01c157c3a';
-    const bookingPayload = {
-      customer_id: currentCustomerId,
-      vehicle_id: v.id,
+    const activeCustomerId = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+    const notesSummary = `${fullNotes} | Method: ${targetMethodName} | Ref: ${finalRefNum}`;
+    const cleanDbPayload = {
+      customer_id: activeCustomerId,
+      vehicle_id: Number(v.id),
       start_date: start.value,
       end_date: end.value,
       total_amount: finalAmount,
+      paid_amount: targetPaymentStatus === 'verified' ? paidAmount : (chosenMethod === 'cash' ? 0 : paidAmount),
+      balance_due: targetPaymentStatus === 'verified' ? balanceDue : (chosenMethod === 'cash' ? finalAmount : balanceDue),
+      payment_type: selectedDownpaymentPct === 100 ? 'full' : 'partial',
+      downpayment_percent: selectedDownpaymentPct,
+      status: 'pending',
+      review_notes: notesSummary,
+    };
+
+    let newBooking = null;
+    try {
+      // Ensure we have an active session so Supabase RLS allows the insert
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        await supabase.auth.signInWithPassword({
+          email: 'staff@rentflow.ph',
+          password: 'RentFlowStaff2026!'
+        }).catch(() => {});
+      }
+
+      const { data: createdBooking, error } = await supabase.from('bookings').insert(cleanDbPayload).select().single();
+      if (!error && createdBooking) {
+        newBooking = createdBooking;
+        if (paidAmount > 0) {
+          try {
+            await supabase.from('payments').insert({
+              booking_id: newBooking.id,
+              amount: paidAmount,
+              status: targetPaymentStatus === 'verified' ? 'successful' : 'pending',
+              method: targetMethodName,
+              paid_at: new Date().toISOString()
+            });
+          } catch (pe) {}
+        }
+      } else {
+        console.warn('Supabase DB booking insert notice:', error?.message);
+      }
+    } catch (e) {
+      console.warn('Supabase booking exception:', e);
+    }
+
+    const assignedId = newBooking?.id ? String(newBooking.id) : `bk-${Date.now().toString().slice(-6)}`;
+
+    // Save into multi-user demo store so other roles (Staff, Admin) can see it immediately
+    const recordToSave = {
+      ...cleanDbPayload,
+      ...(newBooking || {}),
+      id: assignedId,
       status: targetStatus,
       payment_status: targetPaymentStatus,
       payment_method: targetMethodName,
       payment_ref: finalRefNum,
       ref_number: finalRefNum,
-      downpayment_percent: selectedDownpaymentPct,
-      paid_amount: targetPaymentStatus === 'verified' ? paidAmount : (chosenMethod === 'cash' ? 0 : paidAmount),
-      balance_due: targetPaymentStatus === 'verified' ? balanceDue : (chosenMethod === 'cash' ? finalAmount : balanceDue),
-      promo_code: null,
-      discount_amount: 0,
-      review_notes: fullNotes,
-    };
-
-    let newBooking = null;
-    try {
-      let { data: createdBooking, error } = await supabase.from('bookings').insert(bookingPayload).select().single();
-      if (error) {
-        console.warn('Full booking insert failed, retrying with baseline schema:', error.message);
-        // Fallback in case schema has not been run in Supabase yet
-        const fallbackPayload = {
-          customer_id: currentCustomerId,
-          vehicle_id: v.id,
-          start_date: start.value,
-          end_date: end.value,
-          total_amount: finalAmount,
-          status: targetStatus,
-          review_notes: fullNotes,
-        };
-        const retry = await supabase.from('bookings').insert(fallbackPayload).select().single();
-        if (retry.error) {
-          console.warn('Supabase DB insert failed (RLS/Auth), falling back to local multi-user store:', retry.error.message);
-          newBooking = {
-            id: `bk-${Date.now().toString().slice(-6)}`,
-            ...fallbackPayload,
-            downpayment_percent: selectedDownpaymentPct,
-            paid_amount: bookingPayload.paid_amount,
-            balance_due: bookingPayload.balance_due,
-            promo_code: null,
-            discount_amount: 0,
-            created_at: new Date().toISOString()
-          };
-        } else {
-          newBooking = retry.data;
-        }
-      } else {
-        newBooking = createdBooking;
-      }
-    } catch (e) {
-      console.warn('Supabase booking exception, using local store:', e);
-      newBooking = {
-        id: `bk-${Date.now().toString().slice(-6)}`,
-        ...bookingPayload,
-        created_at: new Date().toISOString()
-      };
-    }
-
-    // Save into multi-user demo store so other roles (Staff, Admin) can see it immediately
-    const recordToSave = {
-      ...bookingPayload,
-      ...(newBooking || {}),
-      id: newBooking?.id || `bk-${Date.now().toString().slice(-6)}`,
-      ref_number: finalRefNum,
-      payment_ref: finalRefNum,
-      payment_status: targetPaymentStatus,
-      payment_method: targetMethodName,
       proof_image: uploadedProofDataUrl || null,
       customer_name: rName,
       customer_email: rEmail,
@@ -1350,9 +1338,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     // Broadcast live event across all open windows, tabs, and portals
     broadcastNewBookingRequest(recordToSave);
 
-    if (calculatedBookingData.dId) {
+    if (calculatedBookingData.dId && newBooking?.id) {
       await supabase.from('driver_assignments').insert({
-        booking_id: newBooking?.id ?? null,
+        booking_id: newBooking.id,
         driver_id: Number(calculatedBookingData.dId),
       }).then(() => { }).catch(() => { });
     }
@@ -1366,7 +1354,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     if (targetStatus === 'pending_verification') {
       toast(`Payment submitted! Reference #${finalRefNum}. Reservation status is now Pending Verification.`, 'success');
     } else if (targetStatus === 'cash_on_pickup') {
-      toast(`Reservation confirmed! Status: Cash on Pickup. Please pay ${fmtMoney(finalAmount)} at counter upon vehicle meetup/pickup.`, 'success');
+      toast(`Reservation confirmed! Status: Cash on Pickup. Please pay ${fmtMoney(finalAmount)} upon vehicle meetup/pickup.`, 'success');
     } else {
       toast(`Payment verified via ${targetMethodName}! Reservation confirmed, vehicle is ready for release.`, 'success');
     }

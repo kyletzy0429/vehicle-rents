@@ -217,7 +217,7 @@ async function runPollingTick() {
   try {
     const { fetchMergedBookings } = await import('./admin.js');
     const allBookings = await fetchMergedBookings();
-    const currentPending = allBookings.filter(b => b.status === 'pending');
+    const currentPending = allBookings.filter(b => ['pending', 'pending_verification', 'cash_on_pickup', 'awaiting_payment'].includes(b.status));
     const currentPendingIds = new Set(currentPending.map(b => String(b.id)));
 
     if (lastKnownPendingIds === null) {

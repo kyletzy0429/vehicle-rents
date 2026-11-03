@@ -493,8 +493,6 @@
   transform: translateY(-2px) scale(1.02);
   background: var(--primary-gradient-hover) !important;
   box-shadow: 0 8px 26px rgba(124, 58, 237, 0.55) !important;
-}
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45) !important;
   filter: brightness(1.08);
 }
 

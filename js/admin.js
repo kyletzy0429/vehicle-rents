@@ -318,7 +318,7 @@ export async function fetchMergedBookings(filterFn = null) {
   try {
     const { data, error } = await supabase
       .from('bookings')
-      .select('*, vehicles(name, plate_number, status, current_odometer), profiles!customer_id(full_name, phone), payments(amount, status, method)')
+      .select('*, vehicles(name, plate_number, status), profiles!customer_id(full_name, phone), payments(amount, status, method)')
       .order('created_at', { ascending: false });
     if (!error && data) dbBookings = data;
   } catch (e) {
@@ -343,7 +343,21 @@ export async function fetchMergedBookings(filterFn = null) {
         balance_due: lb.balance_due !== undefined ? lb.balance_due : b.balance_due
       };
     }
-    return b;
+    // Infer rich status from DB review_notes if newly loaded from cloud DB
+    let derivedStatus = b.status;
+    let derivedMethod = b.payments?.[0]?.method || (b.review_notes?.includes('Via Meetup') || b.review_notes?.includes('Cash') ? 'Via Meetup' : b.review_notes?.includes('GCash') ? 'GCash' : b.review_notes?.includes('Bank') ? 'Bank Transfer' : 'Online Payment');
+    if (b.status === 'pending') {
+      if (b.review_notes?.includes('Via Meetup') || b.review_notes?.includes('Cash')) {
+        derivedStatus = 'cash_on_pickup';
+      } else if (b.review_notes?.includes('GCash') || b.review_notes?.includes('Bank')) {
+        derivedStatus = 'pending_verification';
+      }
+    }
+    return {
+      ...b,
+      status: derivedStatus,
+      payment_method: derivedMethod
+    };
   });
 
   for (const lb of localBookings) {
@@ -634,14 +648,14 @@ export async function renderStaffRequests(view) {
     updateLocalBookingStatus(id, 'confirmed', {
       payment_status: 'cash_due',
       balance_due: Number(b?.total_amount || 0),
-      review_notes: 'Reservation confirmed for Cash on Pickup at rental desk.'
+      review_notes: 'Reservation confirmed for Cash on Pickup via meetup.'
     });
     broadcastBookingStatusChange(id, 'confirmed', { payment_status: 'cash_due' });
 
     const currentUserId = state.user?.id || 'ee609b2f-be1e-4551-99e3-d61977ccb578';
     try {
       await supabase.from('bookings').update({
-        status: 'confirmed', reviewed_by: currentUserId, review_notes: 'Confirmed for Cash on Pickup.'
+        status: 'approved', reviewed_by: currentUserId, review_notes: 'Confirmed for Cash on Pickup via meetup.'
       }).eq('id', id);
     } catch (e) {
       console.warn('DB confirm notice:', e);
@@ -1180,7 +1194,7 @@ export async function openStaffPaymentModal(bookingId) {
 
   $('#markSuccess')?.addEventListener('click', async () => {
     const methodVal = $('#payMethod').value;
-    const methodName = methodVal === 'cash' ? 'Cash at Counter' : methodVal === 'card' ? 'Card Terminal' : 'Bank Transfer';
+    const methodName = methodVal === 'cash' ? 'Via Meetup (Cash)' : methodVal === 'card' ? 'Card Terminal' : 'Bank Transfer';
 
     updateLocalBookingStatus(bookingId, 'active', {
       paid_amount: Number(b.total_amount || 0),
@@ -3292,7 +3306,7 @@ export async function openAdminPaymentOverrideModal(bookingId) {
       <select id="selTargetStatus" style="width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.85rem;">
         <option value="pending_verification" ${currentStatus === 'pending_verification' ? 'selected' : ''}>Pending Verification (Staff review queue)</option>
         <option value="confirmed" ${currentStatus === 'confirmed' ? 'selected' : ''}>Confirmed (Payment verified, ready for release)</option>
-        <option value="cash_on_pickup" ${currentStatus === 'cash_on_pickup' ? 'selected' : ''}>Cash on Pickup (Pay cash at venue counter)</option>
+        <option value="cash_on_pickup" ${currentStatus === 'cash_on_pickup' ? 'selected' : ''}>Cash on Pickup (Pay cash via meetup)</option>
         <option value="vehicle_released" ${currentStatus === 'vehicle_released' ? 'selected' : ''}>Vehicle Released (On road / Active rental)</option>
         <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>Completed (Vehicle returned &amp; inspected)</option>
         <option value="awaiting_payment" ${currentStatus === 'awaiting_payment' ? 'selected' : ''}>Awaiting Payment (Rejected / Requires customer re-upload)</option>
