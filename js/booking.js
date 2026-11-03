@@ -5,7 +5,7 @@ import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage } fro
 import { broadcastNewBookingRequest } from './realtime.js';
 
 export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') {
-  const v = state.vehicles.find(v => v.id === id);
+  const v = state.vehicles.find(v => String(v.id) === String(id));
   if (!v) return;
   const fuelType = v.fuel_type ?? 'Gasoline';
   const hasAC = v.has_ac !== undefined ? v.has_ac : true;
@@ -71,25 +71,18 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : {};
   const p = { ...(state.profile || {}), ...savedProfile };
 
-  const modal = openModal(`
-    <div class="booking-modal-wrap">
-      <!-- ═══ MODAL HEADER ═══ -->
-      <div class="booking-modal-header">
-        <div class="bm-header-left">
-          <div class="bm-badges">
-            <span class="bm-cat-pill"><i class="${isMotorcycle ? 'fa-solid fa-motorcycle' : 'fa-solid fa-car'}"></i> ${catName}</span>
-            <span class="bm-plate-pill"><i class="fa-solid fa-hashtag"></i> Plate: ${maskPlate(v.plate_number)}</span>
-            <span class="badge ${statusBadgeClass}"><i class="fa-solid fa-circle-check"></i> ${badgeContent}</span>
-          </div>
-          <h3 class="bm-title">${v.name}</h3>
-        </div>
-        <div class="bm-header-right">
-          <button type="button" class="modal-close bm-close-btn" id="mClose" aria-label="Close modal">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-      </div>
+  closeModal();
 
+  let targetContainer = document.getElementById('mainView');
+  if (!targetContainer || state.portal !== 'customer') {
+    state.portal = 'customer';
+    state.tab = 'browse';
+    if (window.renderShell) window.renderShell();
+    targetContainer = document.getElementById('mainView');
+  }
+
+  targetContainer.innerHTML = `
+    <div class="booking-page-view" style="min-height:100vh;background:var(--bg-canvas,#F5F2FB);padding-bottom:80px;">
       <!-- ═══ STEPPER BAR (Matches 4-booking-process.png) ═══ -->
       <div class="booking-stepper-v2">
         <div class="step-item" id="stepNode1" data-step="1">
@@ -108,8 +101,9 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         </div>
       </div>
 
-      <!-- ═══ 2-COLUMN BOOKING LAYOUT ═══ -->
-      <div class="booking-2col-layout">
+      <!-- ═══ 2-COLUMN BOOKING CONTAINER (Matches 4-booking-process.png) ═══ -->
+      <div class="booking-view-container" style="max-width:1200px;margin:0 auto;padding:0 24px;">
+        <div class="booking-2col-layout">
         <!-- LEFT COLUMN: FORMS & ACTIONS -->
         <div class="booking-form-col">
 
@@ -294,9 +288,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         </div>
       </div>
     </div>
-  `);
-
-  $('#mClose')?.addEventListener('click', closeModal);
+  `;
 
   const start = $('#bStart');
   const end = $('#bEnd');
@@ -413,11 +405,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     if (d1) d1.classList.toggle('active', step >= 2);
     if (d2) d2.classList.toggle('active', step >= 3);
 
-    const modalWrap = modal.querySelector('.booking-modal-wrap');
-    if (modalWrap) {
-      modalWrap.scrollTop = 0;
-      modal.scrollTop = 0;
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (step === 2) {
       checkAvailability();
@@ -427,13 +415,19 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
   }
 
   // Stepper & Nav Bindings
-  $('#stepNode1')?.addEventListener('click', () => setStep(1));
+  $('#stepNode1')?.addEventListener('click', () => {
+    state.tab = 'browse';
+    window.renderShell();
+  });
   $('#stepNode2')?.addEventListener('click', () => setStep(2));
   $('#stepNode3')?.addEventListener('click', () => {
     if (calculatedBookingData) setStep(3);
   });
   $('#btnGoStep2')?.addEventListener('click', () => setStep(2));
-  $('#btnBackStep1')?.addEventListener('click', () => setStep(1));
+  $('#btnBackStep1')?.addEventListener('click', () => {
+    state.tab = 'browse';
+    window.renderShell();
+  });
   $('#btnBackStep2')?.addEventListener('click', () => setStep(2));
 
   // Date Change Listeners (Synchronous 0ms response)

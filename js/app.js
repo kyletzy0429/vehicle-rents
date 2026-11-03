@@ -10,13 +10,22 @@ import { renderCustomer } from './customer.js';
 import { renderStaff, renderAdmin } from './admin.js';
 import { initRealtimeSync } from './realtime.js';
 import { openRentalExtensionModal } from './rental-extension.js';
+import { openVehicleDetail } from './booking.js';
 
 if (typeof window !== 'undefined') {
   window.openRentalExtensionModal = openRentalExtensionModal;
-window.switchTab = function(tab) {
-  state.tab = (tab === 'vehicles' || tab === 'browse') ? 'browse' : tab;
-  renderShell();
-};
+  window.openVehicleDetail = openVehicleDetail;
+  window.switchSystemRole = switchSystemRole;
+  window.renderLandingPage = renderLandingPage;
+  window.renderAuth = renderAuth;
+  window.logout = logout;
+  window.openNotificationsModal = openNotificationsModal;
+  window.openUserMenuModal = openUserMenuModal;
+  window.closeModal = closeModal;
+  window.switchTab = function(tab) {
+    state.tab = (tab === 'vehicles' || tab === 'browse') ? 'browse' : tab;
+    renderShell();
+  };
 }
 
 export function renderRoleSwitcherHTML(currentRole) {
@@ -57,38 +66,39 @@ export function renderRoleSwitcherHTML(currentRole) {
 }
 
 export function bindRoleSwitcherEvents() {
-  const container = $('#roleDropdownContainer');
-  const toggleBtn = $('#roleDropdownToggle');
-  const menu = $('#roleDropdownMenu');
+  $$('.role-dropdown-container').forEach(container => {
+    const toggleBtn = container.querySelector('.role-dropdown-trigger');
+    const menu = container.querySelector('.role-dropdown-menu');
 
-  if (toggleBtn && menu) {
-    toggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = menu.style.display === 'flex' || menu.style.display === 'block';
-      menu.style.display = isOpen ? 'none' : 'flex';
-      toggleBtn.setAttribute('aria-expanded', String(!isOpen));
-      toggleBtn.classList.toggle('active', !isOpen);
-    });
-
-    // Close on click outside
-    document.addEventListener('click', (e) => {
-      if (container && !container.contains(e.target)) {
-        menu.style.display = 'none';
-        toggleBtn.setAttribute('aria-expanded', 'false');
-        toggleBtn.classList.remove('active');
-      }
-    });
-
-    // Handle role choice
-    menu.querySelectorAll('[data-role-choice]').forEach(item => {
-      item.addEventListener('click', (e) => {
+    if (toggleBtn && menu) {
+      toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const role = item.dataset.roleChoice;
-        menu.style.display = 'none';
-        if (role) switchSystemRole(role);
+        const isOpen = menu.style.display === 'flex' || menu.style.display === 'block';
+        menu.style.display = isOpen ? 'none' : 'flex';
+        toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+        toggleBtn.classList.toggle('active', !isOpen);
       });
-    });
-  }
+
+      // Close on click outside
+      document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+          menu.style.display = 'none';
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          toggleBtn.classList.remove('active');
+        }
+      });
+
+      // Handle role choice
+      menu.querySelectorAll('[data-role-choice]').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const role = item.dataset.roleChoice;
+          menu.style.display = 'none';
+          if (role) switchSystemRole(role);
+        });
+      });
+    }
+  });
 }
 
 export function openUserMenuModal() {

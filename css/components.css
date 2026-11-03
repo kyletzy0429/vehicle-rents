@@ -124,12 +124,12 @@
 
 label {
   display: block;
-  font-size: 0.76rem;
-  color: var(--text-mid);
-  margin-bottom: 8px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.84rem;
+  color: var(--text-mid, #5E5778);
+  margin-bottom: 6px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 input,

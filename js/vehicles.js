@@ -1,6 +1,6 @@
 import { supabase } from './config.js';
 import { state, getVehicleOverrides, saveVehicleOverride } from './state.js';
-import { $, $$, fmtMoney, fmtDate, maskPlate, toast, emptyState } from './utils.js';
+import { $, $$, fmtMoney, fmtDate, maskPlate, toast, openModal, emptyState } from './utils.js';
 import { openVehicleDetail } from './booking.js';
 
 export { getVehicleOverrides, saveVehicleOverride };
@@ -516,38 +516,32 @@ export function renderBrowse(view) {
   // Attach card detail open
   $$('#vehicleGrid .renter-vehicle-card, #vehicleGrid .vehicle-card', view).forEach(card => {
     card.addEventListener('click', () => {
-      import('./booking.js').then(({ openVehicleDetail }) => {
-        openVehicleDetail(card.dataset.id);
-      });
+      openVehicleDetail(card.dataset.id);
     });
   });
 
   $$('[data-book-btn]', view).forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      import('./booking.js').then(({ openVehicleDetail }) => {
-        openVehicleDetail(btn.dataset.bookBtn);
-      });
+      openVehicleDetail(btn.dataset.bookBtn);
     });
   });
 
   // Upcoming booking action buttons
   $('#btnShowBookingQr')?.addEventListener('click', () => {
-    import('./utils.js').then(({ openModal }) => {
-      openModal(`
-        <div class="modal-head">
-          <h3 style="font-family:'Fraunces',serif;font-size:1.25rem;color:#2A2340;margin:0;">Booking QR Pass</h3>
-          <div class="modal-close" onclick="document.querySelector('#modalOverlay')?.classList.remove('open')">Close</div>
+    openModal(`
+      <div class="modal-head">
+        <h3 style="font-family:'Fraunces',serif;font-size:1.25rem;color:#2A2340;margin:0;">Booking QR Pass</h3>
+        <div class="modal-close" onclick="window.closeModal && window.closeModal()">Close</div>
+      </div>
+      <div style="text-align:center;padding:24px 16px;">
+        <div style="width:180px;height:180px;background:#F5F2FB;border:2px dashed #B8AED6;border-radius:14px;margin:0 auto 16px auto;display:flex;align-items:center;justify-content:center;color:#5B4B8A;font-size:3.5rem;">
+          <i class="fa-solid fa-qrcode"></i>
         </div>
-        <div style="text-align:center;padding:24px 16px;">
-          <div style="width:180px;height:180px;background:#F5F2FB;border:2px dashed #B8AED6;border-radius:14px;margin:0 auto 16px auto;display:flex;align-items:center;justify-content:center;color:#5B4B8A;font-size:3.5rem;">
-            <i class="fa-solid fa-qrcode"></i>
-          </div>
-          <div style="font-weight:700;font-size:1.1rem;color:#2A2340;margin-bottom:4px;">${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}</div>
-          <div style="font-size:0.86rem;color:#5E5778;">Present this QR pass to staff counter during vehicle meetup.</div>
-        </div>
-      `);
-    });
+        <div style="font-weight:700;font-size:1.1rem;color:#2A2340;margin-bottom:4px;">${upcomingBooking.vehicle_name || 'Toyota Fortuner 2.8 V'}</div>
+        <div style="font-size:0.86rem;color:#5E5778;">Present this QR pass to staff counter during vehicle meetup.</div>
+      </div>
+    `);
   });
 
   $('#btnViewUpcomingBooking')?.addEventListener('click', () => {
