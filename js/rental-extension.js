@@ -101,7 +101,7 @@ export async function openRentalExtensionModal(bookingId = null) {
 
   // Fetch or find candidate active bookings
   try {
-    const validExtStatuses = ['approved', 'active', 'reserved', 'confirmed', 'vehicle_released', 'cash_on_pickup'];
+    const validExtStatuses = ['approved', 'active', 'reserved', 'confirmed', 'vehicle_released', 'cash_on_pickup', 'pending_verification', 'pending'];
     const local = [...getLocalBookings(), ...(state.bookings || [])].filter(b => validExtStatuses.includes(b.status));
     let dbBookings = [];
     if (supabase) {
@@ -130,8 +130,8 @@ export async function openRentalExtensionModal(bookingId = null) {
   if (bookingId) {
     targetBooking = allActiveBookings.find(b => String(b.id) === String(bookingId));
     if (!targetBooking) {
-      // Direct lookup in active customer bookings or local storage
       targetBooking = getLocalBookings().find(b => String(b.id) === String(bookingId)) || (state.bookings || []).find(b => String(b.id) === String(bookingId));
+      if (targetBooking && !allActiveBookings.includes(targetBooking)) allActiveBookings.unshift(targetBooking);
     }
   } else if (allActiveBookings.length > 0) {
     targetBooking = allActiveBookings[0];

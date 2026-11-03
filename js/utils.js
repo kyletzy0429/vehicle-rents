@@ -69,14 +69,21 @@ export function closeModal() {
 window.closeModal = closeModal;
 
 export function getTheme() {
-  return localStorage.getItem('rentflow_theme') || 'light';
+  return 'light';
 }
 
 export function toggleTheme() {
-  const current = getTheme();
-  const next = current === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('rentflow_theme', next);
-  applyTheme();
+  toast('Soft Lavender theme active', 'info');
+}
+
+export function applyTheme() {
+  try {
+    localStorage.removeItem('rentflow_theme');
+  } catch (e) {}
+  document.documentElement.removeAttribute('data-theme');
+  document.body.removeAttribute('data-theme');
+}
+applyTheme();
   toast(`Switched to ${next === 'dark' ? 'Dark' : 'Light'} Mode`, 'info');
 }
 
