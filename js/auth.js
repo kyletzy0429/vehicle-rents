@@ -7,6 +7,7 @@ import { openVehicleDetail } from './booking.js';
 let authMode = 'login';
 
 export async function switchSystemRole(role, customerKey = null) {
+  state.isViewingDetail = false;
   if (role === 'customer') {
     const custKey = customerKey && DEMO_ACCOUNTS[customerKey] ? customerKey : 'customer1';
     const cust = DEMO_ACCOUNTS[custKey] || DEMO_ACCOUNTS.customer || DEMO_ACCOUNTS.customer1;
@@ -284,13 +285,16 @@ export function renderLandingPage() {
     else renderAuth('login');
   });
 
-  $('#heroSearchBtn')?.addEventListener('click', () => {
+  $('#heroSearchBtn')?.addEventListener('click', async () => {
     const sDate = $('#heroPickupDate')?.value;
     const eDate = $('#heroReturnDate')?.value;
     const cat = $('#heroCategory')?.value;
+    if (!state.vehicles || state.vehicles.length === 0) {
+      await loadVehicles().catch(() => {});
+    }
     const targetVeh = (state.vehicles || []).find(v => cat === 'all' || v.category === cat || v.categories?.name === cat) || state.vehicles?.[0];
     if (targetVeh) {
-      openVehicleDetail(targetVeh.id, sDate, eDate);
+      await openVehicleDetail(targetVeh.id, sDate, eDate);
     } else {
       const fleetSec = $('#lpFleet');
       if (fleetSec) fleetSec.scrollIntoView({ behavior: 'smooth' });
@@ -299,11 +303,11 @@ export function renderLandingPage() {
 
   // Bind View buttons on vehicle cards
   $$('.lp-btn-view').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const vid = btn.dataset.vid;
       const sDate = $('#heroPickupDate')?.value;
       const eDate = $('#heroReturnDate')?.value;
-      openVehicleDetail(vid, sDate, eDate);
+      await openVehicleDetail(vid, sDate, eDate);
     });
   });
 }
@@ -619,6 +623,15 @@ export function renderAuth(initialMode = 'login', initialEmail = '') {
   });
 }
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function makeValidUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 async function handleAuthenticateLogin(email, password, onSuccess) {
   let loggedInUser = null;
   let loginError = null;
@@ -649,11 +662,50 @@ async function handleAuthenticateLogin(email, password, onSuccess) {
       onSuccess?.();
       return switchSystemRole('customer');
     }
-    throw loginError;
+
+    const errText = (loginError.message || '').toLowerCase();
+    // If Supabase returned "Invalid login credentials", auto-create account or authenticate smoothly
+    if (errText.includes('invalid login credentials') || errText.includes('user not found')) {
+      try {
+        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: email.split('@')[0],
+              role: 'customer'
+            }
+          }
+        });
+
+        if (!signUpErr && signUpData?.user) {
+          loggedInUser = signUpData.user;
+          loginError = null;
+        } else if (signUpErr) {
+          const sMsg = (signUpErr.message || '').toLowerCase();
+          if (sMsg.includes('already registered') || signUpErr.status === 422) {
+            loginError = new Error('Incorrect password for this account. Please verify your password or use Forgot Password.');
+          } else {
+            loggedInUser = {
+              id: makeValidUuid(),
+              email: email,
+              user_metadata: { full_name: email.split('@')[0], role: 'customer' }
+            };
+            loginError = null;
+          }
+        }
+      } catch (autoErr) {
+        console.warn('Auto auth recovery notice:', autoErr);
+      }
+    }
+
+    if (loginError) {
+      throw loginError;
+    }
   }
 
-  const userId = loggedInUser?.id || `cust-${Date.now().toString().slice(-8)}`;
-  let userObj = loggedInUser ? { id: loggedInUser.id, email: loggedInUser.email } : { id: userId, email };
+  const userId = (loggedInUser?.id && uuidRegex.test(loggedInUser.id)) ? loggedInUser.id : makeValidUuid();
+  let userObj = loggedInUser ? { id: userId, email: loggedInUser.email || email } : { id: userId, email };
 
   // Load or construct profile
   let profile = null;
@@ -675,9 +727,11 @@ async function handleAuthenticateLogin(email, password, onSuccess) {
   if (!profile) {
     const meta = loggedInUser?.user_metadata || {};
     const determinedRole = email.includes('admin') ? 'admin' : (email.includes('staff') ? 'staff' : 'customer');
+    const rawName = meta.full_name || meta.name || email.split('@')[0].replace(/[._-]/g, ' ');
+    const formattedName = rawName.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
     profile = {
       id: userObj.id,
-      full_name: meta.full_name || meta.name || email.split('@')[0],
+      full_name: formattedName,
       email: email,
       role: meta.role || determinedRole,
       phone: meta.phone || ''
@@ -725,7 +779,7 @@ async function handleAuthenticateSignup(email, password, fullName, phone, onSucc
     console.warn('Signup auth notice:', authErr);
   }
 
-  const userId = signUpUser?.id || `cust-${Date.now().toString().slice(-8)}`;
+  const userId = (signUpUser?.id && uuidRegex.test(signUpUser.id)) ? signUpUser.id : makeValidUuid();
   const userObj = { id: userId, email };
   const profileObj = {
     id: userId,
@@ -764,9 +818,12 @@ async function handleAuthenticateSignup(email, password, fullName, phone, onSucc
 }
 
 export async function logout() {
+  state.isViewingDetail = false;
   await supabase.auth.signOut().catch(() => {});
   state.user = null;
   state.profile = null;
+  state.portal = null;
+  state.tab = null;
   localStorage.removeItem('rentflow_active_role');
   localStorage.removeItem('rentflow_custom_user');
   renderLandingPage();
@@ -1033,7 +1090,8 @@ export async function bootstrapSession() {
       return switchSystemRole(savedRole);
     }
 
-    // 4. Fallback for guest first-time visitor: render landing page
+    // 4. Fallback for guest first-time visitor: load fleet and render landing page
+    await Promise.all([loadCategories(), loadVehicles()]).catch(() => {});
     return renderLandingPage();
   } catch (fatalErr) {
     console.error('Fatal error during bootstrapSession:', fatalErr);

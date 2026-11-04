@@ -27,6 +27,7 @@ if (typeof window !== 'undefined') {
   window.openUserMenuModal = openUserMenuModal;
   window.closeModal = closeModal;
   window.switchTab = function(tab) {
+    state.isViewingDetail = false;
     state.tab = (tab === 'vehicles' || tab === 'browse') ? 'browse' : tab;
     renderShell();
   };
@@ -388,11 +389,11 @@ export function openUserMenuModal() {
 
   // Customer shortcuts
   const aAcc = $('#umAccount');
-  if (aAcc) aAcc.addEventListener('click', () => { closeModal(); state.tab = 'account'; renderShell(); });
+  if (aAcc) aAcc.addEventListener('click', () => { closeModal(); state.isViewingDetail = false; state.tab = 'account'; renderShell(); });
   const bBtn = $('#umBookings');
-  if (bBtn) bBtn.addEventListener('click', () => { closeModal(); state.tab = 'bookings'; renderShell(); });
+  if (bBtn) bBtn.addEventListener('click', () => { closeModal(); state.isViewingDetail = false; state.tab = 'bookings'; renderShell(); });
   const fBtn = $('#umFavorites');
-  if (fBtn) fBtn.addEventListener('click', () => { closeModal(); state.tab = 'favorites'; renderShell(); });
+  if (fBtn) fBtn.addEventListener('click', () => { closeModal(); state.isViewingDetail = false; state.tab = 'favorites'; renderShell(); });
   const sBtn = $('#umSupport');
   if (sBtn) sBtn.addEventListener('click', () => {
     const curComp = getSystemSettings().company || DEFAULT_SETTINGS.company;
@@ -547,7 +548,12 @@ export function renderShell() {
   bindLangSwitcherEvents();
   const uChip = $('#userProfileChip');
   if (uChip) uChip.addEventListener('click', openUserMenuModal);
-  $$('.sidebar-nav-btn').forEach(btn => btn.addEventListener('click', () => { closeSidebar(); state.tab = btn.dataset.tab; renderShell(); }));
+  $$('.sidebar-nav-btn').forEach(btn => btn.addEventListener('click', () => { 
+    state.isViewingDetail = false;
+    closeSidebar(); 
+    state.tab = btn.dataset.tab; 
+    renderShell(); 
+  }));
 
   updateNotificationBadge();
   renderTab();
@@ -561,6 +567,7 @@ function checkPendingManagerAlert() {
 }
 
 export async function renderTab(silent = false) {
+  if (state.isViewingDetail) return;
   const view = $('#mainView');
   if (!view) return;
   if (!silent) {

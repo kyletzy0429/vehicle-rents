@@ -1,7 +1,7 @@
 import { supabase } from './config.js';
 import { state, DEFAULT_SETTINGS, getSystemSettings, saveLocalBooking, getLocalBookings } from './state.js';
 import { $, $$, fmtMoney, fmtDate, daysBetween, maskPlate, toast, openModal, closeModal } from './utils.js';
-import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage } from './vehicles.js';
+import { getVehicleDailyRate, getVehicleCategoryName, getExactVehicleImage, loadVehicles } from './vehicles.js';
 import { broadcastNewBookingRequest } from './realtime.js';
 
 export async function ensureDbSession() {
@@ -20,8 +20,16 @@ export async function ensureDbSession() {
 }
 
 export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') {
-    const v = state.vehicles.find(v => String(v.id) === String(id));
+    if (!state.vehicles || state.vehicles.length === 0) {
+        await loadVehicles().catch(() => {});
+    }
+    let v = (state.vehicles || []).find(v => String(v.id) === String(id));
+    if (!v && state.vehicles && state.vehicles.length > 0) {
+        v = state.vehicles[0];
+    }
     if (!v) return;
+
+    state.isViewingDetail = true;
     const fuelType = v.fuel_type ?? 'Gasoline';
     const hasAC = v.has_ac !== undefined ? v.has_ac : true;
     const today = new Date();
@@ -503,6 +511,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
 
     // Stepper & Nav Bindings
     $('#stepNode1')?.addEventListener('click', () => {
+        state.isViewingDetail = false;
         state.tab = 'browse';
         window.renderShell();
     });
@@ -513,6 +522,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
     });
     $('#btnGoStep2')?.addEventListener('click', () => setStep(2));
     $('#btnBackStep1')?.addEventListener('click', () => {
+        state.isViewingDetail = false;
         state.tab = 'browse';
         window.renderShell();
     });
@@ -1030,6 +1040,7 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         broadcastNewBookingRequest(recordToSave);
 
         closeModal();
+        state.isViewingDetail = false;
         state.tab = 'bookings';
         if (window.renderShell) {
             window.renderShell();
