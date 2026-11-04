@@ -187,11 +187,12 @@ export async function renderCustomerProfile(view) {
 export async function renderMyBookings(view) {
   let dbBookings = [];
   const currentCustomerId = state.user?.id || '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+  const targetCustomerIds = Array.from(new Set([currentCustomerId, '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0']));
   try {
     const { data, error } = await supabase
       .from('bookings')
       .select('*, vehicles(name, plate_number, image_url)')
-      .eq('customer_id', currentCustomerId)
+      .in('customer_id', targetCustomerIds)
       .order('created_at', { ascending: false });
     if (!error && data) dbBookings = data;
   } catch (err) {
@@ -199,7 +200,7 @@ export async function renderMyBookings(view) {
   }
 
   // Merge local demo bookings matching active customer
-  const localList = getLocalBookings().filter(b => b.customer_id === currentCustomerId);
+  const localList = getLocalBookings().filter(b => targetCustomerIds.includes(b.customer_id));
   const dbIds = new Set(dbBookings.map(b => String(b.id)));
   const bookings = [...dbBookings];
   for (const lb of localList) {

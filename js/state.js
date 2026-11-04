@@ -30,7 +30,7 @@ export const DEMO_ACCOUNTS = {
     license_number: 'N02-19-482019'
   },
   customer2: {
-    id: '8bebdf37-d488-4e10-bb84-63a01c157c3b',
+    id: '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0',
     email: 'maria.santos@gmail.com',
     full_name: 'Maria Santos',
     displayName: 'Maria Santos (Unverified)',

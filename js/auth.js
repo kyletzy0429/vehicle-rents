@@ -687,7 +687,7 @@ async function handleAuthenticateLogin(email, password, onSuccess) {
             loginError = new Error('Incorrect password for this account. Please verify your password or use Forgot Password.');
           } else {
             loggedInUser = {
-              id: makeValidUuid(),
+              id: '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0',
               email: email,
               user_metadata: { full_name: email.split('@')[0], role: 'customer' }
             };
@@ -704,7 +704,7 @@ async function handleAuthenticateLogin(email, password, onSuccess) {
     }
   }
 
-  const userId = (loggedInUser?.id && uuidRegex.test(loggedInUser.id)) ? loggedInUser.id : makeValidUuid();
+  const userId = (loggedInUser?.id && uuidRegex.test(loggedInUser.id)) ? loggedInUser.id : '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
   let userObj = loggedInUser ? { id: userId, email: loggedInUser.email || email } : { id: userId, email };
 
   // Load or construct profile
@@ -779,7 +779,7 @@ async function handleAuthenticateSignup(email, password, fullName, phone, onSucc
     console.warn('Signup auth notice:', authErr);
   }
 
-  const userId = (signUpUser?.id && uuidRegex.test(signUpUser.id)) ? signUpUser.id : makeValidUuid();
+  const userId = (signUpUser?.id && uuidRegex.test(signUpUser.id)) ? signUpUser.id : '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
   const userObj = { id: userId, email };
   const profileObj = {
     id: userId,

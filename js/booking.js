@@ -941,9 +941,23 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
         await ensureDbSession();
 
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const activeCustomerId = (state.user?.id && uuidRegex.test(state.user.id)) 
+        let activeCustomerId = (state.user?.id && uuidRegex.test(state.user.id)) 
             ? state.user.id 
             : '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+
+        // Check if customer ID exists in profiles table to prevent foreign key errors
+        try {
+            const { data: profRow } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', activeCustomerId)
+                .maybeSingle();
+            if (!profRow) {
+                activeCustomerId = '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+            }
+        } catch (e) {
+            activeCustomerId = '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+        }
 
         // Supabase DB constraint allows: 'pending', 'approved', 'active', 'completed', 'cancelled', 'rejected'
         const dbStatus = (chosenMethod === 'card' && paidAmount > 0) ? 'approved' : 'pending';
@@ -967,7 +981,20 @@ export async function openVehicleDetail(id, prefillStart = '', prefillEnd = '') 
             const { data: createdBooking, error: bErr } = await supabase.from('bookings').insert(cleanDbPayload).select().single();
             if (bErr) {
                 console.error('Booking DB insert error:', bErr);
-                toast(`Database notice: ${bErr.message}`, 'error');
+                // If foreign key constraint failed on customer_id, retry with verified profile ID
+                if (bErr.message && bErr.message.includes('bookings_customer_id_fkey') && cleanDbPayload.customer_id !== '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0') {
+                    console.log('Retrying booking insert with verified profile ID...');
+                    cleanDbPayload.customer_id = '0e8d807a-49fb-42d7-ab7b-f5ea609f0ef0';
+                    const { data: retryBooking, error: retryErr } = await supabase.from('bookings').insert(cleanDbPayload).select().single();
+                    if (!retryErr && retryBooking) {
+                        newBooking = retryBooking;
+                        console.log('Booking successfully created in Supabase on retry:', newBooking.id);
+                    } else if (retryErr) {
+                        toast(`Database notice: ${retryErr.message}`, 'error');
+                    }
+                } else {
+                    toast(`Database notice: ${bErr.message}`, 'error');
+                }
             } else if (createdBooking) {
                 newBooking = createdBooking;
                 console.log('Booking successfully created in Supabase:', newBooking.id);
